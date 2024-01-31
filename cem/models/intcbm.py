@@ -2,6 +2,7 @@ import numpy as np
 import pytorch_lightning as pl
 import sklearn.metrics
 import torch
+import logging
 
 from torchvision.models import resnet50
 
@@ -245,6 +246,12 @@ class IntAwareConceptBottleneckModel(ConceptBottleneckModel):
         if competencies is None:
             competencies = torch.ones(prob.shape).to(pos_embeddings.device)
         # Shape is [B, n_concepts, emb_size]
+        if not train:
+            logging.debug(
+                f"c: {c}"
+                f"prob: {prob}"
+                f"prev_interventions: {prev_interventions}"
+            )
         prob = prev_interventions * c + (1 - prev_interventions) * prob
         embeddings = (
             torch.unsqueeze(prob, dim=-1) * pos_embeddings +

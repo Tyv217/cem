@@ -1,12 +1,17 @@
 import math
 import torch
+import logging
+
 import pytorch_lightning as pl
-from torch.distributions import kl_divergence
 import torch.nn.functional as F
-from torch.nn import Module
-from torchmetrics import Accuracy
 import numpy as np
 import tensorflow as tf
+
+from torch.distributions import kl_divergence
+from torch.nn import Module
+from torchmetrics import Accuracy
+
+from torch.utils.data import Dataset
 
 class ACFlow(pl.LightningModule):
 
@@ -246,11 +251,7 @@ class Flow(Module):
 
     def cond_inverse(self, x, y, b, m):
         _, x_o = self.preprocess(x, b, m)
-        try:
-            c = torch.concat([F.one_hot(y, self.n_tasks), x_o], dim=1)
-        except:
-            import pdb
-            pdb.set_trace()
+        c = torch.concat([F.one_hot(y, self.n_tasks), x_o], dim=1)
         z_u = self.prior.sample(c, b, m)
         x_u, _ = self.transform.inverse(z_u, c, b, m)
         x_sam = self.postprocess(x_u, x, b, m)
@@ -410,7 +411,7 @@ class LeakyReLU(BaseTransform):
     def inverse(self, z, c, b, m):
         query = m * (1-b) # [B, d]
         sorted_query, _ = torch.sort(query, dim=-1, descending = True, stable=True)
-        num_negative = torch.sum((z < 0.).double() * sorted_query, dim=1)
+        num_negative = torch.sum((z < 0).to(torch.float64 if self.float_type == "float64" else torch.float32) * sorted_query, dim=1)
         alpha = torch.sigmoid(self.log_alpha)
         ldet = -1. * num_negative * torch.log(alpha)
         x = torch.minimum(z, z / alpha)
@@ -687,7 +688,6 @@ def mixture_likelihoods(params, targets, n_components, base_distribution='gaussi
     '''
     targets = torch.unsqueeze(targets, dim = -1)
     logits, means, lsigmas = torch.split(params, n_components, dim=2)
-    logits = torch.nn.Softmax()
     sigmas = torch.exp(lsigmas)
     if base_distribution == 'gaussian':
         log_norm_consts = -lsigmas - 0.5 * np.log(2.0 * np.pi)
@@ -743,3 +743,67 @@ def mixture_mean_dim(params_dim, n_components, base_distribution='gaussian'):
     weights = torch.nn.Softmax(logits, dim=-1)
 
     return torch.sum(weights * means, dim=1, keepdims=True)
+
+class ACFlowTransformDataset(Dataset):
+    def __init__(self, dataset, n_tasks):
+        self.dataset = dataset
+        self.n_tasks = n_tasks
+
+    def _unpack_batch(self, batch):
+        x = batch[0]
+        if isinstance(batch[1], list):
+            y, c = batch[1]
+        else:
+            y, c = batch[1], batch[2]
+        if len(batch) > 3:
+            competencies = batch[3]
+        else:
+            competencies = None
+        if len(batch) > 4:
+            prev_interventions = batch[4]
+        else:
+            prev_interventions = None
+        return x, y, (c, competencies, prev_interventions)
+    
+    def transform(self, batch):
+        _, y, (x, _, _) = self._unpack_batch(batch)
+        d = x.shape[-1]
+        b = np.zeros([d], dtype=np.float32)
+        no = np.random.choice(d+1)
+        o = np.random.choice(d, [no], replace=False)
+        b[o] = 1.
+        m = b.copy()
+        w = list(np.where(b == 0)[0])
+        w.append(-1)
+        w = np.random.choice(w)
+        if w >= 0:
+            m[w] = 1.
+        b = torch.tensor(b)
+        m = torch.tensor(m)
+        y = y.to(torch.int64)
+        return {'x': x, 'b': b, 'm': m, 'y': y}
+
+    def transform_batch(x, y):
+        B = x.shape[0]
+        d = x.shape[-1]
+        b = np.zeros([B, d], dtype=np.float32)
+        m = np.zeros([B, d], dtype=np.float32)
+        for i in range(B):            
+            no = np.random.choice(d+1)
+            o = np.random.choice(d, [no], replace=False)
+            b[i][o] = 1.
+            w = list(np.where(b[i] == 0)[0])
+            w.append(-1)
+            w = np.random.choice(w)
+            if w >= 0:
+                m[i][w] = 1.
+        b = torch.tensor(b).to(x.device)
+        m = torch.tensor(m).to(x.device)
+        y = y.to(torch.int64)
+        return x, b, m, y
+
+    def __getitem__(self, index):
+        return self.transform(self.dataset[index])
+
+    def __len__(self):
+        return len(self.dataset)

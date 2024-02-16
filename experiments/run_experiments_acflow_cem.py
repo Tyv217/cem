@@ -8,11 +8,12 @@ import os
 import sys
 import torch
 import yaml
+import pytorch_lightning as pl
 
 
 from datetime import datetime
 from pathlib import Path
-from pytorch_lightning import seed_everything
+from pytorch_lightning import seed_everything, ModelCheckpoint
 
 from cem.data.synthetic_loaders import (
     get_synthetic_data_loader, get_synthetic_num_features
@@ -25,12 +26,18 @@ import cem.data.mnist_add as mnist_data_module
 import cem.interventions.utils as intervention_utils
 import cem.train.training as training
 import cem.train.utils as utils
+from cem.models.acflow import ACFlow, ACFlowTransformDataset
 
 from experiment_utils import (
     evaluate_expressions, determine_rerun,
     generate_hyperatemer_configs, filter_results,
     print_table, get_mnist_extractor_arch
 )
+
+# Helper class to apply transformations to a dataset
+def transform_dataloader(dataloader, n_tasks):
+    dataset = ACFlowTransformDataset(dataloader.dataset, n_tasks)
+    return torch.utils.data.DataLoader(dataset, batch_size = dataloader.batch_size, shuffle = isinstance(dataloader.sampler, RandomSampler), num_workers = dataloader.num_workers)
 
 ################################################################################
 ## MAIN FUNCTION
@@ -233,6 +240,72 @@ def main(
                 if (not current_rerun) and os.path.exists(current_results_path):
                     with open(current_results_path, 'rb') as f:
                         old_results = joblib.load(f)
+
+                if "ACFlow" in run_config["architecture"] and experiment_config['shared_params'].get("separate_flow_model_training", False):    
+                    train_dl_flow = transform_dataloader(train_dl, n_tasks)
+                    val_dl_flow = transform_dataloader(val_dl, n_tasks)
+                    test_dl_flow = transform_dataloader(test_dl, n_tasks)
+                    checkpoint_callback = ModelCheckpoint(
+                        monitor='val_loss',    # Monitor validation loss
+                        save_top_k=1,          # Save the best model
+                        mode='min',            # Minimize the monitored quantity
+                        dirpath = result_dir,
+                        filename=f"acflow_model_trial_{split}"  # Name of the checkpoint file
+                    )
+                    experiment_config['shared_params']['flow_model_config']['save_path'] = result_dir + "" if result_dir[-1] == "/" else "/"  + f"acflow_model_trial_{split}.ckpt"
+
+                    trainer = pl.Trainer(
+                        accelerator=accelerator,
+                        devices=devices,
+                        max_epochs=experiment_config['shared_params'].get('max_epochs', 500),
+                        logger=False,
+                        callbacks = [checkpoint_callback]
+                    )
+
+
+                    model = ACFlow(
+                        n_concepts = n_concepts, 
+                        n_tasks = n_tasks,
+                        layer_cfg = experiment_config['shared_params']['flow_model_config']['layer_cfg'], 
+                        affine_hids = experiment_config['shared_params']['flow_model_config']['affine_hids'], 
+                        linear_rank = experiment_config['shared_params']['flow_model_config']['linear_rank'],
+                        linear_hids = experiment_config['shared_params']['flow_model_config']['linear_hids'], 
+                        transformations = experiment_config['shared_params']['flow_model_config']['transformations'], 
+                        optimizer = experiment_config['shared_params']['flow_model_config']['optimizer'], 
+                        learning_rate = experiment_config['shared_params']['flow_model_config']['learning_rate'], 
+                        weight_decay = experiment_config['shared_params']['flow_model_config']['decay_rate'], 
+                        momentum = experiment_config['shared_params']['flow_model_config'].get('momentum', 0.9), 
+                        prior_units = experiment_config['shared_params']['flow_model_config']['prior_units'], 
+                        prior_layers = experiment_config['shared_params']['flow_model_config']['prior_layers'], 
+                        prior_hids = experiment_config['shared_params']['flow_model_config']['prior_hids'], 
+                        n_components = experiment_config['shared_params']['flow_model_config']['n_components'], 
+                        lambda_xent = 1, 
+                        lambda_nll = 1
+                    )
+
+                    logging.debug(
+                        f"Starting model training..."
+                        f"Transformations: {experiment_config['shared_params']['flow_model_config']['transformations']}"
+                    )
+
+                    trainer.fit(model, train_dl_flow, val_dl_flow)
+                    model.freeze()
+
+                    [test_results] = trainer.test(model, test_dl_flow)
+
+                    try:
+                        acc = test_results['accuracy']
+                        nll = test_results['nll']
+                    except:
+                        logging.debug(
+                            f"Test results for AC Flow model:"
+                            f"\n\t{test_results}"
+                        )
+                    logging.debug(
+                        f"\tTest Accuracy for AC Flow model is {acc}\n"
+                        f"\tNLL is {nll}\n"
+                    )
+
 
                 if run_config["architecture"] in [
                     "IndependentConceptBottleneckModel",

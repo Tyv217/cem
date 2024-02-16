@@ -73,6 +73,12 @@ shared_params:
       prior_layers: 2
       prior_hids: [256,256]
       separate_flow_model_training: True
+      optimizer: adam
+      learning_rate: 0.001
+      decay_steps: 10000
+      decay_rate: 0.5
+      clip_gradient": 1
+      num_samples: 10
     flow_model_nll_ratio: 0.5
     flow_model_weight: 2
     flow_model_rollouts: 1

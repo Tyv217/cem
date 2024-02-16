@@ -587,7 +587,7 @@ class Transform(BaseTransform):
         elif name == "LR":
             return LeakyReLU(self.float_type)
         elif name == "ML":
-            return LULinear(self.n_concepts, self.n_tasks, self.affine_hids, self.float_type)
+            return LULinear(self.n_concepts, self.n_tasks, self.linear_rank, self.linear_hids, self.float_type)
         elif name == "TL":
             return TransLayer(self.n_concepts, self.n_tasks, self.affine_hids, self.layer_cfg, self.linear_rank, self.linear_hids, self.float_type)
             

@@ -13,7 +13,8 @@ import pytorch_lightning as pl
 
 from datetime import datetime
 from pathlib import Path
-from pytorch_lightning import seed_everything, ModelCheckpoint
+from pytorch_lightning import seed_everything
+from pytorch_lightning.callbacks import ModelCheckpoint
 
 from cem.data.synthetic_loaders import (
     get_synthetic_data_loader, get_synthetic_num_features

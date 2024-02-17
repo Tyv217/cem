@@ -99,6 +99,8 @@ def main(
             f"Computing task class weights in the training dataset with "
             f"size {len(train_dl)}..."
         )
+        import pdb
+        pdb.set_trace()
         attribute_count = np.zeros((max(n_tasks, 2),))
         samples_seen = 0
         for i, data in enumerate(train_dl):

@@ -104,6 +104,8 @@ def main(
         samples_seen = 0
         for i, data in enumerate(train_dl):
             y = data['y']
+            if len(y.shape) > 1:
+                y = y.squeeze(dim = 0)
             if n_tasks > 1:
                 y = torch.nn.functional.one_hot(
                     y,

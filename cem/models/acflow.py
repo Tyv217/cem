@@ -92,6 +92,8 @@ class ACFlow(pl.LightningModule):
         return logpu, logpo, sam, cond_sam, pred_sam
 
     def training_step(self, batch, batch_idx):
+        import pdb
+        pdb.set_trace()
         
         x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
         class_weights = torch.tensor(np.array(batch.get('class_weights', [1. for _ in range(self.n_tasks)])).astype(self.float_type)).to(x.device)

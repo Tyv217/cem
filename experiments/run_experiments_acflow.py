@@ -18,7 +18,8 @@ from pytorch_lightning import seed_everything
 from torch.utils.data import Dataset, RandomSampler
 
 import cem.data.celeba_loader as celeba_data_module
-import cem.data.mnist_add as mnist_data_module
+import cem.data.mnist_add as mnist_add_data_module
+import cem.data.mnist as mnist_data_module
 from cem.models.acflow import ACFlow, ACFlowTransformDataset
 
 ################################################################################
@@ -319,8 +320,10 @@ if __name__ == '__main__':
     if loaded_config["dataset"] == "celeba":
         data_module = celeba_data_module
     elif loaded_config["dataset"] == "mnist_add":
-        data_module = mnist_data_module
+        data_module = mnist_add_data_module
         num_operands = loaded_config.get('num_operands', 32)
+    elif loaded_config["dataset"] == "mnist":
+        data_module = mnist_data_module
     else:
         raise ValueError(f"Unsupported dataset {loaded_config['dataset']}!")
 

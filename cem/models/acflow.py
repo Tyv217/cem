@@ -770,17 +770,22 @@ class ACFlowTransformDataset(Dataset):
 
     def _unpack_batch(self, batch):
         x = batch[0]
+        if len(batch) == 2:
+            y = batch[1]
         if isinstance(batch[1], list):
-            y, c = batch[1]
+            if self.use_concepts:
+                y, x = batch[1]
+            else:
+                y, _ = batch[1]
         else:
-            y, c = batch[1], batch[2]
-        if self.use_concepts:
-            return c, y
-        else:
-            import pdb
-            pdb.set_trace()
+            if self.use_concepts:
+                y, x = batch[1], batch[2]
+            else:
+                y = batch[1]
+                
+        if(len(x.shape) > 2):
             x = torch.flatten(x, start_dim = -1)
-            return x, y
+        return x, y
     
     def transform(self, batch):
         x, y = self._unpack_batch(batch)

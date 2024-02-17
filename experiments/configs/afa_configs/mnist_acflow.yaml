@@ -1,6 +1,6 @@
 trials: 1
 results_dir: results/mnist_add_new
-dataset: mnist_add
+dataset: mnist
 num_workers: 8
 batch_size: 64
 num_operands: 12

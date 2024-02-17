@@ -92,8 +92,6 @@ class ACFlow(pl.LightningModule):
         return logpu, logpo, sam, cond_sam, pred_sam
 
     def training_step(self, batch, batch_idx):
-        import pdb
-        pdb.set_trace()
         
         x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
         class_weights = torch.tensor(np.array(batch.get('class_weights', [1. for _ in range(self.n_tasks)])).astype(self.float_type)).to(x.device)
@@ -122,9 +120,6 @@ class ACFlow(pl.LightningModule):
         return {"loss": loss, "accuracy": acc, "nll": nll}
 
     def validation_step(self, batch, batch_idx):
-
-        import pdb
-        pdb.set_trace()
 
         x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
         class_weights = torch.tensor(np.array(batch.get('class_weights', [1. for _ in range(self.n_tasks)])).astype(self.float_type)).to(x.device)
@@ -792,6 +787,8 @@ class ACFlowTransformDataset(Dataset):
             else:
                 y = batch[1]
                 
+        if(len(y.shape) < 1):
+            y = F.one_hot(y, self.n_tasks).to(y.device)
         return x, y
     
     def transform(self, batch):

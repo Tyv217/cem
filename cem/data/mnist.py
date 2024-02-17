@@ -9,98 +9,6 @@ import torchvision
 
 from pytorch_lightning import seed_everything
 
-
-def inject_uncertainty(
-    *datasets,
-    uncertain_width=0,
-    concept_groups=None,
-    batch_size=512,
-    num_workers=-1,
-    mixing=True,
-    threshold=False,
-):
-    seed_everything(42)
-    results = []
-    concept_groups = concept_groups or []
-    for ds in datasets:
-        xs = []
-        ys = []
-        cs = []
-
-        for x, y, c in ds:
-            ys.append(y)
-            c_new = c.numpy()
-            x_new = x.numpy()
-            if uncertain_width:
-                for j in range(c_new.shape[-1]):
-                    num_operands = x.shape[1] if x.shape[1] > 2 else 1
-                    if mixing:
-                        possible_options_pos = x[
-                            c[:, j] == 1,
-                            j//num_operands,
-                            :,
-                            :,
-                        ]
-                        possible_options_neg = x[
-                            c[:, j] == 0,
-                            j//num_operands,
-                            :,
-                            :,
-                        ]
-                    for i in range(c_new.shape[0]):
-                        if c_new[i, j] == 1:
-                            c_new[i, j] = np.random.uniform(
-                                low=1.0 - uncertain_width,
-                                high=1,
-                            )
-                            if mixing:
-                                selected_mix = np.random.randint(
-                                    0,
-                                    possible_options_neg.shape[0],
-                                )
-                                x_new[i,j//num_operands,:,:]  = (
-                                    x_new[i,j//num_operands,:,:] * c_new[i, j] +
-                                    (
-                                        (1 - c_new[i, j]) *
-                                        possible_options_neg[
-                                            selected_mix,
-                                            :,
-                                            :,
-                                        ].numpy()
-                                    )
-                                )
-                        else:
-                            c_new[i, j] = np.random.uniform(
-                                low=0.0,
-                                high=uncertain_width,
-                            )
-                            if mixing:
-                                selected_mix = np.random.randint(
-                                    0,
-                                    possible_options_pos.shape[0],
-                                )
-                                x_new[i,j//num_operands,:,:]  = (
-                                    x_new[i,j//num_operands,:,:] * (1 - c_new[i, j]) +
-                                    c_new[i, j] * possible_options_pos[selected_mix, :, :].numpy()
-                                )
-                        if threshold:
-                            c_new[i, j] = int(c_new[i, j] >= 0.5)
-
-            xs.append(x_new)
-            cs.append(c_new)
-        x = torch.FloatTensor(np.concatenate(xs, axis=0))
-
-        y = torch.cat(ys, dim=0)
-        c = torch.FloatTensor(np.concatenate(cs, axis=0))
-        results.append(
-            torch.utils.data.DataLoader(
-                torch.utils.data.TensorDataset(x, y, c),
-                batch_size=batch_size,
-                num_workers=num_workers,
-            ),
-        )
-    return results
-
 def load_mnist(
     cache_dir="mnist",
     seed=42,
@@ -178,16 +86,6 @@ def load_mnist(
         batch_size=batch_size,
         num_workers=num_workers,
     )
-    if uncertain_width and (not even_concepts):
-        [test_dl] = inject_uncertainty(
-            test_dl,
-            uncertain_width=uncertain_width,
-            concept_groups=concept_groups,
-            batch_size=batch_size,
-            num_workers=num_workers,
-            mixing=mixing,
-            threshold=threshold,
-        )
     if test_only:
         return None, None, test_dl
 
@@ -231,7 +129,6 @@ def load_mnist(
             y_val = torch.FloatTensor(y_val)
         else:
             y_val = torch.LongTensor(y_val)
-        c_val = torch.FloatTensor(c_val)
         val_data = torch.utils.data.TensorDataset(x_val, y_val)
         val_dl = torch.utils.data.DataLoader(
             val_data,

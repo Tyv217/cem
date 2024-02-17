@@ -159,18 +159,6 @@ def load_mnist(
         batch_size=batch_size,
         num_workers=num_workers,
     )
-
-    if uncertain_width and (not even_concepts):
-        [train_dl] = inject_uncertainty(
-            train_dl,
-            uncertain_width=uncertain_width,
-            concept_groups=concept_groups,
-            batch_size=batch_size,
-            num_workers=num_workers,
-            mixing=mixing,
-            threshold=threshold,
-        )
-
     return train_dl, val_dl, test_dl
 
 
@@ -209,8 +197,7 @@ def generate_data(
             num_concepts += num_curr_concepts
             n_tasks += np.max(used_operand_digits)
 
-    if even_labels or (threshold_labels is not None):
-        n_tasks = 1
+    n_tasks = 10
 
     sampling_percent = config.get("sampling_percent", 1)
     sampling_groups = config.get("sampling_groups", False)

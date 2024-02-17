@@ -177,11 +177,6 @@ def main(
             lambda_nll = 1
         )
 
-        logging.debug(
-            f"Starting model training..."
-            f"Transformations: {transformations}"
-        )
-
         trainer.fit(model, train_dl, val_dl)
         model.freeze()
 

@@ -154,74 +154,72 @@ def main(
             enable_checkpointing = False
         )
 
-        for transformations in [[], ["AF"], ["CP2"], ["LR"], ["ML"], ["TL"]]:
+        model = ACFlow(
+            n_concepts = n_concepts, 
+            n_tasks = n_tasks,
+            layer_cfg = experiment_config['shared_params']['layer_cfg'], 
+            affine_hids = experiment_config['shared_params']['affine_hids'], 
+            linear_rank = experiment_config['shared_params']['linear_rank'],
+            linear_hids = experiment_config['shared_params']['linear_hids'], 
+            transformations = experiment_config['shared_params']['transformations'], 
+            optimizer = experiment_config['shared_params']['optimizer'], 
+            learning_rate = experiment_config['shared_params']['learning_rate'], 
+            weight_decay = experiment_config['shared_params']['decay_rate'], 
+            momentum = experiment_config['shared_params'].get('momentum', 0.9), 
+            prior_units = experiment_config['shared_params']['prior_units'], 
+            prior_layers = experiment_config['shared_params']['prior_layers'], 
+            prior_hids = experiment_config['shared_params']['prior_hids'], 
+            n_components = experiment_config['shared_params']['n_components'], 
+            lambda_xent = 1, 
+            lambda_nll = 1
+        )
 
-            model = ACFlow(
-                n_concepts = n_concepts, 
-                n_tasks = n_tasks,
-                layer_cfg = experiment_config['shared_params']['layer_cfg'], 
-                affine_hids = experiment_config['shared_params']['affine_hids'], 
-                linear_rank = experiment_config['shared_params']['linear_rank'],
-                linear_hids = experiment_config['shared_params']['linear_hids'], 
-                transformations = transformations, 
-                optimizer = experiment_config['shared_params']['optimizer'], 
-                learning_rate = experiment_config['shared_params']['learning_rate'], 
-                weight_decay = experiment_config['shared_params']['decay_rate'], 
-                momentum = experiment_config['shared_params'].get('momentum', 0.9), 
-                prior_units = experiment_config['shared_params']['prior_units'], 
-                prior_layers = experiment_config['shared_params']['prior_layers'], 
-                prior_hids = experiment_config['shared_params']['prior_hids'], 
-                n_components = experiment_config['shared_params']['n_components'], 
-                lambda_xent = 1, 
-                lambda_nll = 1
-            )
+        logging.debug(
+            f"Starting model training..."
+            f"Transformations: {transformations}"
+        )
 
+        trainer.fit(model, train_dl, val_dl)
+        model.freeze()
+
+        [test_results] = trainer.test(model, test_dl)
+
+        predict_dl = transform_dataloader(test_dl, n_tasks, train = False)
+            
+        predictions = trainer.predict(model, predict_dl)
+
+        predict_dl = iter(predict_dl)
+        test_results = iter(predictions)
+
+        for i in range(5):
+            data = next(predict_dl)
+            result = next(test_results)
+            def tensor_to_image(tensor):
+                tensor = tensor*255
+                tensor = np.array(tensor, dtype=np.uint8)
+                if np.ndim(tensor)>3:
+                    assert tensor.shape[0] == 1
+                    tensor = tensor[0]
+                return PIL.Image.fromarray(tensor)
+            data = tensor_to_image(data['x'].cpu())
+            inpainted = tensor_to_image((data['x'] * data['b']).cpu())
+            result = tensor_to_image(result.cpu())
+            data.save(f"results/data_{i}.png")
+            inpainted.save(f"results/inpainted_{i}.png")
+            result.save(f"results/result_{i}.png")
+
+        try:
+            acc = test_results['accuracy']
+            nll = test_results['nll']
+        except:
             logging.debug(
-                f"Starting model training..."
-                f"Transformations: {transformations}"
+                f"Test results:"
+                f"\n\t{test_results}"
             )
-
-            trainer.fit(model, train_dl, val_dl)
-            model.freeze()
-
-            [test_results] = trainer.test(model, test_dl)
-
-            predict_dl = transform_dataloader(test_dl, n_tasks, train = False)
-                
-            predictions = trainer.predict(model, predict_dl)
-
-            predict_dl = iter(predict_dl)
-            test_results = iter(predictions)
-
-            for i in range(5):
-                data = next(predict_dl)
-                result = next(test_results)
-                def tensor_to_image(tensor):
-                    tensor = tensor*255
-                    tensor = np.array(tensor, dtype=np.uint8)
-                    if np.ndim(tensor)>3:
-                        assert tensor.shape[0] == 1
-                        tensor = tensor[0]
-                    return PIL.Image.fromarray(tensor)
-                data = tensor_to_image(data['x'].cpu())
-                inpainted = tensor_to_image((data['x'] * data['b']).cpu())
-                result = tensor_to_image(result.cpu())
-                data.save(f"results/data_{i}.png")
-                inpainted.save(f"results/inpainted_{i}.png")
-                result.save(f"results/result_{i}.png")
-
-            try:
-                acc = test_results['accuracy']
-                nll = test_results['nll']
-            except:
-                logging.debug(
-                    f"Test results:"
-                    f"\n\t{test_results}"
-                )
-            logging.debug(
-                f"\tTest Accuracy is {acc}\n"
-                f"\tNLL is {nll}\n"
-            )
+        logging.debug(
+            f"\tTest Accuracy is {acc}\n"
+            f"\tNLL is {nll}\n"
+        )
 
     return results
 

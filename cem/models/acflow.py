@@ -777,6 +777,9 @@ class ACFlowTransformDataset(Dataset):
         if self.use_concepts:
             return c, y
         else:
+            x = torch.flatten(x, start_dim = -1)
+            import pdb
+            odb.set_trace()
             return x, y
     
     def transform(self, batch):

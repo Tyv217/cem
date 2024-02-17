@@ -157,8 +157,6 @@ def produce_addition_set(
             total_operand_samples,
             total_operand_labels,
         ):
-            import pdb
-            pdb.set_trace()
             img_idx = np.random.choice(total_samples.shape[0])
             selected.append(total_labels[img_idx])
             img = total_samples[img_idx: img_idx + 1, :, :, :].copy()

@@ -775,6 +775,10 @@ class ACFlowTransformDataset(Dataset):
 
     def _unpack_batch(self, batch):
         x = batch[0]
+        
+        if(len(x.shape) > 2):
+            x = torch.flatten(x, start_dim = 1)
+            
         if len(batch) == 2:
             y = batch[1]
         if isinstance(batch[1], list):
@@ -788,8 +792,6 @@ class ACFlowTransformDataset(Dataset):
             else:
                 y = batch[1]
                 
-        if(len(x.shape) > 2):
-            x = torch.flatten(x, start_dim = -1)
         return x, y
     
     def transform(self, batch):

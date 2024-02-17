@@ -61,9 +61,6 @@ def main(
     logging.debug(
         f"Applying transformations..."
     )
-    
-    import pdb
-    pdb.set_trace()
     train_dl = transform_dataloader(train_dl, n_tasks)
     # For now, we assume that all concepts have the same
     # aquisition cost

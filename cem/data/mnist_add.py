@@ -198,6 +198,8 @@ def produce_addition_set(
         else:
             sum_train_labels.append(sample_label)
         sum_train_concepts.append(np.concatenate(concepts, axis=-1))
+    import pdb
+    pdb.set_trace()
     sum_train_samples = np.concatenate(sum_train_samples, axis=0)
     sum_train_concepts = np.concatenate(sum_train_concepts, axis=0)
     sum_train_labels = np.array(sum_train_labels)

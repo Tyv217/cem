@@ -66,10 +66,9 @@ def load_mnist(
             np.expand_dims(x, axis=0),
             axis=-1,
         ))
-        y_test.append(np.expand_dims(
-            np.expand_dims(y, axis=0),
-            axis=-1,
-        ))
+        y_test.append(
+            np.expand_dims(y, axis=0)
+        )
     x_test = np.concatenate(x_test, axis=0)
     y_test = np.concatenate(y_test, axis=0)
 
@@ -107,10 +106,9 @@ def load_mnist(
             np.expand_dims(x, axis=0),
             axis=-1,
         ))
-        y_train.append(np.expand_dims(
-            np.expand_dims(y, axis=0),
-            axis=-1,
-        ))
+        y_train.append(
+            np.expand_dims(y, axis=0)
+        )
 
     x_train = np.concatenate(x_train, axis=0)
     y_train = np.concatenate(y_train, axis=0)
@@ -135,16 +133,6 @@ def load_mnist(
             batch_size=batch_size,
             num_workers=num_workers,
         )
-        if uncertain_width and (not even_concepts):
-            [val_dl] = inject_uncertainty(
-                val_dl,
-                uncertain_width=uncertain_width,
-                concept_groups=concept_groups,
-                batch_size=batch_size,
-                num_workers=num_workers,
-                mixing=mixing,
-                threshold=threshold,
-            )
     else:
         val_dl = None
 

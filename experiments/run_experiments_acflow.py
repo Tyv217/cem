@@ -8,6 +8,7 @@ import os
 import sys
 import torch
 import yaml
+import PIL
 import pytorch_lightning as pl
 
 
@@ -26,9 +27,8 @@ from cem.models.acflow import ACFlow, ACFlowTransformDataset
 
 # Helper class to apply transformations to a dataset
 def transform_dataloader(dataloader, n_tasks):
-    dataset = ACFlowTransformDataset(dataloader.dataset, n_tasks)
+    dataset = ACFlowTransformDataset(dataloader.dataset, n_tasks, use_concepts = True)
     return torch.utils.data.DataLoader(dataset, batch_size = dataloader.batch_size, shuffle = isinstance(dataloader.sampler, RandomSampler), num_workers = dataloader.num_workers)
-
 
 
 def main(
@@ -185,6 +185,30 @@ def main(
             model.freeze()
 
             [test_results] = trainer.test(model, test_dl)
+
+            predict_dl = transform_dataloader(test_dl, n_tasks, train = False)
+                
+            predictions = trainer.predict(model, predict_dl)
+
+            predict_dl = iter(predict_dl)
+            test_results = iter(predictions)
+
+            for i in range(5):
+                data = next(predict_dl)
+                result = next(test_results)
+                def tensor_to_image(tensor):
+                    tensor = tensor*255
+                    tensor = np.array(tensor, dtype=np.uint8)
+                    if np.ndim(tensor)>3:
+                        assert tensor.shape[0] == 1
+                        tensor = tensor[0]
+                    return PIL.Image.fromarray(tensor)
+                data = tensor_to_image(data['x'].cpu())
+                inpainted = tensor_to_image((data['x'] * data['b']).cpu())
+                result = tensor_to_image(result.cpu())
+                data.save(f"results/data_{i}.png")
+                inpainted.save(f"results/inpainted_{i}.png")
+                result.save(f"results/result_{i}.png")
 
             try:
                 acc = test_results['accuracy']

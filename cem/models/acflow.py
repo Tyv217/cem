@@ -172,6 +172,23 @@ class ACFlow(pl.LightningModule):
 
         return result
 
+    def predict_step(self, batch, batch_idx):
+        
+        x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
+        class_weights = torch.tensor(np.array(batch.get('class_weights', [1. for _ in range(self.n_tasks)])).astype(self.float_type)).to(x.device)
+        class_weights /= torch.sum(class_weights)
+        class_weights = torch.log(class_weights)
+        class_weights = torch.tile(torch.unsqueeze(class_weights, dim = 0), [x.shape[0], 1])
+
+        logpu, logpo, _, _, _ = self(x,b,m,y)
+
+        logits = logpu + logpo
+        
+        pred = torch.argmax(logits, dim=1)
+        
+        return pred
+
+
     def configure_optimizers(self):
         if self.optimizer_name.lower() == "adam":
             optimizer = torch.optim.Adam(
@@ -745,9 +762,11 @@ def mixture_mean_dim(params_dim, n_components, base_distribution='gaussian'):
     return torch.sum(weights * means, dim=1, keepdims=True)
 
 class ACFlowTransformDataset(Dataset):
-    def __init__(self, dataset, n_tasks):
+    def __init__(self, dataset, n_tasks, use_concepts = False, train = True):
         self.dataset = dataset
         self.n_tasks = n_tasks
+        self.use_concepts = use_concepts
+        self.train = train
 
     def _unpack_batch(self, batch):
         x = batch[0]
@@ -755,29 +774,27 @@ class ACFlowTransformDataset(Dataset):
             y, c = batch[1]
         else:
             y, c = batch[1], batch[2]
-        if len(batch) > 3:
-            competencies = batch[3]
+        if self.use_concepts:
+            return c, y
         else:
-            competencies = None
-        if len(batch) > 4:
-            prev_interventions = batch[4]
-        else:
-            prev_interventions = None
-        return x, y, (c, competencies, prev_interventions)
+            return x, y
     
     def transform(self, batch):
-        _, y, (x, _, _) = self._unpack_batch(batch)
+        x, y = self._unpack_batch(batch)
         d = x.shape[-1]
         b = np.zeros([d], dtype=np.float32)
         no = np.random.choice(d+1)
         o = np.random.choice(d, [no], replace=False)
         b[o] = 1.
-        m = b.copy()
-        w = list(np.where(b == 0)[0])
-        w.append(-1)
-        w = np.random.choice(w)
-        if w >= 0:
-            m[w] = 1.
+        if self.train:
+            m = b.copy()
+            w = list(np.where(b == 0)[0])
+            w.append(-1)
+            w = np.random.choice(w)
+            if w >= 0:
+                m[w] = 1.
+        else:
+            m = np.ones([d], dtype=np.float32)
         b = torch.tensor(b)
         m = torch.tensor(m)
         y = y.to(torch.int64)

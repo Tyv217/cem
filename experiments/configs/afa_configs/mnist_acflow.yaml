@@ -35,7 +35,7 @@ shared_params:
     lambda_mse: 0.0
     lambda_xent: 1.0
     lambda_nll: 1.0
-    transform: [AF, TL, TL, TL, TL, AF]
+    transformations: [AF, TL, TL, TL, TL, AF]
     layer_cfg: [LR, CP2]
     rnncp_units: 256
     rnncp_layers: 2

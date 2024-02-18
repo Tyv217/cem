@@ -185,8 +185,6 @@ def produce_addition_set(
                     concepts.append(np.array([[val]]))
             sample_label += total_labels[img_idx]
             operands.append(img)
-        import pdb
-        pdb.set_trace()
         if concat_dim == 'channels':
             sum_train_samples.append(np.concatenate(operands, axis=3))
         elif concat_dim == 'x':
@@ -200,8 +198,6 @@ def produce_addition_set(
         else:
             sum_train_labels.append(sample_label)
         sum_train_concepts.append(np.concatenate(concepts, axis=-1))
-    import pdb
-    pdb.set_trace()
     sum_train_samples = np.concatenate(sum_train_samples, axis=0)
     sum_train_concepts = np.concatenate(sum_train_concepts, axis=0)
     sum_train_labels = np.array(sum_train_labels)

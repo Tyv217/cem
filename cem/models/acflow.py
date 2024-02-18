@@ -788,9 +788,7 @@ class ACFlowTransformDataset(Dataset):
                 y = batch[1]
                 
         if(len(y.shape) < 1):
-            import pdb
-            pdb.set_trace()
-            y = F.one_hot(y, self.n_tasks).to(y.device)
+            y = F.one_hot(y.long(), self.n_tasks).to(y.device)
         return x, y
     
     def transform(self, batch):

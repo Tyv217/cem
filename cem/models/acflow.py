@@ -42,7 +42,7 @@ class ACFlow(pl.LightningModule):
         m = torch.tile(torch.unsqueeze(m, dim = 1), [1, N, 1])
         m = torch.reshape(m, [B * N, d])
         
-        if(y == None):
+        if(y is None):
             if(task == "classify"):
                 y = torch.tile(torch.unsqueeze(torch.arange(N), dim = 0), [B, 1])
                 y = y.to(x.device)
@@ -51,6 +51,9 @@ class ACFlow(pl.LightningModule):
                 y = torch.randint(0, self.n_tasks, [B*N])
                 y = y.to(x.device)
                 forward = False
+        else:
+            import pdb
+            pdb.set_trace()
         if(y.shape != (B*N,)):
             if(y.shape == (B,)):
                 y = torch.tile(torch.unsqueeze(y, dim = 1), [1, N])
@@ -83,8 +86,6 @@ class ACFlow(pl.LightningModule):
 
         # sample p(x_u | x_o, y)
         if y is not None:
-            import pdb
-            pdb.set_trace()
             cond_sam = self.flow_forward(x, b, m, y, forward = False)
         else:
             cond_sam = None

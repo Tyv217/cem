@@ -342,7 +342,11 @@ class Affine(BaseTransform):
         t = t.gather(1, order.unsqueeze(-1).expand(-1, -1, query.size(-1)))
         t = t.transpose(1, 2)
         
-        scale = torch.einsum('nd,ndi->ni', scale, t)
+        try:
+            scale = torch.einsum('nd,ndi->ni', scale, t)
+        except:
+            import pdb
+            pdb.set_trace()
         shift = torch.einsum('nd,ndi->ni', shift, t)
 
         return shift, scale

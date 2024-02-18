@@ -285,6 +285,9 @@ def generate_data(
         ),
     )
 
+    x_sample = next(iter(train_dl))[0]
+    n_concepts = x_sample.shape[1]
+
     if not output_dataset_vars:
         return train_dl, val_dl, test_dl, None
     return (

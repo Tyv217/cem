@@ -40,7 +40,8 @@ class ACFlow(pl.LightningModule):
         b = torch.tile(torch.unsqueeze(b, dim = 1), [1, N, 1])
         b = torch.reshape(b, [B * N, d])
         m = torch.tile(torch.unsqueeze(m, dim = 1), [1, N, 1])
-        m = torch.reshape(x, [B * N, d])
+        m = torch.reshape(m, [B * N, d])
+
         if(y == None):
             if(task == "classify"):
                 y = torch.tile(torch.unsqueeze(torch.arange(N), dim = 0), [B, 1])

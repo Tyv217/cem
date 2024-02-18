@@ -680,6 +680,33 @@ for i, concept_name in enumerate(list(
     CONCEPT_GROUP_MAP[group].append(i)
 
 
+head_colors = ['has_nape_color', 'has_crown_color', 'has_throat_color', 'has_eye_color', 'has_forehead_color','has_bill_color']
+body_colors = ['has_wing_color',  'has_underparts_color', 'has_primary_color', 'has_back_color', 'has_leg_color']
+body_detail_colors = ['has_upper_tail_color', 'has_under_tail_color', 'has_belly_color', 'has_breast_color', 'has_upperparts_color']
+shapes = ['has_tail_shape', 'has_shape', 'has_wing_shape', 'has_bill_shape', 'has_size', 'has_bill_length']
+patterns = ['has_belly_pattern', 'has_back_pattern', 'has_head_pattern', 'has_breast_pattern', 'has_tail_pattern', 'has_wing_pattern']
+
+CONCEPT_SEMANTICS_MAP = {}
+for head_color in head_colors:
+    CONCEPT_SEMANTICS_MAP[head_color] = "has_head_color"
+for body_color in body_colors:
+    CONCEPT_SEMANTICS_MAP[body_color] = "has_body_color"
+for body_detail_color in body_detail_colors:
+    CONCEPT_SEMANTICS_MAP[body_detail_color] = "has_body_detail_color"
+for shape in shapes:
+    CONCEPT_SEMANTICS_MAP[shape] = "has_shape"
+for pattern in patterns:
+    CONCEPT_SEMANTICS_MAP[pattern] = "has_pattern"
+
+CONCEPT_GROUP_MAP_GENERAL = defaultdict(list)
+
+for i, concept_name in enumerate(list(
+    np.array(CONCEPT_SEMANTICS)[SELECTED_CONCEPTS]
+)):
+    group = concept_name[:concept_name.find("::")]
+    CONCEPT_GROUP_MAP_GENERAL[CONCEPT_SEMANTICS_MAP[group]].append(i)
+
+
 ##########################################################
 ## ORIGINAL SAMPLER/CLASSES FROM CBM PAPER
 ##########################################################
@@ -1026,7 +1053,7 @@ def generate_data(
     sampling_percent = config.get("sampling_percent", 1)
     sampling_groups = config.get("sampling_groups", False)
 
-    concept_group_map = CONCEPT_GROUP_MAP.copy()
+    concept_group_map = CONCEPT_GROUP_MAP_GENERAL.copy()
     n_concepts = len(SELECTED_CONCEPTS)
     if sampling_percent != 1:
         # Do the subsampling

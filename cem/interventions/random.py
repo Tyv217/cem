@@ -20,6 +20,7 @@ class IndependentRandomMaskIntPolicy(InterventionPolicy):
         self.include_prior = include_prior
         self.horizon = horizon
         self.cbm_use_concept_groups = cbm.use_concept_groups
+        self.optimal = False
 
     def __call__(
         self,

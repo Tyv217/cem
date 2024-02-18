@@ -63,7 +63,7 @@ def load_mnist(
 
     for x, y in ds_test:
         x_test.append(
-            np.expand_dims(x, axis=0).astype(np.float32) / 255
+            (np.expand_dims(x, axis=0) > 127).long()
         )
         y_test.append(
             np.expand_dims(y, axis=0)
@@ -102,7 +102,7 @@ def load_mnist(
 
     for x, y in ds_train:
         x_train.append(
-            np.expand_dims(x, axis=0).astype(np.float32) / 255
+            (np.expand_dims(x, axis=0) > 127).long()
         )
         y_train.append(
             np.expand_dims(y, axis=0)

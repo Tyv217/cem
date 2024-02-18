@@ -51,9 +51,6 @@ class ACFlow(pl.LightningModule):
                 y = torch.randint(0, self.n_tasks, [B*N])
                 y = y.to(x.device)
                 forward = False
-        else:
-            import pdb
-            pdb.set_trace()
         if(y.shape != (B*N,)):
             if(y.shape == (B,)):
                 y = torch.tile(torch.unsqueeze(y, dim = 1), [1, N])
@@ -790,9 +787,6 @@ class ACFlowTransformDataset(Dataset):
                 y, x = batch[1], batch[2]
             else:
                 y = batch[1]
-                
-        if(len(y.shape) < 1):
-            y = F.one_hot(y.long(), self.n_tasks).to(y.device)
         return x, y
     
     def transform(self, batch):

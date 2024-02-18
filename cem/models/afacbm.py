@@ -326,8 +326,8 @@ class ACFlowConceptBottleneckModel(ConceptBottleneckModel):
         logpus_sparse = torch.zeros(used_groups.shape, dtype = torch.float32, device = used_groups.device)
         logpos_sparse = torch.zeros(used_groups.shape, dtype = torch.float32, device = used_groups.device)
 
-        mask = prev_interventions.clone()
-        missing = prev_interventions.clone()
+        mask = prev_interventions.clone().float()
+        missing = prev_interventions.clone().float()
         concepts = c.clone()
         concept_map_vals = list(self.concept_map.values())
         for i in range(num_groups):

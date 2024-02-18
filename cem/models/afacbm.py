@@ -1171,19 +1171,24 @@ class ACFlowConceptEmbeddingModel(
         self.units = units
         self.concept_rank_model = torch.nn.Sequential(*layers)
 
-        self.acflow_model = ACFlow(
-            n_concepts = n_concepts,
-            n_tasks = n_tasks,
-            layer_cfg = flow_model_config['layer_cfg'],
-            affine_hids = flow_model_config['affine_hids'],
-            linear_rank = flow_model_config['linear_rank'],
-            linear_hids = flow_model_config['linear_hids'],
-            transformations = flow_model_config['transformations'],
-            prior_units = flow_model_config['prior_units'],
-            prior_layers = flow_model_config['prior_layers'],
-            prior_hids = flow_model_config['prior_hids'],
-            n_components = flow_model_config['n_components']
-        )
+        if flow_model_config.get("save_path", None) is not None:
+            self.acflow_model = ACFlow.load_from_checkpoint(checkpoint_path = flow_model_config['save_path'])
+            self.train_flow_model = False
+        else:
+            self.acflow_model = ACFlow(
+                n_concepts = n_concepts,
+                n_tasks = n_tasks,
+                layer_cfg = flow_model_config['layer_cfg'],
+                affine_hids = flow_model_config['affine_hids'],
+                linear_rank = flow_model_config['linear_rank'],
+                linear_hids = flow_model_config['linear_hids'],
+                transformations = flow_model_config['transformations'],
+                prior_units = flow_model_config['prior_units'],
+                prior_layers = flow_model_config['prior_layers'],
+                prior_hids = flow_model_config['prior_hids'],
+                n_components = flow_model_config['n_components']
+            )
+            self.train_flow_model = True
 
         self.flow_model_nll_ratio = flow_model_nll_ratio
         self.flow_model_weight = flow_model_weight

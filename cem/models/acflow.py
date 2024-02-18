@@ -32,6 +32,8 @@ class ACFlow(pl.LightningModule):
         self.float_type = float_type
 
     def flow_forward(self, x, b, m, y = None, forward = True, task = "classify"):
+        import pdb
+        pdb.set_trace()
         B = x.shape[0]
         d = self.n_concepts
         N = self.n_tasks

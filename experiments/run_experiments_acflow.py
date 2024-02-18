@@ -200,9 +200,12 @@ def main(
                     assert tensor.shape[0] == 1
                     tensor = tensor[0]
                 return PIL.Image.fromarray(tensor)
-            data = tensor_to_image(data['x'].cpu())
-            inpainted = tensor_to_image((data['x'] * data['b']).cpu())
-            result = tensor_to_image(result.cpu())
+            image_size = data['x'].shape[-1]
+            image_size = int(np.sqrt(image_size))
+            image_size = (image_size, image_size)
+            data = tensor_to_image(torch.reshape(data['x'].cpu()), image_size)
+            inpainted = tensor_to_image(torch.reshape(data['x'].cpu() * data['b'].cpu()), image_size)
+            result = tensor_to_image(torch.reshape(result.cpu()), image_size)
             data.save(f"results/data_{i}.png")
             inpainted.save(f"results/inpainted_{i}.png")
             result.save(f"results/result_{i}.png")

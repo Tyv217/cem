@@ -165,7 +165,7 @@ class CooP(InterventionPolicy):
                 # And aim to maximize the probability of the ground-truth class
                 # assuming we also correctly intervened on the current concept
                 expected_change = new_prob_distr[
-                    torch.eye(new_prob_distr.shape[-1])[pred_class].type(
+                    torch.eye(new_prob_distr.shape[-1]).to(new_prob_distr.device)[pred_class].type(
                         torch.bool
                     )
                 ]

@@ -344,9 +344,14 @@ class Affine(BaseTransform):
         
         try:
             scale = torch.einsum('nd,ndi->ni', scale, t)
-        except:
-            import pdb
-            pdb.set_trace()
+        except Exception as e:
+            logging.warning(
+                "Einsum calculation error:"
+                f"shapes: scale: {scale.shape}, t: {t.shape}"
+                f"types: scale: {scale.type()}, t: {t.type()}"
+            )
+            raise e
+
         shift = torch.einsum('nd,ndi->ni', shift, t)
 
         return shift, scale

@@ -28,7 +28,7 @@ skip_repr_evaluation: True
 
 # Intervention Parameters
 intervention_freq: 1
-intervention_batch_size: 2
+intervention_batch_size: 64
 intervention_policies:
     - "intcem_policy"
     - "optimal_greedy_no_prior"

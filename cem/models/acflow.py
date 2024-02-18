@@ -35,8 +35,6 @@ class ACFlow(pl.LightningModule):
         B = x.shape[0]
         d = self.n_concepts
         N = self.n_tasks
-        import pdb
-        pdb.set_trace()
         x = torch.tile(torch.unsqueeze(x, dim = 1), [1, N, 1])
         x = torch.reshape(x, [B * N, d])
         b = torch.tile(torch.unsqueeze(b, dim = 1), [1, N, 1])

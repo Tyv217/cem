@@ -32,8 +32,6 @@ class ACFlow(pl.LightningModule):
         self.float_type = float_type
 
     def flow_forward(self, x, b, m, y = None, forward = True, task = "classify"):
-        import pdb
-        pdb.set_trace()
         B = x.shape[0]
         d = self.n_concepts
         N = self.n_tasks
@@ -85,6 +83,8 @@ class ACFlow(pl.LightningModule):
 
         # sample p(x_u | x_o, y)
         if y is not None:
+            import pdb
+            pdb.set_trace()
             cond_sam = self.flow_forward(x, b, m, y, forward = False)
         else:
             cond_sam = None

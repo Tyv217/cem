@@ -286,7 +286,7 @@ def generate_data(
     )
 
     x_sample = next(iter(train_dl))[0]
-    n_concepts = x_sample.shape[0] * (1 if len(x_sample.shape) < 2 else x_sample.shape[1])
+    n_concepts = x_sample.shape[1] * (1 if len(x_sample.shape) < 2 else x_sample.shape[2])
 
     if not output_dataset_vars:
         return train_dl, val_dl, test_dl, None

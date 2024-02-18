@@ -204,7 +204,7 @@ class CooP(InterventionPolicy):
 
                     expected_change += (
                         prob * new_prob_distr[
-                            torch.eye(new_prob_distr.shape[-1])[pred_class].type(
+                            torch.eye(new_prob_distr.shape[-1]).to(new_prob_distr.device)[pred_class].type(
                                 torch.bool
                             )
                         ]
@@ -712,7 +712,7 @@ class CompetenceCooPEntropy(CooP):
                 )
                 expected_new_entropy += (
                     prob * new_class_probs[
-                        torch.eye(new_class_probs.shape[-1])[pred_class].type(
+                        torch.eye(new_class_probs.shape[-1]).to(new_class_probs.device)[pred_class].type(
                             torch.bool
                         )
                     ]

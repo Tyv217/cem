@@ -37,7 +37,7 @@ from experiment_utils import (
 
 # Helper class to apply transformations to a dataset
 def transform_dataloader(dataloader, n_tasks):
-    dataset = ACFlowTransformDataset(dataloader.dataset, n_tasks)
+    dataset = ACFlowTransformDataset(dataloader.dataset, n_tasks, use_concept = True)
     return torch.utils.data.DataLoader(dataset, batch_size = dataloader.batch_size, shuffle = isinstance(dataloader.sampler, RandomSampler), num_workers = dataloader.num_workers)
 
 ################################################################################

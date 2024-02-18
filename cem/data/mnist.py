@@ -295,5 +295,5 @@ def generate_data(
         val_dl,
         test_dl,
         None,
-        (num_concepts, n_tasks, concept_group_map)
+        (n_concepts, n_tasks, concept_group_map)
     )

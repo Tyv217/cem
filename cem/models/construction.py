@@ -3,6 +3,7 @@ import numpy as np
 import os
 import pytorch_lightning as pl
 import torch
+import logging
 
 from torchvision.models import resnet18, resnet34, resnet50, densenet121
 
@@ -556,6 +557,10 @@ def load_trained_model(
             output_interventions=output_interventions,
         )
         model.load_state_dict(torch.load(model_saved_path))
+        
+        logging.debug(
+            f"Loading trained model from {model_saved_path}"
+        )
         trainer = pl.Trainer(
             accelerator=accelerator,
             devices=devices,
@@ -645,4 +650,7 @@ def load_trained_model(
         )
 
     model.load_state_dict(torch.load(model_saved_path))
+    logging.debug(
+        f"Loading trained model from {model_saved_path}"
+    )
     return model

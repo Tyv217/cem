@@ -390,10 +390,13 @@ def intervene_in_cbm(
             f = io.StringIO()
             with redirect_stdout(f):
                 start_time = time.time()
-                test_batch_results = trainer.predict(
-                    model,
-                    test_dl,
-                )
+                try:
+                    test_batch_results = trainer.predict(
+                        model,
+                        test_dl,
+                    )
+                except:
+                    raise ValueError(f"Failed to intervene with {num_groups_intervened} groups while restoring checkpoint from {trainer.ckpt_path}")
         coeff = (num_groups_intervened - prev_num_groups_intervened)
         time_diff = time.time() - start_time
         avg_times.append(
@@ -622,11 +625,14 @@ def fine_tune_coop(
                         include_prior=include_prior,
                     )
                     with redirect_stdout(f):
-                        [test_results] = trainer.test(
-                            cbm,
-                            val_dl,
-                            verbose=False,
-                        )
+                        try:
+                            [test_results] = trainer.test(
+                                cbm,
+                                val_dl,
+                                verbose=False,
+                            )
+                        except:
+                            raise ValueError(f"Failed to intervene with {num_groups_intervened} groups while restoring checkpoint from {trainer.ckpt_path}")
                     intervention_accs.append(test_results['test_y_accuracy'])
                 print("\tValidation accuracies are:", intervention_accs)
                 grid_search_results.append((used_params, intervention_accs))

@@ -157,7 +157,10 @@ class ACFlowConceptBottleneckModel(ConceptBottleneckModel):
         self.concept_rank_model = torch.nn.Sequential(*layers)
         
         if flow_model_config.get("save_path", None) is not None:
-            self.acflow_model = ACFlow.load_from_checkpoint(checkpoint_path = flow_model_config['save_path'])
+            try:
+                self.acflow_model = ACFlow.load_from_checkpoint(checkpoint_path = flow_model_config['save_path'])
+            except:
+                raise ValueError(f"ACFlow model checkpoint at {flow_model_config['save_path']} incorrect / not found")
             self.train_flow_model = False
         else:
             self.acflow_model = ACFlow(

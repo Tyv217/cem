@@ -46,7 +46,7 @@ def execute_and_save(
     p.join()
     if p.exitcode:
         raise ValueError(
-            f'Subprocess failed!'
+            f'Subprocess of saving to {output_filepath} failed!'
         )
     p.kill()
     return joblib.load(output_filepath)

@@ -96,6 +96,8 @@ def load_mnist(
         download=True,
     )
 
+    
+
 
     x_train = []
     y_train = []

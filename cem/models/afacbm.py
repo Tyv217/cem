@@ -159,6 +159,9 @@ class ACFlowConceptBottleneckModel(ConceptBottleneckModel):
         if flow_model_config.get("save_path", None) is not None:
             try:
                 self.acflow_model = ACFlow.load_from_checkpoint(checkpoint_path = flow_model_config['save_path'])
+                logging.debug(
+                    f"Loading AC Flow model from {flow_model_config['save_path']} to be used in CEM training"
+                )
             except:
                 raise ValueError(f"ACFlow model checkpoint at {flow_model_config['save_path']} incorrect / not found")
             self.train_flow_model = False
@@ -177,6 +180,9 @@ class ACFlowConceptBottleneckModel(ConceptBottleneckModel):
                 n_components = flow_model_config['n_components']
             )
             self.train_flow_model = True
+            logging.debug(
+                f"Training AC Flow model simultaneously with CEM model."
+            )
 
         self.flow_model_nll_ratio = flow_model_nll_ratio
         self.flow_model_weight = flow_model_weight

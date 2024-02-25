@@ -243,28 +243,7 @@ def main(
                         old_results = joblib.load(f)
 
                 if "ACFlow" in run_config["architecture"] and experiment_config['shared_params'].get("separate_flow_model_training", False):    
-                    train_dl_flow = transform_dataloader(train_dl, n_tasks)
-                    val_dl_flow = transform_dataloader(val_dl, n_tasks)
-                    test_dl_flow = transform_dataloader(test_dl, n_tasks)
-                    checkpoint_callback = ModelCheckpoint(
-                        monitor='val_loss',    # Monitor validation loss
-                        save_top_k=1,          # Save the best model
-                        mode='min',            # Minimize the monitored quantity
-                        dirpath = result_dir,
-                        filename=f"acflow_model_trial_{split}"  # Name of the checkpoint file
-                    )
-                    experiment_config['shared_params']['flow_model_config']['save_path'] = result_dir + "" if result_dir[-1] == "/" else "/"  + f"acflow_model_trial_{split}.ckpt"
-
-                    trainer = pl.Trainer(
-                        accelerator=accelerator,
-                        devices=devices,
-                        max_epochs=experiment_config['shared_params'].get('max_epochs', 500),
-                        logger=False,
-                        callbacks = [checkpoint_callback]
-                    )
-
-
-                    model = ACFlow(
+                    acflow_model = ACFlow(
                         n_concepts = n_concepts, 
                         n_tasks = n_tasks,
                         layer_cfg = experiment_config['shared_params']['flow_model_config']['layer_cfg'], 
@@ -284,15 +263,57 @@ def main(
                         lambda_nll = 1
                     )
 
-                    logging.debug(
-                        f"Starting model training..."
-                        f"Transformations: {experiment_config['shared_params']['flow_model_config']['transformations']}"
+                    current_rerun = determine_rerun(
+                        config=run_config,
+                        rerun=rerun,
+                        split=split,
+                        full_run_name=full_run_name,
                     )
+                    
+                    if not current_rerun:
+                        try:
+                            logging.debug(
+                                f"Found AC Flow model saved in {experiment_config['shared_params']['flow_model_config']['save_path']}"
+                            )
+                            acflow_model = ACFlow.load_from_checkpoint(checkpoint_path = experiment_config['shared_params']['flow_model_config']['save_path'])
+                        except:
+                            logging.warning(
+                                f"Model at {experiment_config['shared_params']['flow_model_config']['save_path']} not found. Defaulting to rerunning."
+                            )
+                            current_rerun = True
+                    if current_rerun:
+                        logging.warning(
+                            f"We will rerun model {full_run_name}_split_{split} "
+                            f"as requested by the config"
+                        )
+                        logging.debug(
+                            f"Starting AC Flow Model training...\n"
+                            f"\tTransformations: {experiment_config['shared_params']['flow_model_config']['transformations']}\n"
+                            f"\tSave path: {experiment_config['shared_params']['flow_model_config']['save_path']}"
+                        )
+                        train_dl_flow = transform_dataloader(train_dl, n_tasks)
+                        val_dl_flow = transform_dataloader(val_dl, n_tasks)
+                        test_dl_flow = transform_dataloader(test_dl, n_tasks)
+                        checkpoint_callback = ModelCheckpoint(
+                            monitor='val_loss',    # Monitor validation loss
+                            save_top_k=1,          # Save the best model
+                            mode='min',            # Minimize the monitored quantity
+                            dirpath = result_dir,
+                            filename=f"acflow_model_trial_{split}"  # Name of the checkpoint file
+                        )
+                        experiment_config['shared_params']['flow_model_config']['save_path'] = result_dir + "" if result_dir[-1] == "/" else "/"  + f"acflow_model_trial_{split}.ckpt"
+                        trainer = pl.Trainer(
+                            accelerator=accelerator,
+                            devices=devices,
+                            max_epochs=experiment_config['shared_params']['flow_model_config'].get('max_epochs', 100),
+                            logger=False,
+                            callbacks = [checkpoint_callback]
+                        )
+                        trainer.fit(acflow_model, train_dl_flow, val_dl_flow)
 
-                    trainer.fit(model, train_dl_flow, val_dl_flow)
-                    model.freeze()
+                    acflow_model.freeze()
 
-                    [test_results] = trainer.test(model, test_dl_flow)
+                    [test_results] = trainer.test(acflow_model, test_dl_flow)
 
                     try:
                         acc = test_results['accuracy']

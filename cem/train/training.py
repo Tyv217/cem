@@ -1088,6 +1088,93 @@ def train_independent_and_sequential_model(
         seq_test_results = None
     return ind_model, ind_test_results, seq_model, seq_test_results
 
+def train_ac_model(
+    n_concepts,
+    n_tasks,
+    ac_model_config,
+    accelerator,
+    devices,
+    current_rerun
+):
+    if(ac_model_config['architecture'] == 'acflow'):
+        ac_model = ACFlow(
+            n_concepts = n_concepts, 
+            n_tasks = n_tasks,
+            layer_cfg = ac_model_config['layer_cfg'], 
+            affine_hids = ac_model_config['affine_hids'], 
+            linear_rank = ac_model_config['linear_rank'],
+            linear_hids = ac_model_config['linear_hids'], 
+            transformations = ac_model_config['transformations'], 
+            optimizer = ac_model_config['optimizer'], 
+            learning_rate = ac_model_config['learning_rate'], 
+            weight_decay = ac_model_config['decay_rate'], 
+            momentum = ac_model_config.get('momentum', 0.9), 
+            prior_units = ac_model_config['prior_units'], 
+            prior_layers = ac_model_config['prior_layers'], 
+            prior_hids = ac_model_config['prior_hids'], 
+            n_components = ac_model_config['n_components'], 
+            lambda_xent = 1, 
+            lambda_nll = 1
+        )
+
+        if not current_rerun:
+            try:
+                logging.debug(
+                    f"Found AC Flow model saved in {ac_model_config['save_path']}"
+                )
+                acflow_model = ACFlow.load_from_checkpoint(checkpoint_path = ac_model_config['save_path'])
+            except:
+                logging.warning(
+                    f"Model at {ac_model_config['save_path']} not found. Defaulting to rerunning."
+                )
+                current_rerun = True
+        if current_rerun:
+            logging.warning(
+                f"We will rerun model {full_run_name}_split_{split} "
+                f"as requested by the config"
+            )
+            logging.debug(
+                f"Starting AC Flow Model training...\n"
+                f"\tTransformations: {ac_model_config['transformations']}\n"
+                f"\tSave path: {ac_model_config['save_path']}"
+            )
+    train_dl = transform_dataloader(train_dl, n_tasks)
+    val_dl = transform_dataloader(val_dl, n_tasks)
+    test_dl = transform_dataloader(test_dl, n_tasks)
+    checkpoint_callback = ModelCheckpoint(
+        monitor='val_loss',    # Monitor validation loss
+        save_top_k=1,          # Save the best model
+        mode='min',            # Minimize the monitored quantity
+        dirpath = result_dir,
+        filename=f"acflow_model_trial_{split}"  # Name of the checkpoint file
+    )
+    ac_model_config['save_path'] = result_dir + "" if result_dir[-1] == "/" else "/"  + f"acflow_model_trial_{split}.ckpt"
+    trainer = pl.Trainer(
+        accelerator=accelerator,
+        devices=devices,
+        max_epochs=ac_model_config.get('max_epochs', 100),
+        logger=False,
+        callbacks = [checkpoint_callback]
+    )
+    trainer.fit(ac_model, train_dl, val_dl)
+
+    ac_model.freeze()
+
+    [test_results] = trainer.test(ac_model, test_dl)
+
+    try:
+        acc = test_results['accuracy']
+        nll = test_results['nll']
+    except:
+        logging.debug(
+            f"Test results for AC model:"
+            f"\n\t{test_results}"
+        )
+    logging.debug(
+        f"\tTest Accuracy for AC model is {acc}\n"
+        f"\tNLL is {nll}\n"
+    )
+
 
 def update_statistics(results, config, model, test_results, save_model=True):
     full_run_name = f"{config['architecture']}{config.get('extra_name', '')}"

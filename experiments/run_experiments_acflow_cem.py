@@ -242,7 +242,7 @@ def main(
                     with open(current_results_path, 'rb') as f:
                         old_results = joblib.load(f)
 
-                if "ACFlow" in run_config["architecture"] and experiment_config['shared_params'].get("separate_flow_model_training", False):    
+                if "AC" in run_config["architecture"] and experiment_config['shared_params'].get("separate_ac_model_training", False):    
                     acflow_model = ACFlow(
                         n_concepts = n_concepts, 
                         n_tasks = n_tasks,
@@ -327,6 +327,7 @@ def main(
                         f"\tTest Accuracy for AC Flow model is {acc}\n"
                         f"\tNLL is {nll}\n"
                     )
+                    
 
 
                 if run_config["architecture"] in [

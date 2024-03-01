@@ -6,7 +6,6 @@ import gymnasium as gym
 from gymnasium import spaces
 
 class AFAEnv(gym.Env):
-    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
     def __init__(self, cbm, n_concepts, n_tasks, seed, use_groups, concept_group_map = None):
 

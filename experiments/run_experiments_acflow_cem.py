@@ -238,12 +238,12 @@ def main(
                         f"We will rerun model {full_run_name}_split_{split} "
                         f"as requested by the config"
                     )
-                if (not current_rerun) and os.path.exists(current_results_path):
+                if (not current_rerun) and os.patah.exists(current_results_path):
                     with open(current_results_path, 'rb') as f:
                         old_results = joblib.load(f)
 
                 if "AC" in run_config["architecture"] and experiment_config['shared_params'].get("separate_ac_model_training", False):    
-
+                    full_run_name = f"acflow_model_split_{split}"
                     current_rerun = determine_rerun(
                         config=run_config,
                         rerun=rerun,

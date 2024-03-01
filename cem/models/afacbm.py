@@ -160,8 +160,10 @@ class ACFlowConceptBottleneckModel(ConceptBottleneckModel):
             try:
                 self.acflow_model = ACFlow.load_from_checkpoint(checkpoint_path = flow_model_config['save_path'])
                 logging.debug(
-                    f"Loading AC Flow model from {flow_model_config['save_path']} to be used in CEM training"
+                    f"AC CBM loaded AC model checkpoint from {flow_model_config['save_path']}"
+                    f"AC model trained with {self.acflow_model.current_epoch} epochs"
                 )
+                self.train_flow_model = False
             except:
                 raise ValueError(f"ACFlow model checkpoint at {flow_model_config['save_path']} incorrect / not found")
             self.train_flow_model = False
@@ -1181,7 +1183,15 @@ class ACFlowConceptEmbeddingModel(
         self.concept_rank_model = torch.nn.Sequential(*layers)
 
         if flow_model_config.get("save_path", None) is not None:
-            self.acflow_model = ACFlow.load_from_checkpoint(checkpoint_path = flow_model_config['save_path'])
+            try:
+                self.acflow_model = ACFlow.load_from_checkpoint(checkpoint_path = flow_model_config['save_path'])
+                logging.debug(
+                    f"AC CBM loaded AC model checkpoint from {flow_model_config['save_path']}"
+                    f"AC model trained with {self.acflow_model.current_epoch} epochs"
+                )
+                self.train_flow_model = False
+            except:
+                raise ValueError(f"ACFlow model checkpoint at {flow_model_config['save_path']} incorrect / not found")
             self.train_flow_model = False
         else:
             self.acflow_model = ACFlow(

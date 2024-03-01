@@ -58,7 +58,9 @@ shared_params:
     momentum: 0.9
     sigmoidal_prob: False
     training_intervention_prob: 0.25
-    flow_model_config:
+    separate_ac_model_training: False
+    ac_model_config:
+      architecture: flow
       max_epochs: 100
       transformations: [AF, TL, TL, TL, TL, AF]
       layer_cfg: [LR, CP2]

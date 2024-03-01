@@ -819,7 +819,7 @@ class ACFlowTransformDataset(Dataset):
         y = y.to(torch.int64)
         return {'x': x, 'b': b, 'm': m, 'y': y}
 
-    def transform_batch(x, y):
+    def transform_batch(x, y, intervention_style = False):
         B = x.shape[0]
         d = x.shape[-1]
         b = np.zeros([B, d], dtype=np.float32)
@@ -843,3 +843,9 @@ class ACFlowTransformDataset(Dataset):
 
     def __len__(self):
         return len(self.dataset)
+
+
+# Helper class to apply transformations to a dataset
+def transform_dataloader(dataloader, n_tasks):
+    dataset = ACFlowTransformDataset(dataloader.dataset, n_tasks, use_concepts = False)
+    return torch.utils.data.DataLoader(dataset, batch_size = dataloader.batch_size, shuffle = isinstance(dataloader.sampler, RandomSampler), num_workers = dataloader.num_workers)

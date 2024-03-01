@@ -25,7 +25,7 @@ from cem.models.construction import (
     construct_sequential_models,
     load_trained_model,
 )
-
+from cem.models.acflow import ACFlow
 
 
 ################################################################################
@@ -1092,6 +1092,11 @@ def train_ac_model(
     n_concepts,
     n_tasks,
     ac_model_config,
+    train_dl,
+    val_dl,
+    test_dl,
+    split,
+    result_dir,
     accelerator,
     devices,
     current_rerun
@@ -1122,7 +1127,7 @@ def train_ac_model(
                 logging.debug(
                     f"Found AC Flow model saved in {ac_model_config['save_path']}"
                 )
-                acflow_model = ACFlow.load_from_checkpoint(checkpoint_path = ac_model_config['save_path'])
+                ac_model = ACFlow.load_from_checkpoint(checkpoint_path = ac_model_config['save_path'])
             except:
                 logging.warning(
                     f"Model at {ac_model_config['save_path']} not found. Defaulting to rerunning."

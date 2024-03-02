@@ -202,8 +202,8 @@ def construct_model(
             "legacy_mode": config.get("legacy_mode", False),
             "include_certainty": config.get("include_certainty", True),
         }
-    elif config["architecture"] in ["ACFlowConceptBottleneckModel", "ACFCBM"]:
-        model_cls = models_afacbm.ACFlowConceptBottleneckModel
+    elif config["architecture"] in ["ACConceptBottleneckModel", "ACFCBM"]:
+        model_cls = models_afacbm.ACConceptBottleneckModel
         extra_params = {
             "bool": config["bool"],
             "extra_dims": config["extra_dims"],
@@ -219,7 +219,7 @@ def construct_model(
             "x2c_model": x2c_model,
             "c2y_model": c2y_model,
             "c2y_layers": config.get("c2y_layers", []),
-            "flow_model_config": config.get("flow_model_config", {}),
+            "ac_model_config": config.get("ac_model_config", {}),
             "flow_model_nll_ratio": config.get("flow_model_nll_ratio", 0.5),
             "flow_model_weight": config.get("flow_model_weight", 1),
             "flow_model_rollouts": config.get("flow_model_rollouts", 1),
@@ -274,8 +274,8 @@ def construct_model(
             "legacy_mode": config.get("legacy_mode", False),
             "include_certainty": config.get("include_certainty", True),
         }
-    elif config["architecture"] in ["ACFlowConceptEmbeddingModel", "ACFCEM"]:
-        model_cls = models_afacbm.ACFlowConceptEmbeddingModel
+    elif config["architecture"] in ["ACConceptEmbeddingModel", "ACFCEM"]:
+        model_cls = models_afacbm.ACConceptEmbeddingModel
         extra_params = {
             "emb_size": config["emb_size"],
             "intervention_policy": intervention_policy,
@@ -290,7 +290,7 @@ def construct_model(
             "c2y_model": c2y_model,
             "c2y_layers": config.get("c2y_layers", []),
             
-            "flow_model_config": config.get("flow_model_config", {}),
+            "ac_model_config": config.get("ac_model_config", {}),
             "flow_model_nll_ratio": config.get("flow_model_nll_ratio", 0.5),
             "flow_model_weight": config.get("flow_model_weight", 1),
             "flow_model_rollouts": config.get("flow_model_rollouts", 1),

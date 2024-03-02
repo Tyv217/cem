@@ -14,7 +14,6 @@ import pytorch_lightning as pl
 from datetime import datetime
 from pathlib import Path
 from pytorch_lightning import seed_everything
-from pytorch_lightning.callbacks import ModelCheckpoint
 
 from cem.data.synthetic_loaders import (
     get_synthetic_data_loader, get_synthetic_num_features
@@ -27,19 +26,12 @@ import cem.data.mnist_add as mnist_data_module
 import cem.interventions.utils as intervention_utils
 import cem.train.training as training
 import cem.train.utils as utils
-from cem.models.acflow import ACFlow, ACFlowTransformDataset
 
 from experiment_utils import (
     evaluate_expressions, determine_rerun,
     generate_hyperatemer_configs, filter_results,
     print_table, get_mnist_extractor_arch
 )
-
-# Helper class to apply transformations to a dataset
-def transform_dataloader(dataloader, n_tasks):
-    dataset = ACFlowTransformDataset(dataloader.dataset, n_tasks, use_concept = True)
-    return torch.utils.data.DataLoader(dataset, batch_size = dataloader.batch_size, shuffle = isinstance(dataloader.sampler, RandomSampler), num_workers = dataloader.num_workers)
-
 ################################################################################
 ## MAIN FUNCTION
 ################################################################################
@@ -238,12 +230,12 @@ def main(
                         f"We will rerun model {full_run_name}_split_{split} "
                         f"as requested by the config"
                     )
-                if (not current_rerun) and os.patah.exists(current_results_path):
+                if (not current_rerun) and os.path.exists(current_results_path):
                     with open(current_results_path, 'rb') as f:
                         old_results = joblib.load(f)
 
                 if "AC" in run_config["architecture"] and experiment_config['shared_params'].get("separate_ac_model_training", False):    
-                    full_run_name = f"acflow_model_split_{split}"
+                    full_run_name = f"ac_{experiment_config['shared_params']['ac_model_config']['architecture']}_model_split_{split}"
                     current_rerun = determine_rerun(
                         config=run_config,
                         rerun=rerun,

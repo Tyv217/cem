@@ -34,6 +34,7 @@ def transform_dataloader(dataloader, n_tasks):
 
 def main(
     data_module,
+    result_dir,
     experiment_config,
     num_workers=8,
     accelerator="auto",
@@ -206,7 +207,7 @@ def main(
             data = tensor_to_image(torch.reshape(data['x'].cpu()), image_size)
             inpainted = tensor_to_image(torch.reshape(data['x'].cpu() * data['b'].cpu()), image_size)
             result = tensor_to_image(torch.reshape(result.cpu()), image_size)
-            data.save(f"results/data_{i}.png")
+            data.save(f"results/mnist_inpaint/data_{i}.png")
             inpainted.save(f"results/inpainted_{i}.png")
             result.save(f"results/result_{i}.png")
 
@@ -330,6 +331,10 @@ if __name__ == '__main__':
 
     main(
         data_module=data_module,
+        result_dir=(
+            args.output_dir if args.output_dir
+            else loaded_config['results_dir']
+        ),
         accelerator=(
             "gpu" if (not args.force_cpu) and (torch.cuda.is_available())
             else "cpu"

@@ -9,6 +9,7 @@ import torch
 
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from pytoch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger
 from scipy.special import expit
 from sklearn.metrics import accuracy_score
@@ -25,7 +26,7 @@ from cem.models.construction import (
     construct_sequential_models,
     load_trained_model,
 )
-from cem.models.acflow import ACFlow
+from cem.models.acflow import ACFlow, transform_dataloader
 
 
 ################################################################################
@@ -1292,7 +1293,7 @@ def train_ac_model(
         save_top_k=1,          # Save the best model
         mode='min',            # Minimize the monitored quantity
         dirpath = result_dir,
-        filename=f"acflow_model_trial_{split}"  # Name of the checkpoint file
+        filename=f"ac_{architecture}_model_trial_{split}"  # Name of the checkpoint file
     )
     trainer = pl.Trainer(
         accelerator=accelerator,

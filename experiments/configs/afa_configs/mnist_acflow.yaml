@@ -1,5 +1,5 @@
 trials: 1
-results_dir: results/mnist_add_new
+results_dir: results/mnist_inpaint
 dataset: mnist
 num_workers: 8
 batch_size: 64

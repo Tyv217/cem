@@ -771,7 +771,7 @@ def mixture_mean_dim(params_dim, n_components, base_distribution='gaussian'):
 
     return torch.sum(weights * means, dim=1, keepdims=True)
 
-class ACFlowTransformDataset(Dataset):
+class ACTransformDataset(Dataset):
     def __init__(self, dataset, n_tasks, use_concepts = False, train = True):
         self.dataset = dataset
         self.n_tasks = n_tasks
@@ -847,5 +847,5 @@ class ACFlowTransformDataset(Dataset):
 
 # Helper class to apply transformations to a dataset
 def transform_dataloader(dataloader, n_tasks):
-    dataset = ACFlowTransformDataset(dataloader.dataset, n_tasks, use_concepts = False)
+    dataset = ACTransformDataset(dataloader.dataset, n_tasks, use_concepts = False)
     return torch.utils.data.DataLoader(dataset, batch_size = dataloader.batch_size, shuffle = isinstance(dataloader.sampler, RandomSampler), num_workers = dataloader.num_workers)

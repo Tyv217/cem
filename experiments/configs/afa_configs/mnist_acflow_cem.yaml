@@ -58,7 +58,7 @@ shared_params:
     momentum: 0.9
     sigmoidal_prob: False
     training_intervention_prob: 0.25
-    separate_ac_model_training: False
+    separate_ac_model_training: True
     ac_model_config:
       architecture: flow
       max_epochs: 100
@@ -86,7 +86,7 @@ shared_params:
     flow_model_weight: 2
     flow_model_rollouts: 1
 runs:
-  - architecture: "ACFlowConceptEmbeddingModel"
+  - architecture: "ACConceptEmbeddingModel"
     extra_name: "Retry_intervention_weight_{intervention_weight}_horizon_rate_{horizon_rate}_intervention_discount_{intervention_discount}_task_discount_{intervention_task_discount}"
     training_intervention_prob: 0.25
     horizon_binary_representation:  True

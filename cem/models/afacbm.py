@@ -9,10 +9,10 @@ from torchvision.models import resnet50
 
 from cem.models.cbm import ConceptBottleneckModel, compute_accuracy
 from cem.models.cem import ConceptEmbeddingModel
-from cem.models.acflow import ACFlow, ACFlowTransformDataset
+from cem.models.acflow import ACFlow, ACTransformDataset
 import cem.train.utils as utils
 
-class ACFlowConceptBottleneckModel(ConceptBottleneckModel):
+class ACConceptBottleneckModel(ConceptBottleneckModel):
     def __init__(
         self,
         n_concepts,
@@ -31,10 +31,10 @@ class ACFlowConceptBottleneckModel(ConceptBottleneckModel):
         c_extractor_arch=utils.wrap_pretrained_model(resnet50),
         c2y_model=None,
         c2y_layers=None,
-        flow_model_config = {},
-        flow_model_nll_ratio = 0.5,
-        flow_model_weight = 2,
-        flow_model_rollouts = 1,
+        ac_model_config = {},
+        ac_model_nll_ratio = 0.5,
+        ac_model_weight = 2,
+        ac_model_rollouts = 1,
 
         optimizer="adam",
         momentum=0.9,
@@ -99,7 +99,7 @@ class ACFlowConceptBottleneckModel(ConceptBottleneckModel):
         self.concept_map = concept_map
         if len(concept_map) == n_concepts:
             use_concept_groups = False
-        super(ACFlowConceptBottleneckModel, self).__init__(
+        super(ACConceptBottleneckModel, self).__init__(
             n_concepts=n_concepts,
             n_tasks=n_tasks,
             concept_loss_weight=concept_loss_weight,
@@ -156,39 +156,39 @@ class ACFlowConceptBottleneckModel(ConceptBottleneckModel):
                 layers.append(torch.nn.LeakyReLU())
         self.concept_rank_model = torch.nn.Sequential(*layers)
         
-        if flow_model_config.get("save_path", None) is not None:
+        if ac_model_config.get("save_path", None) is not None:
             try:
-                self.acflow_model = ACFlow.load_from_checkpoint(checkpoint_path = flow_model_config['save_path'])
+                self.ac_model = ACFlow.load_from_checkpoint(checkpoint_path = ac_model_config['save_path'])
                 logging.debug(
-                    f"AC CBM loaded AC model checkpoint from {flow_model_config['save_path']}"
-                    f"AC model trained with {self.acflow_model.current_epoch} epochs"
+                    f"AC CBM loaded AC model checkpoint from {ac_model_config['save_path']}"
+                    f"AC model trained with {self.ac_model.current_epoch} epochs"
                 )
-                self.train_flow_model = False
+                self.train_ac_model = False
             except:
-                raise ValueError(f"ACFlow model checkpoint at {flow_model_config['save_path']} incorrect / not found")
-            self.train_flow_model = False
+                raise ValueError(f"ACFlow model checkpoint at {ac_model_config['save_path']} incorrect / not found")
+            self.train_ac_model = False
         else:
-            self.acflow_model = ACFlow(
+            self.ac_model = ACFlow(
                 n_concepts = n_concepts,
                 n_tasks = n_tasks,
-                layer_cfg = flow_model_config['layer_cfg'],
-                affine_hids = flow_model_config['affine_hids'],
-                linear_rank = flow_model_config['linear_rank'],
-                linear_hids = flow_model_config['linear_hids'],
-                transformations = flow_model_config['transformations'],
-                prior_units = flow_model_config['prior_units'],
-                prior_layers = flow_model_config['prior_layers'],
-                prior_hids = flow_model_config['prior_hids'],
-                n_components = flow_model_config['n_components']
+                layer_cfg = ac_model_config['layer_cfg'],
+                affine_hids = ac_model_config['affine_hids'],
+                linear_rank = ac_model_config['linear_rank'],
+                linear_hids = ac_model_config['linear_hids'],
+                transformations = ac_model_config['transformations'],
+                prior_units = ac_model_config['prior_units'],
+                prior_layers = ac_model_config['prior_layers'],
+                prior_hids = ac_model_config['prior_hids'],
+                n_components = ac_model_config['n_components']
             )
-            self.train_flow_model = True
+            self.train_ac_model = True
             logging.debug(
                 f"Training AC Flow model simultaneously with CEM model."
             )
 
-        self.flow_model_nll_ratio = flow_model_nll_ratio
-        self.flow_model_weight = flow_model_weight
-        self.flow_model_rollouts = flow_model_rollouts
+        self.ac_model_nll_ratio = ac_model_nll_ratio
+        self.ac_model_weight = ac_model_weight
+        self.ac_model_rollouts = ac_model_rollouts
 
         self.intervention_discount = intervention_discount
         self.intervention_task_discount = intervention_task_discount
@@ -212,7 +212,7 @@ class ACFlowConceptBottleneckModel(ConceptBottleneckModel):
         self.intervention_weight = intervention_weight
         self.average_trajectory = average_trajectory
         self.loss_interventions = torch.nn.CrossEntropyLoss()
-        self.flow_model_xent_loss = torch.nn.CrossEntropyLoss(weight=task_class_weights) if n_tasks > 1 else torch.nn.BCEWithLogitsLoss(
+        self.ac_model_xent_loss = torch.nn.CrossEntropyLoss(weight=task_class_weights) if n_tasks > 1 else torch.nn.BCEWithLogitsLoss(
             pos_weight=task_class_weights 
         )
         self.max_horizon = max_horizon
@@ -345,7 +345,7 @@ class ACFlowConceptBottleneckModel(ConceptBottleneckModel):
             for b in range(used_groups.shape[0]):
                 for concept in concept_map_vals[int(unintervened_groups[b][i])]:
                     missing[b][concept] = 1.
-            logpu, logpo, _, _, _ = self.acflow_model(x = concepts, b = mask, m = missing, y = None)
+            logpu, logpo, _, _, _ = self.ac_model(x = concepts, b = mask, m = missing, y = None)
             pu = torch.logsumexp(logpu, dim = -1)
             po = torch.logsumexp(logpo, dim = -1)
             batches = torch.arange(used_groups.shape[0])
@@ -453,30 +453,30 @@ class ACFlowConceptBottleneckModel(ConceptBottleneckModel):
             task_loss = 0.0
             task_loss_scalar = 0.0
 
-        flow_model_loss = 0.0
-        flow_model_loss_scalar = 0.0
+        ac_model_loss = 0.0
+        ac_model_loss_scalar = 0.0
         # Do some rollouts for flow model
-        if self.flow_model_weight != 0 and train and self.train_flow_model:
+        if self.ac_model_weight != 0 and train and self.train_ac_model:
             if self.rollout_aneal_rate != 1:
-                flow_model_rollouts = int(round(
-                    self.flow_model_rollouts * (
+                ac_model_rollouts = int(round(
+                    self.ac_model_rollouts * (
                         self.current_aneal_rate.detach().cpu().numpy()[0]
                     )
                 ))
             else:
-                flow_model_rollouts = self.flow_model_rollouts
+                ac_model_rollouts = self.ac_model_rollouts
 
-            for _ in range(flow_model_rollouts):
-                x_flow, b_flow, m_flow, y_flow = ACFlowTransformDataset.transform_batch(c, y)
-                logpu, logpo, _, _, _ = self.acflow_model(x_flow, b_flow, m_flow, y_flow)
+            for _ in range(ac_model_rollouts):
+                x_ac, b_ac, m_ac, y_ac = ACTransformDataset.transform_batch(c, y)
+                logpu, logpo, _, _, _ = self.ac_model(x_ac, b_ac, m_ac, y_ac)
                 logits = logpu + logpo
                 loglikel = torch.logsumexp(logpu + logpo, dim = 1) - torch.logsumexp(logpo, dim = 1)
                 nll = torch.mean(-loglikel)
-                flow_model_loss += (1 - self.flow_model_nll_ratio) * self.flow_model_xent_loss(logits, y_flow) + self.flow_model_nll_ratio * nll
+                ac_model_loss += (1 - self.ac_model_nll_ratio) * self.ac_model_xent_loss(logits, y_ac) + self.ac_model_nll_ratio * nll
             
 
-            flow_model_loss = flow_model_loss / flow_model_rollouts
-            flow_model_loss_scalar = flow_model_loss.detach() * self.flow_model_weight
+            ac_model_loss = ac_model_loss / ac_model_rollouts
+            ac_model_loss_scalar = ac_model_loss.detach() * self.ac_model_weight
 
         intervention_task_loss = 0.0
 
@@ -965,7 +965,7 @@ class ACFlowConceptBottleneckModel(ConceptBottleneckModel):
         loss = (
             self.concept_loss_weight * concept_loss +
             self.intervention_weight * intervention_loss +
-            self.flow_model_weight * flow_model_loss +
+            self.ac_model_weight * ac_model_loss +
             self.task_loss_weight * task_loss +
             self.intervention_task_loss_weight * intervention_task_loss
         )
@@ -999,7 +999,7 @@ class ACFlowConceptBottleneckModel(ConceptBottleneckModel):
             "task_loss": task_loss_scalar,
             "intervention_task_loss": intervention_task_loss_scalar,
             "intervention_loss": intervention_loss_scalar,
-            "flow_model_loss": flow_model_loss_scalar,
+            "ac_model_loss": ac_model_loss_scalar,
             "loss": loss.detach() if not isinstance(loss, float) else loss,
             "avg_c_y_acc": (c_accuracy + y_accuracy) / 2,
             "horizon_limit": self.horizon_limit.detach().cpu().numpy()[0],
@@ -1031,9 +1031,9 @@ class ACFlowConceptBottleneckModel(ConceptBottleneckModel):
                 result[f'y_top_{top_k_val}_accuracy'] = y_top_k_accuracy
         return loss, result
 
-class ACFlowConceptEmbeddingModel(
+class ACConceptEmbeddingModel(
     ConceptEmbeddingModel,
-    ACFlowConceptBottleneckModel,
+    ACConceptBottleneckModel,
 ):
     def __init__(
         self,
@@ -1050,10 +1050,10 @@ class ACFlowConceptEmbeddingModel(
         c_extractor_arch=utils.wrap_pretrained_model(resnet50),
         output_latent=False,
 
-        flow_model_config = {},
-        flow_model_nll_ratio = 0.5,
-        flow_model_weight = 2,
-        flow_model_rollouts = 1,
+        ac_model_config = {},
+        ac_model_nll_ratio = 0.5,
+        ac_model_weight = 2,
+        ac_model_rollouts = 1,
 
         optimizer="adam",
         momentum=0.9,
@@ -1182,36 +1182,36 @@ class ACFlowConceptEmbeddingModel(
         self.units = units
         self.concept_rank_model = torch.nn.Sequential(*layers)
 
-        if flow_model_config.get("save_path", None) is not None:
+        if ac_model_config.get("save_path", None) is not None:
             try:
-                self.acflow_model = ACFlow.load_from_checkpoint(checkpoint_path = flow_model_config['save_path'])
+                self.ac_model = ACFlow.load_from_checkpoint(checkpoint_path = ac_model_config['save_path'])
                 logging.debug(
-                    f"AC CBM loaded AC model checkpoint from {flow_model_config['save_path']}"
-                    f"AC model trained with {self.acflow_model.current_epoch} epochs"
+                    f"AC CBM loaded AC model checkpoint from {ac_model_config['save_path']}"
+                    f"AC model trained with {self.ac_model.current_epoch} epochs"
                 )
-                self.train_flow_model = False
+                self.train_ac_model = False
             except:
-                raise ValueError(f"ACFlow model checkpoint at {flow_model_config['save_path']} incorrect / not found")
-            self.train_flow_model = False
+                raise ValueError(f"ACFlow model checkpoint at {ac_model_config['save_path']} incorrect / not found")
+            self.train_ac_model = False
         else:
-            self.acflow_model = ACFlow(
+            self.ac_model = ACFlow(
                 n_concepts = n_concepts,
                 n_tasks = n_tasks,
-                layer_cfg = flow_model_config['layer_cfg'],
-                affine_hids = flow_model_config['affine_hids'],
-                linear_rank = flow_model_config['linear_rank'],
-                linear_hids = flow_model_config['linear_hids'],
-                transformations = flow_model_config['transformations'],
-                prior_units = flow_model_config['prior_units'],
-                prior_layers = flow_model_config['prior_layers'],
-                prior_hids = flow_model_config['prior_hids'],
-                n_components = flow_model_config['n_components']
+                layer_cfg = ac_model_config['layer_cfg'],
+                affine_hids = ac_model_config['affine_hids'],
+                linear_rank = ac_model_config['linear_rank'],
+                linear_hids = ac_model_config['linear_hids'],
+                transformations = ac_model_config['transformations'],
+                prior_units = ac_model_config['prior_units'],
+                prior_layers = ac_model_config['prior_layers'],
+                prior_hids = ac_model_config['prior_hids'],
+                n_components = ac_model_config['n_components']
             )
-            self.train_flow_model = True
+            self.train_ac_model = True
 
-        self.flow_model_nll_ratio = flow_model_nll_ratio
-        self.flow_model_weight = flow_model_weight
-        self.flow_model_rollouts = flow_model_rollouts
+        self.ac_model_nll_ratio = ac_model_nll_ratio
+        self.ac_model_weight = ac_model_weight
+        self.ac_model_rollouts = ac_model_rollouts
 
         self.intervention_discount = intervention_discount
         self.intervention_task_discount = intervention_task_discount
@@ -1235,7 +1235,7 @@ class ACFlowConceptEmbeddingModel(
         self.intervention_weight = intervention_weight
         self.average_trajectory = average_trajectory
         self.loss_interventions = torch.nn.CrossEntropyLoss()
-        self.flow_model_xent_loss = torch.nn.CrossEntropyLoss()
+        self.ac_model_xent_loss = torch.nn.CrossEntropyLoss()
         self.max_horizon = max_horizon
         self.include_task_trajectory_loss = include_task_trajectory_loss
         self.horizon_binary_representation = horizon_binary_representation
@@ -1313,7 +1313,7 @@ class ACFlowConceptEmbeddingModel(
         horizon=1,
         train=False,
     ):
-        return ACFlowConceptBottleneckModel._prior_int_distribution(
+        return ACConceptBottleneckModel._prior_int_distribution(
             self=self,
             prob=prob,
             pos_embeddings=pos_embeddings,

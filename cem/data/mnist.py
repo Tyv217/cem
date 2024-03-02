@@ -7,6 +7,8 @@ import sklearn.model_selection
 import torch
 import torchvision
 
+from torchvision import transforms
+
 from pytorch_lightning import seed_everything
 
 def load_mnist(
@@ -56,6 +58,15 @@ def load_mnist(
         download=True,
     )
 
+    transformations = transforms.Compose([
+        transforms.ToPILImage,
+        transforms.Resize((7,7)),
+        transforms.ToTensor(),
+        transforms.Lambda(lambda x: (x > 0.5).int())
+    ])
+
+    ds_test.transform = transformations
+
     # Put all the images into a single np array for easy
     # manipulation
     x_test = []
@@ -63,7 +74,7 @@ def load_mnist(
 
     for x, y in ds_test:
         x_test.append(
-            (np.expand_dims(x, axis=0) > 127).astype(np.int32)
+            np.expand_dims(x, axis=0)
         )
         y_test.append(
             np.expand_dims(y, axis=0)
@@ -71,11 +82,17 @@ def load_mnist(
     x_test = np.concatenate(x_test, axis=0)
     y_test = np.concatenate(y_test, axis=0)
 
+    logging.debug(
+        f"Dataset sizes:"
+        f"\tx: {x_test.shape}"
+        f"\ty: {y_test.shape}"
+    )
+
+    raise ValueError("For debug")
+
     x_test = torch.FloatTensor(x_test)
-    if even_labels or (threshold_labels is not None):
-        y_test = torch.FloatTensor(y_test)
-    else:
-        y_test = torch.LongTensor(y_test)
+    
+    y_test = torch.LongTensor(y_test)
     
     test_data = torch.utils.data.TensorDataset(x_test, y_test)
 
@@ -96,15 +113,21 @@ def load_mnist(
         download=True,
     )
 
-    
+    transformations = transforms.Compose([
+        transforms.ToPILImage,
+        transforms.Resize((7,7)),
+        transforms.ToTensor(),
+        transforms.Lambda(lambda x: (x > 0.5).int())
+    ])
 
+    ds_train.transform = transformations
 
     x_train = []
     y_train = []
 
     for x, y in ds_train:
         x_train.append(
-            (np.expand_dims(x, axis=0) > 127).astype(np.int32)
+            np.expand_dims(x, axis=0)
         )
         y_train.append(
             np.expand_dims(y, axis=0)

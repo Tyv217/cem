@@ -26,7 +26,7 @@ from cem.models.construction import (
     construct_sequential_models,
     load_trained_model,
 )
-from cem.models.acflow import ACFlow, transform_dataloader
+from cem.models.acflow import ACFlow, ac_transform_dataloader
 
 
 ################################################################################
@@ -1285,9 +1285,9 @@ def train_ac_model(
             )
     else:
         raise ValueError(f"AC {architecture} model current not supported.")
-    train_dl = transform_dataloader(train_dl, n_tasks)
-    val_dl = transform_dataloader(val_dl, n_tasks)
-    test_dl = transform_dataloader(test_dl, n_tasks)
+    train_dl = ac_transform_dataloader(train_dl, n_tasks)
+    val_dl = ac_transform_dataloader(val_dl, n_tasks)
+    test_dl = ac_transform_dataloader(test_dl, n_tasks)
     checkpoint_callback = ModelCheckpoint(
         monitor='val_loss',    # Monitor validation loss
         save_top_k=1,          # Save the best model

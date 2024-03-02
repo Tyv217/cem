@@ -846,6 +846,86 @@ class ACTransformDataset(Dataset):
 
 
 # Helper class to apply transformations to a dataset
-def transform_dataloader(dataloader, n_tasks):
+def ac_transform_dataloader(dataloader, n_tasks):
+    dataset = ACTransformDataset(dataloader.dataset, n_tasks, use_concepts = False)
+    return torch.utils.data.DataLoader(dataset, batch_size = dataloader.batch_size, shuffle = isinstance(dataloader.sampler, RandomSampler), num_workers = dataloader.num_workers)
+
+
+class ACInpaintTransformDataset(Dataset):
+    def __init__(self, dataset, n_tasks, use_concepts = False, train = True):
+        self.dataset = dataset
+        self.n_tasks = n_tasks
+        self.use_concepts = use_concepts
+        self.train = train
+
+    def _unpack_batch(self, batch):
+        x = batch[0]
+        
+        if(len(x.shape) > 1):
+            x = torch.flatten(x)
+
+        if len(batch) == 2:
+            y = batch[1]
+        if isinstance(batch[1], list):
+            if self.use_concepts:
+                y, x = batch[1]
+            else:
+                y, _ = batch[1]
+        else:
+            if self.use_concepts:
+                y, x = batch[1], batch[2]
+            else:
+                y = batch[1]
+        return x, y
+    
+    def transform(self, batch):
+        x, y = self._unpack_batch(batch)
+        d = x.shape[-1]
+        b = np.zeros([d], dtype=np.float32)
+        no = np.random.choice(d+1)
+        o = np.random.choice(d, [no], replace=False)
+        b[o] = 1.
+        if self.train:
+            m = b.copy()
+            w = list(np.where(b == 0)[0])
+            w.append(-1)
+            w = np.random.choice(w)
+            if w >= 0:
+                m[w] = 1.
+        else:
+            m = np.ones([d], dtype=np.float32)
+        b = torch.tensor(b)
+        m = torch.tensor(m)
+        y = y.to(torch.int64)
+        return {'x': x, 'b': b, 'm': m, 'y': y}
+
+    def transform_batch(x, y, intervention_style = False):
+        B = x.shape[0]
+        d = x.shape[-1]
+        b = np.zeros([B, d], dtype=np.float32)
+        m = np.zeros([B, d], dtype=np.float32)
+        for i in range(B):            
+            no = np.random.choice(d+1)
+            o = np.random.choice(d, [no], replace=False)
+            b[i][o] = 1.
+            w = list(np.where(b[i] == 0)[0])
+            w.append(-1)
+            w = np.random.choice(w)
+            if w >= 0:
+                m[i][w] = 1.
+        b = torch.tensor(b).to(x.device)
+        m = torch.tensor(m).to(x.device)
+        y = y.to(torch.int64)
+        return x, b, m, y
+
+    def __getitem__(self, index):
+        return self.transform(self.dataset[index])
+
+    def __len__(self):
+        return len(self.dataset)
+
+
+# Helper class to apply transformations to a dataset
+def ac_transform_dataloader(dataloader, n_tasks):
     dataset = ACTransformDataset(dataloader.dataset, n_tasks, use_concepts = False)
     return torch.utils.data.DataLoader(dataset, batch_size = dataloader.batch_size, shuffle = isinstance(dataloader.sampler, RandomSampler), num_workers = dataloader.num_workers)

@@ -27,10 +27,6 @@ from cem.models.acflow import ACFlow, ACFlowTransformDataset
 ################################################################################
 
 # Helper class to apply transformations to a dataset
-def transform_dataloader(dataloader, n_tasks):
-    dataset = ACFlowTransformDataset(dataloader.dataset, n_tasks, use_concepts = False)
-    return torch.utils.data.DataLoader(dataset, batch_size = dataloader.batch_size, shuffle = isinstance(dataloader.sampler, RandomSampler), num_workers = dataloader.num_workers)
-
 
 def main(
     data_module,

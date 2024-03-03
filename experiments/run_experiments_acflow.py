@@ -9,6 +9,7 @@ import sys
 import torch
 import yaml
 import PIL
+import random
 import pytorch_lightning as pl
 
 
@@ -20,7 +21,7 @@ from torch.utils.data import Dataset, RandomSampler
 import cem.data.celeba_loader as celeba_data_module
 import cem.data.mnist_add as mnist_add_data_module
 import cem.data.mnist as mnist_data_module
-from cem.models.acflow import ACFlow, ACFlowTransformDataset
+from cem.models.acflow import ACFlow, ac_transform_dataloader
 
 ################################################################################
 ## MAIN FUNCTION
@@ -30,7 +31,7 @@ from cem.models.acflow import ACFlow, ACFlowTransformDataset
 
 def main(
     data_module,
-    result_dir,
+    results_dir,
     experiment_config,
     num_workers=8,
     accelerator="auto",
@@ -59,7 +60,7 @@ def main(
     logging.debug(
         f"Applying transformations..."
     )
-    train_dl = transform_dataloader(train_dl, n_tasks)
+    train_dl = ac_transform_dataloader(train_dl, n_tasks)
     # For now, we assume that all concepts have the same
     # aquisition cost
     experiment_config["shared_params"]["n_concepts"] = \
@@ -80,8 +81,8 @@ def main(
     logging.info(
         f"\tNumber of training concepts: {n_concepts}"
     )
-    val_dl = transform_dataloader(val_dl, n_tasks)
-    test_dl = transform_dataloader(test_dl, n_tasks)
+    val_dl = ac_transform_dataloader(val_dl, n_tasks)
+    test_dl = ac_transform_dataloader(test_dl, n_tasks)
 
     sample = next(iter(train_dl.dataset))
 
@@ -178,47 +179,81 @@ def main(
         trainer.fit(model, train_dl, val_dl)
         model.freeze()
 
-        [test_results] = trainer.test(model, test_dl)
+        i = iter(test_dl)
 
-        predict_dl = transform_dataloader(test_dl, n_tasks, train = False)
-            
-        predictions = trainer.predict(model, predict_dl)
+        for i in range(10):
+            data = next(i)
 
-        predict_dl = iter(predict_dl)
-        test_results = iter(predictions)
+            inpaint_iters = int(np.random.rand() * 10) + 1
 
-        for i in range(5):
-            data = next(predict_dl)
-            result = next(test_results)
-            def tensor_to_image(tensor):
+            b = torch.ones_like(data[0])
+
+            directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+            start_point = (random.randint(0, 6), random.randint(0, 6))
+            path = [start_point]
+            while len(path) < inpaint_iters:
+                current_point = path[-1]
+                possible_moves = []
+                for d in directions:
+                    next_point = (current_point[0] + d[0], current_point[1] + d[1])
+                    if (0 <= next_point[0] < 7) and (0 <= next_point[1] < 7) and (next_point not in path):
+                        possible_moves.append(next_point)
+                if not possible_moves:
+                    break
+                path.append(random.choice(possible_moves))
+
+            inpaint_iters = len(path)
+
+            pred = data[0].clone()
+
+            for p in path:
+                b[p[0]][p[1]] = 0
+                pred[p[0]][p[1]] = 0
+
+            def array_to_image(tensor):
+                image_size = tensor.shape[-1]
+                image_size = int(np.sqrt(image_size))
+                image_size = (image_size, image_size)
                 tensor = tensor*255
                 tensor = np.array(tensor, dtype=np.uint8)
+                tensor = np.reshape(tensor, image_size)
                 if np.ndim(tensor)>3:
                     assert tensor.shape[0] == 1
                     tensor = tensor[0]
-                return PIL.Image.fromarray(tensor)
-            image_size = data['x'].shape[-1]
-            image_size = int(np.sqrt(image_size))
-            image_size = (image_size, image_size)
-            data = tensor_to_image(torch.reshape(data['x'].cpu()), image_size)
-            inpainted = tensor_to_image(torch.reshape(data['x'].cpu() * data['b'].cpu()), image_size)
-            result = tensor_to_image(torch.reshape(result.cpu()), image_size)
-            data.save(f"results/mnist_inpaint/data_{i}.png")
-            inpainted.save(f"results/inpainted_{i}.png")
-            result.save(f"results/result_{i}.png")
+                return PIL.Image.fromarray(tensor, mode='L')
+            counter = 0
+            original = array_to_image(data[0].clone().cpu().numpy())
+            original.save(f"{results_dir}/original_{i}.png")
+            for p in path:
+                pred_with = pred.clone()
+                pred_without = pred.clone()
+                pred_with[p[0]][p[1]] = 1
+                pred_without[p[0]][p[1]] = 0
+                m = b.clone()
+                m[p[0]][p[1]] = 1
+                batch_with = {}
+                batch_with['x'] = pred_with
+                batch_with['b'] = b
+                batch_with['m'] = m
+                batch_with['y'] = None
+                
+                logpu_with, logpo_with = model.predict_step(batch_with, counter)
+                loglikel_with = torch.mean(torch.logsumexp(logpu_with + logpo_with, dim = 1) - torch.logsumexp(logpo_with, dim = 1))
+                batch_without = {}
+                batch_without['x'] = pred_with
+                batch_without['b'] = b
+                batch_without['m'] = m
+                batch_without['y'] = None
+                logpu_without, logpo_without = model.predict_step(batch_without, counter)
+                loglikel_without = torch.mean(torch.logsumexp(logpu_without + logpo_without, dim = 1) - torch.logsumexp(logpo_without, dim = 1))
 
-        try:
-            acc = test_results['accuracy']
-            nll = test_results['nll']
-        except:
-            logging.debug(
-                f"Test results:"
-                f"\n\t{test_results}"
-            )
-        logging.debug(
-            f"\tTest Accuracy is {acc}\n"
-            f"\tNLL is {nll}\n"
-        )
+                pred[p[0]][p[1]] = 1 if loglikel_with > loglikel_without else 0
+
+                inpainted = np.where(m.clone().cpu().numpy() == 1, pred.clone().cpu().numpy(), 0.5)
+                inpainted = array_to_image(inpainted)
+                inpainted.save(f"results/inpainted_{i}_{counter}.png")
+                
+                b[p[0]][p[1]] = 1
 
     return results
 
@@ -327,7 +362,7 @@ if __name__ == '__main__':
 
     main(
         data_module=data_module,
-        result_dir=(
+        results_dir=(
             args.output_dir if args.output_dir
             else loaded_config['results_dir']
         ),

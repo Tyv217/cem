@@ -182,12 +182,8 @@ class ACFlow(pl.LightningModule):
         class_weights = torch.tile(torch.unsqueeze(class_weights, dim = 0), [x.shape[0], 1])
 
         logpu, logpo, _, _, _ = self(x,b,m,y)
-
-        logits = logpu + logpo
         
-        pred = torch.argmax(logits, dim=1)
-        
-        return pred
+        return logpu, logpo
 
 
     def configure_optimizers(self):

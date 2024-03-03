@@ -82,9 +82,9 @@ shared_params:
       decay_rate: 0.5
       clip_gradient": 1
       num_samples: 10
-    flow_model_nll_ratio: 0.5
-    flow_model_weight: 2
-    flow_model_rollouts: 1
+    ac_model_nll_ratio: 0.5
+    ac_model_weight: 2
+    ac_model_rollouts: 1
 runs:
   - architecture: "ACConceptEmbeddingModel"
     extra_name: "Retry_intervention_weight_{intervention_weight}_horizon_rate_{horizon_rate}_intervention_discount_{intervention_discount}_task_discount_{intervention_task_discount}"

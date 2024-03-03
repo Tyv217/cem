@@ -11,7 +11,7 @@ from torch.distributions import kl_divergence
 from torch.nn import Module
 from torchmetrics import Accuracy
 
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, RandomSampler
 
 class ACFlow(pl.LightningModule):
 
@@ -842,8 +842,8 @@ class ACTransformDataset(Dataset):
 
 
 # Helper class to apply transformations to a dataset
-def ac_transform_dataloader(dataloader, n_tasks):
-    dataset = ACTransformDataset(dataloader.dataset, n_tasks, use_concepts = False)
+def ac_transform_dataloader(dataloader, n_tasks, use_concepts = False):
+    dataset = ACTransformDataset(dataloader.dataset, n_tasks, use_concepts = use_concepts)
     return torch.utils.data.DataLoader(dataset, batch_size = dataloader.batch_size, shuffle = isinstance(dataloader.sampler, RandomSampler), num_workers = dataloader.num_workers)
 
 
@@ -922,6 +922,6 @@ class ACInpaintTransformDataset(Dataset):
 
 
 # Helper class to apply transformations to a dataset
-def ac_transform_dataloader(dataloader, n_tasks):
+def ac_inpaint_transform_dataloader(dataloader, n_tasks):
     dataset = ACTransformDataset(dataloader.dataset, n_tasks, use_concepts = False)
     return torch.utils.data.DataLoader(dataset, batch_size = dataloader.batch_size, shuffle = isinstance(dataloader.sampler, RandomSampler), num_workers = dataloader.num_workers)

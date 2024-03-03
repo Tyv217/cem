@@ -220,8 +220,9 @@ def construct_model(
             "c2y_model": c2y_model,
             "c2y_layers": config.get("c2y_layers", []),
             "ac_model_config": config.get("ac_model_config", {}),
-            "flow_model_weight": config.get("flow_model_weight", 1),
-            "flow_model_rollouts": config.get("flow_model_rollouts", 1),
+            "ac_model_nll_ratio": config.get("ac_model_nll_ratio", 0.5),
+            "ac_model_weight": config.get("ac_model_weight", 1),
+            "ac_model_rollouts": config.get("ac_model_rollouts", 1),
             "intervention_discount": config.get("intervention_discount", 0.9),
             "intervention_weight": config.get("intervention_weight", 5),
             "horizon_rate": config.get("horizon_rate", 1.005),
@@ -290,8 +291,9 @@ def construct_model(
             "c2y_layers": config.get("c2y_layers", []),
             
             "ac_model_config": config.get("ac_model_config", {}),
-            "flow_model_weight": config.get("flow_model_weight", 1),
-            "flow_model_rollouts": config.get("flow_model_rollouts", 1),
+            "ac_model_nll_ratio": config.get("ac_model_nll_ratio", 0.5),
+            "ac_model_weight": config.get("ac_model_weight", 1),
+            "ac_model_rollouts": config.get("ac_model_rollouts", 1),
 
             "intervention_discount": config.get("intervention_discount", 0.9),
             "intervention_weight": config.get("intervention_weight", 5),

@@ -271,6 +271,7 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             train=False,
         )
 
+
     def _prior_int_distribution(
         self,
         prob,
@@ -319,14 +320,10 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
         unintervened_groups = [torch.nonzero(available_groups[i], as_tuple = False).squeeze(dim = 1) for i in range(available_groups.shape[0])]
 
         try:
-            unintervened_groups = torch.stack(unintervened_groups, dim = 0) 
-            need_padding = False
+            unintervened_groups = torch.stack(unintervened_groups, dim = 0)
         except:
             max_length = max([t.size(0) for t in unintervened_groups])
             min_length = min([t.size(0) for t in unintervened_groups])
-            logging.warning(
-                f"Unintervened groups have different lengths: {min_length} vs {max_length} at horizon {self.horizon_index} / {self.current_horizon}"
-            )
             padded_list = [t if t.numel() == max_length else torch.cat([t, \
                 t[torch.multinomial(torch.ones_like(t, dtype = torch.float) / t.numel(), num_samples=max_length - t.numel(), replacement=True)]]) \
             for t in unintervened_groups]
@@ -339,13 +336,13 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
 
         mask = prev_interventions.clone().float()
         missing = prev_interventions.clone().float()
-        concepts = c.clone()
+        predicted_and_intervened_concepts = prob.clone()
         concept_map_vals = list(self.concept_map.values())
         for i in range(num_groups):
             for b in range(used_groups.shape[0]):
                 for concept in concept_map_vals[int(unintervened_groups[b][i])]:
                     missing[b][concept] = 1.
-            logpu, logpo, _, _, _ = self.ac_model(x = concepts, b = mask, m = missing, y = None)
+            logpu, logpo, _, _, _ = self.ac_model(x = predicted_and_intervened_concepts, b = mask, m = missing, y = None)
             pu = torch.logsumexp(logpu, dim = -1)
             po = torch.logsumexp(logpo, dim = -1)
             batches = torch.arange(used_groups.shape[0])
@@ -356,23 +353,6 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             for b in range(used_groups.shape[0]):
                 for concept in concept_map_vals[int(unintervened_groups[b][i])]:
                     missing[b][concept] = 0.
-        # except Exception as e:
-        #     try:
-        #         logging.warning(
-        #             f"ACFlow model forward failed at horizon {self.horizon_index or 0} / {self.current_horizon or 0}\n, iteration {i} / {num_groups}\n"
-        #         )
-        #     except:
-        #         logging.warning(
-        #             f"ACFlow model forward failed at iteration {i} / {num_groups}\n"
-        #         )
-        #     logging.warning(
-        #         f"available_groups: {available_groups}\n"
-        #         f"available_groups shape and type: {available_groups.shape} {available_groups.dtype}\n"
-        #         f"unintervened_groups: {unintervened_groups}\n"
-        #         f"unintervened_groups shape and type: {unintervened_groups.shape} {unintervened_groups.dtype}\n"
-        #         f"unintervened_groups padding required: {need_padding}\n"
-        #     )
-        #     raise e
         cat_inputs = [
             logpus_sparse,
             logpos_sparse,
@@ -477,6 +457,9 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
 
             ac_model_loss = ac_model_loss / ac_model_rollouts
             ac_model_loss_scalar = ac_model_loss.detach() * self.ac_model_weight
+
+        else:
+            self.ac_model.freeze()
 
         intervention_task_loss = 0.0
 
@@ -847,6 +830,7 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
                             tau=self.tau,
                         )
                     if self.use_concept_groups:
+                        prev_intervention_idxs = intervention_idxs.clone()
                         for sample_idx in range(intervention_idxs.shape[0]):
                             for group_idx, (_, group_concepts) in enumerate(
                                 self.concept_map.items()

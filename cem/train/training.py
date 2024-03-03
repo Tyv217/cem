@@ -241,18 +241,18 @@ def train_model(
                 def _inner_call():
                     [val_results] = trainer.test(model, val_dl)
                     output = [
-                        val_results["val_c_accuracy"],
-                        val_results["val_y_accuracy"],
-                        val_results["val_c_auc"],
-                        val_results["val_y_auc"],
-                        val_results["val_c_f1"],
-                        val_results["val_y_f1"],
+                        val_results["test_c_accuracy"],
+                        val_results["test_y_accuracy"],
+                        val_results["test_c_auc"],
+                        val_results["test_y_auc"],
+                        val_results["test_c_f1"],
+                        val_results["test_y_f1"],
                     ]
                     top_k_vals = []
                     for key, val in val_results.items():
-                        if "val_y_top" in key:
+                        if "test_y_top" in key:
                             top_k = int(
-                                key[len("val_y_top_"):-len("_accuracy")]
+                                key[len("test_y_top_"):-len("_accuracy")]
                             )
                             top_k_vals.append((top_k, val))
                     output += list(map(
@@ -292,7 +292,7 @@ def train_model(
                 val_results['training_time'] = training_time
                 val_results['num_epochs'] = num_epochs
                 print(
-                    f'val_c_acc: {val_results["val_acc_c"]*100:.2f}%, '
+                    f'val_c_acc: {val_results["test_acc_c"]*100:.2f}%, '
                     f'val_y_acc: {val_results["val_acc_y"]*100:.2f}%, '
                     f'val_c_auc: {val_results["val_auc_c"]*100:.2f}%, '
                     f'val_y_auc: {val_results["val_auc_y"]*100:.2f}% with '
@@ -1236,7 +1236,7 @@ def train_ac_model(
     result_dir,
     accelerator,
     devices,
-    current_rerun
+    rerun
 ):  
     architecture = ac_model_config["architecture"]
     if("flow" in architecture):
@@ -1262,7 +1262,7 @@ def train_ac_model(
         save_path = result_dir + "" if result_dir[-1] == "/" else "/"  + f"acflow_model_trial_{split}.ckpt"
         ac_model_config['save_path'] = save_path
 
-        if not current_rerun:
+        if not rerun:
             try:
                 logging.debug(
                     f"Found AC Flow model saved in {ac_model_config['save_path']}"
@@ -1272,8 +1272,8 @@ def train_ac_model(
                 logging.warning(
                     f"Model at {ac_model_config['save_path']} not found. Defaulting to rerunning."
                 )
-                current_rerun = True
-        if current_rerun:
+                rerun = True
+        if rerun:
             logging.warning(
                 f"We will rerun model ac_flow_split_{split} "
                 f"as requested by the config"
@@ -1285,9 +1285,30 @@ def train_ac_model(
             )
     else:
         raise ValueError(f"AC {architecture} model current not supported.")
-    train_dl = ac_transform_dataloader(train_dl, n_tasks)
-    val_dl = ac_transform_dataloader(val_dl, n_tasks)
-    test_dl = ac_transform_dataloader(test_dl, n_tasks)
+    
+    sample = next(iter(train_dl.dataset))
+    logging.debug(
+        f"Original input:"
+        f"\tx:{sample[0]}"
+        f"\tx shape:{sample[0].shape}"
+        f"\ty:{sample[1]}"
+        f"\ty shape:{sample[1].shape}"
+        f"\tc:{sample[2]}"
+        f"\tc shape:{sample[2].shape}"
+        f"AC Data loader batch size: {train_dl.batch_size}"
+    )
+    train_dl = ac_transform_dataloader(train_dl, n_tasks, use_concepts = True)
+    sample = next(iter(train_dl.dataset))
+    logging.debug(
+        f"AC Model input shape:"
+        f"\tx:{sample['x'].shape}"
+        f"\tb:{sample['b'].shape}"
+        f"\tm:{sample['m'].shape}"
+        f"\ty:{sample['y'].shape}"
+        f"AC Data loader batch size: {train_dl.batch_size}"
+    )
+    val_dl = ac_transform_dataloader(val_dl, n_tasks, use_concepts = True)
+    test_dl = ac_transform_dataloader(test_dl, n_tasks, use_concepts = True)
     checkpoint_callback = ModelCheckpoint(
         monitor='val_loss',    # Monitor validation loss
         save_top_k=1,          # Save the best model

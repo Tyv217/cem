@@ -179,10 +179,10 @@ def main(
         trainer.fit(model, train_dl, val_dl)
         model.freeze()
 
-        i = iter(test_dl)
+        it = iter(test_dl)
 
         for i in range(10):
-            data = next(i)
+            data = next(it)
 
             inpaint_iters = int(np.random.rand() * 10) + 1
 

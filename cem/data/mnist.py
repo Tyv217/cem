@@ -65,7 +65,7 @@ def load_mnist(
         cache_dir,
         train=False,
         download=True,
-        transforms = transformations
+        transform = transformations
     )
 
     ds_test.transform = transformations

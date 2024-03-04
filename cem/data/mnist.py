@@ -52,18 +52,21 @@ def load_mnist(
             len(concept_groups) + len(operand_digits),
         )))
 
-    ds_test = torchvision.datasets.MNIST(
-        cache_dir,
-        train=False,
-        download=True,
-    )
+    
 
     transformations = transforms.Compose([
         transforms.ToPILImage,
         transforms.Resize((7,7)),
         transforms.ToTensor(),
-        transforms.Lambda(lambda x: (x > 0.5).int())
+        transforms.Lambda(lambda x: (x > 0.5).float())
     ])
+
+    ds_test = torchvision.datasets.MNIST(
+        cache_dir,
+        train=False,
+        download=True,
+        transforms = transformations
+    )
 
     ds_test.transform = transformations
 
@@ -100,25 +103,19 @@ def load_mnist(
         test_data,
         batch_size=batch_size,
         num_workers=num_workers,
+        transform = transformations
     )
     if test_only:
         return None, None, test_dl
-
-
 
     # Now time to do the same for the train/val datasets!
     ds_train = torchvision.datasets.MNIST(
         cache_dir,
         train=True,
         download=True,
+        transform=transformations,
     )
 
-    transformations = transforms.Compose([
-        transforms.ToPILImage,
-        transforms.Resize((7,7)),
-        transforms.ToTensor(),
-        transforms.Lambda(lambda x: (x > 0.5).int())
-    ])
 
     ds_train.transform = transformations
 

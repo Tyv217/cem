@@ -99,8 +99,7 @@ def load_mnist(
     test_dl = torch.utils.data.DataLoader(
         test_data,
         batch_size=batch_size,
-        num_workers=num_workers,
-        transform = transformations
+        num_workers=num_workers
     )
     if test_only:
         return None, None, test_dl

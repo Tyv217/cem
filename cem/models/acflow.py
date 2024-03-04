@@ -116,7 +116,7 @@ class ACFlow(pl.LightningModule):
         result = {"loss": loss.detach(), "accuracy": acc.detach(), "nll": nll.detach()}
 
         for name, val in result.items():
-            self.log(name, val, prog_bar=("accuracy" in name))
+            self.log("train_" + name, val, prog_bar=("accuracy" in name))
 
         return {"loss": loss, "accuracy": acc, "nll": nll}
 
@@ -144,7 +144,7 @@ class ACFlow(pl.LightningModule):
         result = {"loss": loss.detach(), "accuracy": acc.detach(), "nll": nll.detach()}
 
         for name, val in result.items():
-            self.log(name, val, prog_bar=("accuracy" in name))
+            self.log("val_" +name, val, prog_bar=("accuracy" in name))
 
         return {"loss": loss, "accuracy": acc, "nll": nll}
 
@@ -169,7 +169,7 @@ class ACFlow(pl.LightningModule):
         result = {"accuracy": acc.detach(), "nll": nll.detach()}
 
         for name, val in result.items():
-            self.log(name, val, prog_bar=("accuracy" in name))
+            self.log("test_" +name, val, prog_bar=("accuracy" in name))
 
         return result
 

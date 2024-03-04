@@ -55,7 +55,7 @@ def load_mnist(
     
 
     transformations = transforms.Compose([
-        transforms.ToPILImage,
+        transforms.ToPILImage(),
         transforms.Resize((7,7)),
         transforms.ToTensor(),
         transforms.Lambda(lambda x: (x > 0.5).float())

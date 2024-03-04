@@ -186,6 +186,8 @@ def main(
 
             inpaint_iters = int(np.random.rand() * 10) + 1
 
+            print(data.keys())
+
             b = torch.ones_like(data[0])
 
             directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]

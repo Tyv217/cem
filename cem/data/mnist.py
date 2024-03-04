@@ -76,7 +76,7 @@ def load_mnist(
 
     for x, y in ds_test:
         x_test.append(
-            np.expand_dims(x, axis=0)
+            x
         )
         y_test.append(
             np.expand_dims(y, axis=0)
@@ -89,8 +89,6 @@ def load_mnist(
         f"\tx: {x_test.shape}"
         f"\ty: {y_test.shape}"
     )
-
-    raise ValueError("For debug")
 
     x_test = torch.FloatTensor(x_test)
     
@@ -115,15 +113,12 @@ def load_mnist(
         transform=transformations,
     )
 
-
-    ds_train.transform = transformations
-
     x_train = []
     y_train = []
 
     for x, y in ds_train:
         x_train.append(
-            np.expand_dims(x, axis=0)
+            x
         )
         y_train.append(
             np.expand_dims(y, axis=0)

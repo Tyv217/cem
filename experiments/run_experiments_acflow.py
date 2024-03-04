@@ -363,8 +363,7 @@ if __name__ == '__main__':
     main(
         data_module=data_module,
         results_dir=(
-            args.output_dir if args.output_dir
-            else loaded_config['results_dir']
+            loaded_config['results_dir']
         ),
         accelerator=(
             "gpu" if (not args.force_cpu) and (torch.cuda.is_available())

@@ -8,6 +8,7 @@ import os
 import sys
 import torch
 import yaml
+import pytorch_lightning as pl
 
 
 from datetime import datetime
@@ -31,7 +32,6 @@ from experiment_utils import (
     generate_hyperatemer_configs, filter_results,
     print_table, get_mnist_extractor_arch
 )
-
 ################################################################################
 ## MAIN FUNCTION
 ################################################################################
@@ -233,6 +233,29 @@ def main(
                 if (not current_rerun) and os.path.exists(current_results_path):
                     with open(current_results_path, 'rb') as f:
                         old_results = joblib.load(f)
+
+                if "AC" in run_config["architecture"] and experiment_config['shared_params'].get("separate_ac_model_training", False):    
+                    full_run_name = f"ac_{experiment_config['shared_params']['ac_model_config']['architecture']}_model_split_{split}"
+                    current_rerun = determine_rerun(
+                        config=run_config,
+                        rerun=rerun,
+                        split=split,
+                        full_run_name=full_run_name,
+                    )
+                    training.train_ac_model(
+                        n_concepts=n_concepts,
+                        n_tasks=n_tasks,
+                        ac_model_config = experiment_config['shared_params']['ac_model_config'],
+                        train_dl=train_dl,
+                        val_dl=val_dl,
+                        test_dl=test_dl,
+                        split=split,
+                        result_dir=result_dir,
+                        accelerator=accelerator,
+                        devices=devices,
+                        rerun=current_rerun,
+                    )
+
 
                 if run_config["architecture"] in [
                     "IndependentConceptBottleneckModel",

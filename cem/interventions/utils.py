@@ -350,6 +350,7 @@ def intervene_in_cbm(
     )
     prev_num_groups_intervened = 0
     avg_times = []
+    total_times = []
     logging.debug(
         f"Intervention groups: {groups}"
     )
@@ -389,16 +390,21 @@ def intervene_in_cbm(
             f = io.StringIO()
             with redirect_stdout(f):
                 start_time = time.time()
-                test_batch_results = trainer.predict(
-                    model,
-                    test_dl,
-                )
+                try:
+                    test_batch_results = trainer.predict(
+                        model,
+                        test_dl,
+                    )
+                except:
+                    raise ValueError(f"Failed to intervene with {num_groups_intervened} groups while restoring checkpoint from {trainer.ckpt_path}")
         coeff = (num_groups_intervened - prev_num_groups_intervened)
+        time_diff = time.time() - start_time
         avg_times.append(
-            (time.time() - start_time)/(
+            (time_diff)/(
                 x_test.shape[0] * (coeff if coeff != 0 else 1)
             )
         )
+        total_times.append(time_diff)
         y_pred = np.concatenate(
             list(map(lambda x: x[2].detach().cpu().numpy(), test_batch_results)),
             axis=0,
@@ -451,9 +457,11 @@ def intervene_in_cbm(
             num_workers=test_dl.num_workers,
         )
     avg_time = np.mean(avg_times)
-    print(
+    total_time = np.sum(total_times)
+    logging.debug(
         f"\tAverage intervention took {avg_time:.5f} seconds and "
-        f"construction took {construct_time:.5f} seconds."
+        f"construction took {construct_time:.5f} seconds.\n"
+        f"\tIn total interventions took {total_time:.5f} seconds"
     )
     if key_name:
         result_file = os.path.join(
@@ -617,11 +625,14 @@ def fine_tune_coop(
                         include_prior=include_prior,
                     )
                     with redirect_stdout(f):
-                        [test_results] = trainer.test(
-                            cbm,
-                            val_dl,
-                            verbose=False,
-                        )
+                        try:
+                            [test_results] = trainer.test(
+                                cbm,
+                                val_dl,
+                                verbose=False,
+                            )
+                        except:
+                            raise ValueError(f"Failed to intervene with {num_groups_intervened} groups while restoring checkpoint from {trainer.ckpt_path}")
                     intervention_accs.append(test_results['test_y_accuracy'])
                 print("\tValidation accuracies are:", intervention_accs)
                 grid_search_results.append((used_params, intervention_accs))
@@ -1023,6 +1034,8 @@ def get_int_policy(
                     "ConceptEmbeddingModel",
                     "IntAwareConceptEmbeddingModel",
                     "IntCEM",
+                    "ACConceptEmbeddingModel",
+                    "ACCEM",
                 ]
                 else 1
             )

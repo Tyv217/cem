@@ -9,6 +9,7 @@ import torch
 
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger
 from scipy.special import expit
 from sklearn.metrics import accuracy_score
@@ -25,7 +26,7 @@ from cem.models.construction import (
     construct_sequential_models,
     load_trained_model,
 )
-
+from cem.models.acflow import ACFlow, ac_transform_dataloader
 
 
 ################################################################################
@@ -235,6 +236,70 @@ def train_model(
                         np.array([training_time, num_epochs]),
                     )
             # freeze model and compute test accuracy
+            if val_dl is not None:
+                model.freeze()
+                def _inner_call():
+                    [val_results] = trainer.test(model, val_dl)
+                    output = [
+                        val_results["test_c_accuracy"],
+                        val_results["test_y_accuracy"],
+                        val_results["test_c_auc"],
+                        val_results["test_y_auc"],
+                        val_results["test_c_f1"],
+                        val_results["test_y_f1"],
+                    ]
+                    top_k_vals = []
+                    for key, val in val_results.items():
+                        if "test_y_top" in key:
+                            top_k = int(
+                                key[len("test_y_top_"):-len("_accuracy")]
+                            )
+                            top_k_vals.append((top_k, val))
+                    output += list(map(
+                        lambda x: x[1],
+                        sorted(top_k_vals, key=lambda x: x[0]),
+                    ))
+                    return output
+
+                keys = [
+                    "val_acc_c",
+                    "val_acc_y",
+                    "val_auc_c",
+                    "val_auc_y",
+                    "val_f1_c",
+                    "val_f1_y",
+                ]
+                if 'top_k_accuracy' in config:
+                    top_k_args = config['top_k_accuracy']
+                    if top_k_args is None:
+                        top_k_args = []
+                    if not isinstance(top_k_args, list):
+                        top_k_args = [top_k_args]
+                    for top_k in sorted(top_k_args):
+                        keys.append(f'val_top_{top_k}_acc_y')
+                values, _ = utils.load_call(
+                    function=_inner_call,
+                    keys=keys,
+                    full_run_name=key_full_run_name,
+                    old_results=old_results,
+                    rerun=rerun,
+                    kwargs={},
+                )
+                val_results = {
+                    key: val
+                    for (key, val) in zip(keys, values)
+                }
+                val_results['training_time'] = training_time
+                val_results['num_epochs'] = num_epochs
+                print(
+                    f'val_c_acc: {val_results["test_acc_c"]*100:.2f}%, '
+                    f'val_y_acc: {val_results["val_acc_y"]*100:.2f}%, '
+                    f'val_c_auc: {val_results["val_auc_c"]*100:.2f}%, '
+                    f'val_y_auc: {val_results["val_auc_y"]*100:.2f}% with '
+                    f'{num_epochs} epochs in {training_time:.2f} seconds'
+                )
+            else:
+                val_results = None
             if test_dl is not None:
                 model.freeze()
                 def _inner_call():
@@ -299,6 +364,10 @@ def train_model(
                 )
             else:
                 test_results = None
+            if val_results is not None and test_results is not None:
+                for key, val in val_results.items():
+                    test_results[key] = val
+
     else:
         callbacks = [
             EarlyStopping(
@@ -389,6 +458,71 @@ def train_model(
                 result_dir,
                 f'{full_run_name}_experiment_config.joblib'
             ))
+        # freeze model and compute test accuracy
+        if val_dl is not None:
+            model.freeze()
+            def _inner_call():
+                [val_results] = trainer.test(model, val_dl)
+                output = [
+                    val_results["val_c_accuracy"],
+                    val_results["val_y_accuracy"],
+                    val_results["val_c_auc"],
+                    val_results["val_y_auc"],
+                    val_results["val_c_f1"],
+                    val_results["val_y_f1"],
+                ]
+                top_k_vals = []
+                for key, val in val_results.items():
+                    if "val_y_top" in key:
+                        top_k = int(
+                            key[len("val_y_top_"):-len("_accuracy")]
+                        )
+                        top_k_vals.append((top_k, val))
+                output += list(map(
+                    lambda x: x[1],
+                    sorted(top_k_vals, key=lambda x: x[0]),
+                ))
+                return output
+
+            keys = [
+                "val_acc_c",
+                "val_acc_y",
+                "val_auc_c",
+                "val_auc_y",
+                "val_f1_c",
+                "val_f1_y",
+            ]
+            if 'top_k_accuracy' in config:
+                top_k_args = config['top_k_accuracy']
+                if top_k_args is None:
+                    top_k_args = []
+                if not isinstance(top_k_args, list):
+                    top_k_args = [top_k_args]
+                for top_k in sorted(top_k_args):
+                    keys.append(f'val_top_{top_k}_acc_y')
+            values, _ = utils.load_call(
+                function=_inner_call,
+                keys=keys,
+                full_run_name=key_full_run_name,
+                old_results=old_results,
+                rerun=rerun,
+                kwargs={},
+            )
+            val_results = {
+                key: val
+                for (key, val) in zip(keys, values)
+            }
+            val_results['training_time'] = training_time
+            val_results['num_epochs'] = num_epochs
+            print(
+                f'val_c_acc: {val_results["val_acc_c"]*100:.2f}%, '
+                f'val_y_acc: {val_results["val_acc_y"]*100:.2f}%, '
+                f'val_c_auc: {val_results["val_auc_c"]*100:.2f}%, '
+                f'val_y_auc: {val_results["val_auc_y"]*100:.2f}% with '
+                f'{num_epochs} epochs in {training_time:.2f} seconds'
+            )
+        else:
+            val_results = None
         if test_dl is not None:
             model.freeze()
             def _inner_call():
@@ -455,6 +589,9 @@ def train_model(
             )
         else:
             test_results = None
+        if val_results is not None and test_results is not None:
+                for key, val in val_results.items():
+                    test_results[key] = val
     return model, test_results
 
 
@@ -1087,6 +1224,125 @@ def train_independent_and_sequential_model(
         ind_test_results = None
         seq_test_results = None
     return ind_model, ind_test_results, seq_model, seq_test_results
+
+def train_ac_model(
+    n_concepts,
+    n_tasks,
+    ac_model_config,
+    train_dl,
+    val_dl,
+    test_dl,
+    split,
+    result_dir,
+    accelerator,
+    devices,
+    rerun
+):  
+    architecture = ac_model_config["architecture"]
+    if("flow" in architecture):
+        ac_model = ACFlow(
+            n_concepts = n_concepts, 
+            n_tasks = n_tasks,
+            layer_cfg = ac_model_config['layer_cfg'], 
+            affine_hids = ac_model_config['affine_hids'], 
+            linear_rank = ac_model_config['linear_rank'],
+            linear_hids = ac_model_config['linear_hids'], 
+            transformations = ac_model_config['transformations'], 
+            optimizer = ac_model_config['optimizer'], 
+            learning_rate = ac_model_config['learning_rate'], 
+            weight_decay = ac_model_config['decay_rate'], 
+            momentum = ac_model_config.get('momentum', 0.9), 
+            prior_units = ac_model_config['prior_units'], 
+            prior_layers = ac_model_config['prior_layers'], 
+            prior_hids = ac_model_config['prior_hids'], 
+            n_components = ac_model_config['n_components'], 
+            lambda_xent = 1, 
+            lambda_nll = 1
+        )
+        save_path = result_dir + "" if result_dir[-1] == "/" else "/"  + f"acflow_model_trial_{split}.ckpt"
+        ac_model_config['save_path'] = save_path
+
+        if not rerun:
+            try:
+                logging.debug(
+                    f"Found AC Flow model saved in {ac_model_config['save_path']}"
+                )
+                ac_model = ACFlow.load_from_checkpoint(checkpoint_path = ac_model_config['save_path'])
+            except:
+                logging.warning(
+                    f"Model at {ac_model_config['save_path']} not found. Defaulting to rerunning."
+                )
+                rerun = True
+        if rerun:
+            logging.warning(
+                f"We will rerun model ac_flow_split_{split} "
+                f"as requested by the config"
+            )
+            logging.debug(
+                f"Starting AC Flow Model training...\n"
+                f"\tTransformations: {ac_model_config['transformations']}\n"
+                f"\tSave path: {ac_model_config['save_path']}"
+            )
+    else:
+        raise ValueError(f"AC {architecture} model current not supported.")
+    
+    sample = next(iter(train_dl.dataset))
+    logging.debug(
+        f"Original input:"
+        f"\tx:{sample[0]}"
+        f"\tx shape:{sample[0].shape}"
+        f"\ty:{sample[1]}"
+        f"\ty shape:{sample[1].shape}"
+        f"\tc:{sample[2]}"
+        f"\tc shape:{sample[2].shape}"
+        f"AC Data loader batch size: {train_dl.batch_size}"
+    )
+    train_dl = ac_transform_dataloader(train_dl, n_tasks, use_concepts = True)
+    sample = next(iter(train_dl.dataset))
+    logging.debug(
+        f"AC Model input shape:"
+        f"\tx:{sample['x'].shape}"
+        f"\tb:{sample['b'].shape}"
+        f"\tm:{sample['m'].shape}"
+        f"\ty:{sample['y'].shape}"
+        f"AC Data loader batch size: {train_dl.batch_size}"
+    )
+    val_dl = ac_transform_dataloader(val_dl, n_tasks, use_concepts = True)
+    test_dl = ac_transform_dataloader(test_dl, n_tasks, use_concepts = True)
+    checkpoint_callback = ModelCheckpoint(
+        monitor='val_loss',    # Monitor validation loss
+        save_top_k=1,          # Save the best model
+        mode='min',            # Minimize the monitored quantity
+        dirpath = result_dir,
+        filename=f"ac_{architecture}_model_trial_{split}"  # Name of the checkpoint file
+    )
+    trainer = pl.Trainer(
+        accelerator=accelerator,
+        devices=devices,
+        max_epochs=ac_model_config.get('max_epochs', 100),
+        logger=False,
+        callbacks = [checkpoint_callback]
+    )
+    trainer.fit(ac_model, train_dl, val_dl)
+
+    ac_model.freeze()
+
+    [test_results] = trainer.test(ac_model, test_dl)
+
+    try:
+        acc = test_results['accuracy']
+        nll = test_results['nll']
+    except:
+        logging.debug(
+            f"Test results for AC model:"
+            f"\n\t{test_results}"
+        )
+    logging.debug(
+        f"\tTest Accuracy for AC model is {acc}\n"
+        f"\tNLL is {nll}\n"
+    )
+
+    return 
 
 
 def update_statistics(results, config, model, test_results, save_model=True):

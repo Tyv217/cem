@@ -1316,7 +1316,7 @@ def train_ac_model(
                 [training_time, num_epochs] = np.load(
                     save_path.replace(".pt", "_training_times.npy")
                 )
-        if rerun:
+        if rerun or not(chpt_exists):
             logging.warning(
                 f"We will rerun model ac_flow_split_{split} "
                 f"as requested by the config"

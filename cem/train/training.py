@@ -463,12 +463,12 @@ def train_model(
             def _inner_call():
                 [val_results] = trainer.test(model, val_dl)
                 output = [
-                    val_results["val_c_accuracy"],
-                    val_results["val_y_accuracy"],
-                    val_results["val_c_auc"],
-                    val_results["val_y_auc"],
-                    val_results["val_c_f1"],
-                    val_results["val_y_f1"],
+                    val_results["test_c_accuracy"],
+                    val_results["test_y_accuracy"],
+                    val_results["test_c_auc"],
+                    val_results["test_y_auc"],
+                    val_results["test_c_f1"],
+                    val_results["test_y_f1"],
                 ]
                 top_k_vals = []
                 for key, val in val_results.items():

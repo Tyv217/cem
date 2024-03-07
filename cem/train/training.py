@@ -1286,7 +1286,8 @@ def train_ac_model(
             accelerator=accelerator,
             devices=devices,
             max_epochs=ac_model_config.get('max_epochs', 100),
-            logger=False
+            logger=False,
+            enable_checkpointing=False
         )
         
         training_time, num_epochs = 0, 0
@@ -1345,7 +1346,7 @@ def train_ac_model(
     
     
     if test_dl is not None:
-        test_dl = ac_transform_dataloader(test_dl, n_tasks, use_concepts = True)
+        test_dl = ac_transform_dataloader(test_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
         ac_model.freeze()
 
         def _inner_call(trainer, model):

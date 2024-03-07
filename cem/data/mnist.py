@@ -36,6 +36,7 @@ def load_mnist(
     concept_transform=None,
     noise_level=0.0,
     test_noise_level=None,
+    resize_image_size=14,
 ):
     test_noise_level = (
         test_noise_level if (test_noise_level is not None) else noise_level
@@ -55,7 +56,7 @@ def load_mnist(
     
 
     transformations = transforms.Compose([
-        transforms.Resize((7,7)),
+        transforms.Resize((resize_image_size,resize_image_size)),
         transforms.ToTensor(),
         transforms.Lambda(lambda x: (x > 0.5).float())
     ])

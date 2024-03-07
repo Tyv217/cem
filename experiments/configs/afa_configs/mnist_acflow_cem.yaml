@@ -62,6 +62,7 @@ shared_params:
     ac_model_config:
       architecture: flow
       max_epochs: 100
+      batch_size: 1024
       transformations: [AF, TL, TL, TL, TL, AF]
       layer_cfg: [LR, CP2]
       rnncp_units: 256

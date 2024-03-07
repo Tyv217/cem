@@ -179,6 +179,13 @@ def main(
         trainer.fit(model, train_dl, val_dl)
         model.freeze()
 
+        sample = next(iter(test_dl))
+        image_size = sample[0].shape[-1]
+
+        print(
+            f"Testing inpaint on image size {image_size}x{image_size}..."
+        )
+
         it = iter(test_dl)
 
         for i in range(10):
@@ -198,7 +205,7 @@ def main(
                 possible_moves = []
                 for d in directions:
                     next_point = (current_point[0] + d[0], current_point[1] + d[1])
-                    if (0 <= next_point[0] < 7) and (0 <= next_point[1] < 7) and (next_point not in path):
+                    if (0 <= next_point[0] < image_size) and (0 <= next_point[1] < image_size) and (next_point not in path):
                         possible_moves.append(next_point)
                 if not possible_moves:
                     break

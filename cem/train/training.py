@@ -1262,7 +1262,7 @@ def train_ac_model(
             lambda_xent = 1, 
             lambda_nll = 1
         )
-        save_path = result_dir + "" if result_dir[-1] == "/" else "/"  + f"acflow_model_trial_{split}.pt"
+        save_path = result_dir + ("" if result_dir[-1] == "/" else "/")  + f"acflow_model_trial_{split}.pt"
         ac_model_config['save_path'] = save_path
 
         chpt_exists = (

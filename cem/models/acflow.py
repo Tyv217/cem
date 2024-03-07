@@ -842,9 +842,9 @@ class ACTransformDataset(Dataset):
 
 
 # Helper class to apply transformations to a dataset
-def ac_transform_dataloader(dataloader, n_tasks, use_concepts = False):
+def ac_transform_dataloader(dataloader, n_tasks, batch_size, use_concepts = False):
     dataset = ACTransformDataset(dataloader.dataset, n_tasks, use_concepts = use_concepts)
-    return torch.utils.data.DataLoader(dataset, batch_size = dataloader.batch_size, shuffle = isinstance(dataloader.sampler, RandomSampler), num_workers = dataloader.num_workers)
+    return torch.utils.data.DataLoader(dataset, batch_size = batch_size, shuffle = isinstance(dataloader.sampler, RandomSampler), num_workers = dataloader.num_workers)
 
 
 class ACInpaintTransformDataset(Dataset):

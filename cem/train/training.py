@@ -1269,8 +1269,8 @@ def train_ac_model(
             os.path.exists(save_path)
         )
 
-        train_dl = ac_transform_dataloader(train_dl, n_tasks, use_concepts = True)
-        val_dl = ac_transform_dataloader(val_dl, n_tasks, use_concepts = True)
+        train_dl = ac_transform_dataloader(train_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
+        val_dl = ac_transform_dataloader(val_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
         
         sample = next(iter(train_dl.dataset))
         logging.debug(

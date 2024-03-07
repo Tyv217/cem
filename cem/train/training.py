@@ -9,7 +9,6 @@ import torch
 
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
-from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger
 from scipy.special import expit
 from sklearn.metrics import accuracy_score
@@ -1282,20 +1281,12 @@ def train_ac_model(
             f"\ty:{sample['y'].shape}"
             f"AC Data loader batch size: {train_dl.batch_size}"
         )
-        checkpoint_callback = ModelCheckpoint(
-            monitor='val_loss',    # Monitor validation loss
-            save_top_k=1,          # Save the best model
-            mode='min',            # Minimize the monitored quantity
-            dirpath = result_dir,
-            filename=f"ac_{architecture}_model_trial_{split}"  # Name of the checkpoint file
-        )
 
         trainer = pl.Trainer(
             accelerator=accelerator,
             devices=devices,
             max_epochs=ac_model_config.get('max_epochs', 100),
-            logger=False,
-            callbacks = [checkpoint_callback]
+            logger=False
         )
         
         training_time, num_epochs = 0, 0

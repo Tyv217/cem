@@ -155,32 +155,34 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             if i != len(units) - 1:
                 layers.append(torch.nn.LeakyReLU())
         self.concept_rank_model = torch.nn.Sequential(*layers)
-        
+        self.ac_model = ACFlow(
+            n_concepts = n_concepts,
+            n_tasks = n_tasks,
+            layer_cfg = ac_model_config['layer_cfg'],
+            affine_hids = ac_model_config['affine_hids'],
+            linear_rank = ac_model_config['linear_rank'],
+            linear_hids = ac_model_config['linear_hids'],
+            transformations = ac_model_config['transformations'],
+            prior_units = ac_model_config['prior_units'],
+            prior_layers = ac_model_config['prior_layers'],
+            prior_hids = ac_model_config['prior_hids'],
+            n_components = ac_model_config['n_components']
+        )
         if ac_model_config.get("save_path", None) is not None:
-            try:
-                self.ac_model = ACFlow.load_from_checkpoint(checkpoint_path = ac_model_config['save_path'])
+            chpt_exists = (
+                os.path.exists(ac_model_config['save_path'])
+            )
+            if chpt_exists:
+                self.ac_model.load_state_dict(torch.load(ac_model_config['save_path']))
                 logging.debug(
                     f"AC CBM loaded AC model checkpoint from {ac_model_config['save_path']}"
                     f"AC model trained with {self.ac_model.current_epoch} epochs"
                 )
                 self.train_ac_model = False
-            except:
+            else:
                 raise ValueError(f"ACFlow model checkpoint at {ac_model_config['save_path']} incorrect / not found")
             self.train_ac_model = False
         else:
-            self.ac_model = ACFlow(
-                n_concepts = n_concepts,
-                n_tasks = n_tasks,
-                layer_cfg = ac_model_config['layer_cfg'],
-                affine_hids = ac_model_config['affine_hids'],
-                linear_rank = ac_model_config['linear_rank'],
-                linear_hids = ac_model_config['linear_hids'],
-                transformations = ac_model_config['transformations'],
-                prior_units = ac_model_config['prior_units'],
-                prior_layers = ac_model_config['prior_layers'],
-                prior_hids = ac_model_config['prior_hids'],
-                n_components = ac_model_config['n_components']
-            )
             self.train_ac_model = True
             logging.debug(
                 f"Training AC Flow model simultaneously with CEM model."

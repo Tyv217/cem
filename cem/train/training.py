@@ -1236,7 +1236,9 @@ def train_ac_model(
     result_dir,
     accelerator,
     devices,
-    rerun
+    rerun=False,
+    ac_old_results=None,
+    save_model=True,
 ):  
     architecture = ac_model_config["architecture"]
     if("flow" in architecture):
@@ -1259,20 +1261,59 @@ def train_ac_model(
             lambda_xent = 1, 
             lambda_nll = 1
         )
-        save_path = result_dir + "" if result_dir[-1] == "/" else "/"  + f"acflow_model_trial_{split}.ckpt"
+        save_path = result_dir + "" if result_dir[-1] == "/" else "/"  + f"acflow_model_trial_{split}.pt"
         ac_model_config['save_path'] = save_path
 
-        if not rerun:
+        chpt_exists = (
+            os.path.exists(save_path)
+        )
+
+        train_dl = ac_transform_dataloader(train_dl, n_tasks, use_concepts = True)
+        val_dl = ac_transform_dataloader(val_dl, n_tasks, use_concepts = True)
+        
+        sample = next(iter(train_dl.dataset))
+        logging.debug(
+            f"AC Model input shape:"
+            f"\tx:{sample['x'].shape}"
+            f"\tb:{sample['b'].shape}"
+            f"\tm:{sample['m'].shape}"
+            f"\ty:{sample['y'].shape}"
+            f"AC Data loader batch size: {train_dl.batch_size}"
+        )
+        checkpoint_callback = ModelCheckpoint(
+            monitor='val_loss',    # Monitor validation loss
+            save_top_k=1,          # Save the best model
+            mode='min',            # Minimize the monitored quantity
+            dirpath = result_dir,
+            filename=f"ac_{architecture}_model_trial_{split}"  # Name of the checkpoint file
+        )
+
+        trainer = pl.Trainer(
+            accelerator=accelerator,
+            devices=devices,
+            max_epochs=ac_model_config.get('max_epochs', 100),
+            logger=False,
+            callbacks = [checkpoint_callback]
+        )
+        
+        training_time, num_epochs = 0, 0
+        if (not rerun) and chpt_exists:
             try:
                 logging.debug(
                     f"Found AC Flow model saved in {ac_model_config['save_path']}"
                 )
-                ac_model = ACFlow.load_from_checkpoint(checkpoint_path = ac_model_config['save_path'])
+                ac_model.load_state_dict(torch.load(save_path))
             except:
                 logging.warning(
                     f"Model at {ac_model_config['save_path']} not found. Defaulting to rerunning."
                 )
                 rerun = True
+            if os.path.exists(
+                save_path.replace(".pt", "_training_times.npy")
+            ):
+                [training_time, num_epochs] = np.load(
+                    save_path.replace(".pt", "_training_times.npy")
+                )
         if rerun:
             logging.warning(
                 f"We will rerun model ac_flow_split_{split} "
@@ -1283,66 +1324,93 @@ def train_ac_model(
                 f"\tTransformations: {ac_model_config['transformations']}\n"
                 f"\tSave path: {ac_model_config['save_path']}"
             )
+            start_time = time.time()
+            trainer.fit(ac_model, train_dl, val_dl)
+
+            training_time += time.time()
+            num_epochs = trainer.current_epoch
+            config_copy = copy.deepcopy(ac_model_config)
+            joblib.dump(
+                config_copy,
+                os.path.join(
+                    result_dir,
+                    f'{full_run_name}_experiment_config.joblib',
+                ),
+            )
+            if save_model:
+                torch.save(
+                    ac_model.state_dict(),
+                    save_path,
+                )
+                np.save(
+                    save_path.replace(".pt", "_training_times.npy"),
+                    np.array([training_time, num_epochs]),
+                )
     else:
         raise ValueError(f"AC {architecture} model current not supported.")
     
-    sample = next(iter(train_dl.dataset))
-    logging.debug(
-        f"Original input:"
-        f"\tx:{sample[0]}"
-        f"\tx shape:{sample[0].shape}"
-        f"\ty:{sample[1]}"
-        f"\ty shape:{sample[1].shape}"
-        f"\tc:{sample[2]}"
-        f"\tc shape:{sample[2].shape}"
-        f"AC Data loader batch size: {train_dl.batch_size}"
-    )
-    train_dl = ac_transform_dataloader(train_dl, n_tasks, use_concepts = True)
-    sample = next(iter(train_dl.dataset))
-    logging.debug(
-        f"AC Model input shape:"
-        f"\tx:{sample['x'].shape}"
-        f"\tb:{sample['b'].shape}"
-        f"\tm:{sample['m'].shape}"
-        f"\ty:{sample['y'].shape}"
-        f"AC Data loader batch size: {train_dl.batch_size}"
-    )
-    val_dl = ac_transform_dataloader(val_dl, n_tasks, use_concepts = True)
-    test_dl = ac_transform_dataloader(test_dl, n_tasks, use_concepts = True)
-    checkpoint_callback = ModelCheckpoint(
-        monitor='val_loss',    # Monitor validation loss
-        save_top_k=1,          # Save the best model
-        mode='min',            # Minimize the monitored quantity
-        dirpath = result_dir,
-        filename=f"ac_{architecture}_model_trial_{split}"  # Name of the checkpoint file
-    )
-    trainer = pl.Trainer(
-        accelerator=accelerator,
-        devices=devices,
-        max_epochs=ac_model_config.get('max_epochs', 100),
-        logger=False,
-        callbacks = [checkpoint_callback]
-    )
-    trainer.fit(ac_model, train_dl, val_dl)
+    
+    
+    if test_dl is not None:
+        test_dl = ac_transform_dataloader(test_dl, n_tasks, use_concepts = True)
+        ac_model.freeze()
 
-    ac_model.freeze()
+        def _inner_call(trainer, model):
+            [test_results] = trainer.test(model, test_dl)
+            output = [
+                test_results["test_accuracy"],
+                test_results["test_nll"],
+            ]
+            top_k_vals = []
+            for key, val in test_results.items():
+                if "test_y_top" in key:
+                    top_k = int(key[len("test_y_top_"):-len("_accuracy")])
+                    top_k_vals.append((top_k, val))
+            output += list(map(
+                lambda x: x[1],
+                sorted(top_k_vals, key=lambda x: x[0]),
+            ))
+            return output
 
-    [test_results] = trainer.test(ac_model, test_dl)
-
-    try:
-        acc = test_results['accuracy']
-        nll = test_results['nll']
-    except:
-        logging.debug(
-            f"Test results for AC model:"
-            f"\n\t{test_results}"
+        keys = [
+            "test_accuracy",
+            "test_nll"
+        ]
+        if ac_model_config.get('top_k_accuracy', None):
+            top_k_args = config['top_k_accuracy']
+            if top_k_args is None:
+                top_k_args = []
+            if not isinstance(top_k_args, list):
+                top_k_args = [top_k_args]
+            for top_k in sorted(top_k_args):
+                keys.append(f'test_top_{top_k}_acc_y')
+        values, _ = utils.load_call(
+            function=_inner_call,
+            keys=keys,
+            full_run_name=(
+                f"ACModel{config.get('extra_name', '')}"
+            ),
+            old_results=ac_old_results,
+            rerun=rerun,
+            kwargs=dict(
+                trainer=trainer,
+                model=ac_model,
+            ),
         )
-    logging.debug(
-        f"\tTest Accuracy for AC model is {acc}\n"
-        f"\tNLL is {nll}\n"
-    )
-
-    return 
+        test_results = {
+            key: val
+            for (key, val) in zip(keys, values)
+        }
+        test_results['training_time'] = training_time
+        test_results['num_epochs'] = num_epochs
+        print(
+            f'AC Model test_accuracy: {test_results["test_accuracy"] * 100:.2f}%, '
+            f'AC Model test_nll: {test_results["test_nll"] * 100:.2f}% with '
+            f'{num_epochs} epochs in {training_time:.2f} seconds'
+        )
+    else:
+        test_results = None
+    return model, test_results
 
 
 def update_statistics(results, config, model, test_results, save_model=True):

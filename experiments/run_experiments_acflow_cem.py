@@ -236,6 +236,15 @@ def main(
 
                 if "AC" in run_config["architecture"] and experiment_config['shared_params'].get("separate_ac_model_training", False):    
                     full_run_name = f"ac_{experiment_config['shared_params']['ac_model_config']['architecture']}_model_split_{split}"
+                    
+                    ac_old_results = None
+                    ac_current_results_path = os.path.join(
+                        result_dir,
+                        f'{full_run_name}_results.joblib'
+                    )
+                    if os.path.exists(ac_current_results_path):
+                        with open(ac_current_results_path, 'rb') as f:
+                            ac_old_results = joblib.load(f)
                     current_rerun = determine_rerun(
                         config=run_config,
                         rerun=rerun,
@@ -254,6 +263,7 @@ def main(
                         accelerator=accelerator,
                         devices=devices,
                         rerun=current_rerun,
+                        ac_old_results=ac_old_results
                     )
 
 

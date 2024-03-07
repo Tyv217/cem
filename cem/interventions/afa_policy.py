@@ -19,6 +19,8 @@ class AFAEnv(gym.Env):
         self.n_tasks = self.n_tasks if self.n_tasks > 1 else 2
         self.emb_size = env_config["emb_size"]
         self.cbm_dl = env_config["cbm_dl"]
+        self.cbm_forward = env_config["cbm_forward"]
+        self.unpack_batch = env_config["unpack_batch"]
         self.torch_generator = torch.Generator()
         self.torch_generator.manual_seed(env_config["seed"])
 
@@ -39,7 +41,7 @@ class AFAEnv(gym.Env):
         return {
             "budget": self._budget,
             "intervened_concepts_map": self._intervened_concepts_map,
-            "intervened_concepts": self._intervened_concepts
+            "intervened_concepts": self._intervened_concepts,
             "ac_model_output": self._ac_model_output,
             "cbm_bottleneck": self._cbm_bottleneck,
             "cbm_pred_concepts": self._cbm_pred_concepts,
@@ -48,51 +50,98 @@ class AFAEnv(gym.Env):
 
     def _get_info(self):
         return {
-            "intervened_concepts_map": self._intervened_concepts_map,
+            "action_mask": 1 - self._intervened_concepts_map,
         }
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
-        if options is not None:
-            budget = options.get("budget", None)
-            cbm_data = options.get("cbm_data", None)
-            train = options.get("train", None)
-
-        if budget is not None:
-            self._budget = self.np_random.integers(low = 0, high = self.n_concepts + 1)
-        else:
-            self._budget = budget
         
-        if options is not None:
-        else:
-            cbm_data = torch.utils.data.RandomSampler(cbm_data.dataset, num_samples = 1, generator = self.torch_generator)
-        x, y, (c, competencies, _) = self.cbm_model._unpack_batch(cbm_data)
-        outputs = self.cbm_model.forward(
-            x,
-            intervention_idxs=intervention_idxs,
-            c=c,
-            y=y,
-            train=train,
-            competencies=competencies,
-            prev_interventions=torch.unsqueeze(torch.IntTensor(self._intervened_concept), dim = 0),
-        )
-        c_sem, c_logits, y_logits = outputs[0], outputs[1], outputs[2]
-        latent = outputs[4]
-        pos_embeddings = outputs[-2]
-        neg_embeddings = outputs[-1]
-        prob = prev_interventions * c_sem + (1 - prev_interventions) * prob
-        embeddings = (
-            torch.unsqueeze(prob, dim=-1) * pos_embeddings +
-            (1 - torch.unsqueeze(prob, dim=-1)) * neg_embeddings
-        )
+        self._budget = options.get("budget", None) or \
+            self.np_random.integers(low = 0, high = self.n_concepts + 1)
+        self._cbm_data = options.get("cbm_data", None) or \
+            torch.utils.data.RandomSampler(self.cbm_dl.dataset, num_samples = 1, generator = self.torch_generator)
+        self._train = options.get("train", None) or True
+
+        prev_interventions = torch.unsqueeze(torch.IntTensor(self._intervened_concepts), dim = 0)
+        x, y, (c, competencies, _) = self.unpack_batch(self._cbm_data)
+        with torch.no_grad():
+            outputs = self.cbm_forward(
+                x,
+                intervention_idxs=np.zeros(self.n_concepts, dtype = int),
+                c=c,
+                y=y,
+                train=self._train,
+                competencies=competencies,
+                prev_interventions=torch.unsqueeze(torch.IntTensor(self._intervened_concepts), dim = 0),
+            )
+            c_sem, c_pred, y_logits = outputs[0], outputs[1], outputs[2]
+            pos_embeddings = outputs[-2]
+            neg_embeddings = outputs[-1]
+            prob = prev_interventions * c_sem + (1 - prev_interventions) * prob
+            embeddings = (
+                torch.unsqueeze(prob, dim=-1) * pos_embeddings.detach() +
+                (1 - torch.unsqueeze(prob, dim=-1)) * neg_embeddings.detach()
+            ).cpu().numpy()
+            ac_model_output = torch.squeeze(
+                self.ac_model(
+                        b = torch.unsqueeze(torch.tensor(self._intervened_concepts_map.to(self.ac_model.device)))
+                    )
+            .detach()).cpu().numpy()
         self._intervened_concepts_map = np.zeros(self.n_concept_groups, dtype = int)
         self._intervened_concepts = np.zeros(self.n_concepts, dtype = int)
-        self._ac_model_output = torch.squeeze(
-            self.ac_model(
-                    b = torch.unsqueeze(torch.tensor(self._intervened_concepts_map.to(self.ac_model.device)))
-                )
-            
-        .detach()).cpu().numpy()
-        self._cbm_model_output = self.cbm_model()
+        self._ac_model_output = ac_model_output
+        self._cbm_bottleneck = embeddings
+        self._cbm_pred_concepts = c_pred.detach().cpu().numpy()
+        self._cbm_pred_output = torch.argmax(y_logits.detach(), dim = 1).cpu().numpy()
 
-    def step()
+        obs = self._get_obs()
+        info = self._get_info()
+
+        return obs, info
+
+    def step(self, action):
+
+        prev_interventions = torch.unsqueeze(torch.IntTensor(self._intervened_concepts), dim = 0)
+        new_interventions_map = self._intervened_concepts_map
+        new_interventions = prev_interventions.copy()
+        new_interventions_map[0, action] = 1
+        concept_group = sorted(list(self.concept_group_map.keys()))[action]
+        for concept in concept_group:
+            new_interventions[0, concept] = 1
+        x, y, (c, competencies, _) = self.unpack_batch(self._cbm_data)
+        
+        with torch.no_grad():
+            outputs = self.cbm_forward(
+                x,
+                intervention_idxs=new_interventions,
+                c=c,
+                y=y,
+                train=self._train,
+                competencies=competencies,
+                prev_interventions=prev_interventions,
+            )
+            c_sem, c_pred, y_logits = outputs[0], outputs[1], outputs[2]
+            pos_embeddings = outputs[-2]
+            neg_embeddings = outputs[-1]
+            prob = prev_interventions * c_sem + (1 - prev_interventions) * prob
+            embeddings = (
+                torch.unsqueeze(prob, dim=-1) * pos_embeddings.detach() +
+                (1 - torch.unsqueeze(prob, dim=-1)) * neg_embeddings.detach()
+            ).cpu().numpy()
+            ac_model_output = torch.squeeze(
+                self.ac_model(
+                        b = torch.unsqueeze(new_interventions.to(self.ac_model.device), dim = 0)
+                    )
+            .detach(), dim = 0).cpu().numpy()
+        self._ac_model_output = ac_model_output
+        self._intervened_concepts_map = new_interventions_map
+        self._intervened_concepts = new_interventions.copy().detach().squeeze().cpu().numpy()
+        self._cbm_bottleneck = embeddings
+        self._cbm_pred_concepts = c_pred.detach().cpu().numpy()
+        self._cbm_pred_output = torch.argmax(y_logits.detach(), dim = 1).cpu().numpy()
+
+        obs = self._get_obs()
+        info = self._get_info()
+
+        return obs, info
+

@@ -263,7 +263,8 @@ def main(
                         accelerator=accelerator,
                         devices=devices,
                         rerun=current_rerun,
-                        ac_old_results=ac_old_results
+                        ac_old_results=ac_old_results,
+                        full_run_name=full_run_name
                     )
 
 

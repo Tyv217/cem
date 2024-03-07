@@ -1239,8 +1239,10 @@ def train_ac_model(
     rerun=False,
     ac_old_results=None,
     save_model=True,
+    full_run_name = None
 ):  
     architecture = ac_model_config["architecture"]
+    full_run_name = full_run_name or f"ac_{architecture}_model_split_{split}"
     if("flow" in architecture):
         ac_model = ACFlow(
             n_concepts = n_concepts, 
@@ -1324,10 +1326,10 @@ def train_ac_model(
                 f"\tTransformations: {ac_model_config['transformations']}\n"
                 f"\tSave path: {ac_model_config['save_path']}"
             )
-            start_time = time.time()
+            training_time = time.time()
             trainer.fit(ac_model, train_dl, val_dl)
 
-            training_time += time.time()
+            training_time = time.time() - training_time
             num_epochs = trainer.current_epoch
             config_copy = copy.deepcopy(ac_model_config)
             joblib.dump(
@@ -1377,7 +1379,7 @@ def train_ac_model(
             "test_nll"
         ]
         if ac_model_config.get('top_k_accuracy', None):
-            top_k_args = config['top_k_accuracy']
+            top_k_args = ac_model_config['top_k_accuracy']
             if top_k_args is None:
                 top_k_args = []
             if not isinstance(top_k_args, list):
@@ -1388,7 +1390,7 @@ def train_ac_model(
             function=_inner_call,
             keys=keys,
             full_run_name=(
-                f"ACModel{config.get('extra_name', '')}"
+                f"ACModel{ac_model_config.get('extra_name', '')}"
             ),
             old_results=ac_old_results,
             rerun=rerun,
@@ -1410,7 +1412,7 @@ def train_ac_model(
         )
     else:
         test_results = None
-    return model, test_results
+    return ac_model, test_results
 
 
 def update_statistics(results, config, model, test_results, save_model=True):

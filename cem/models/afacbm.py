@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pytorch_lightning as pl
 import sklearn.metrics
@@ -1167,20 +1168,7 @@ class ACConceptEmbeddingModel(
         # DEBUG
         self.units = units
         self.concept_rank_model = torch.nn.Sequential(*layers)
-
-        if ac_model_config.get("save_path", None) is not None:
-            try:
-                self.ac_model = ACFlow.load_from_checkpoint(checkpoint_path = ac_model_config['save_path'])
-                logging.debug(
-                    f"AC CBM loaded AC model checkpoint from {ac_model_config['save_path']}"
-                    f"AC model trained with {self.ac_model.current_epoch} epochs"
-                )
-                self.train_ac_model = False
-            except:
-                raise ValueError(f"ACFlow model checkpoint at {ac_model_config['save_path']} incorrect / not found")
-            self.train_ac_model = False
-        else:
-            self.ac_model = ACFlow(
+        self.ac_model = ACFlow(
                 n_concepts = n_concepts,
                 n_tasks = n_tasks,
                 layer_cfg = ac_model_config['layer_cfg'],
@@ -1193,7 +1181,25 @@ class ACConceptEmbeddingModel(
                 prior_hids = ac_model_config['prior_hids'],
                 n_components = ac_model_config['n_components']
             )
+        if ac_model_config.get("save_path", None) is not None:
+            chpt_exists = (
+                os.path.exists(ac_model_config['save_path'])
+            )
+            if chpt_exists:
+                self.ac_model.load_state_dict(torch.load(ac_model_config['save_path']))
+                logging.debug(
+                    f"AC CBM loaded AC model checkpoint from {ac_model_config['save_path']}"
+                    f"AC model trained with {self.ac_model.current_epoch} epochs"
+                )
+                self.train_ac_model = False
+            else:
+                raise ValueError(f"ACFlow model checkpoint at {ac_model_config['save_path']} incorrect / not found")
+            self.train_ac_model = False
+        else:
             self.train_ac_model = True
+            logging.debug(
+                f"Training AC Flow model simultaneously with CEM model."
+            )
 
         self.ac_model_nll_ratio = ac_model_nll_ratio
         self.ac_model_weight = ac_model_weight

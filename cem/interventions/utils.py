@@ -1254,10 +1254,10 @@ def test_interventions(
                 independent=independent,
                 task_class_weights=task_class_weights,
             )
-            print(
-                f"\tIntervening in {full_run_name} with policy {policy} and "
-                f"competence {competence_level}"
-            )
+            # print(
+            #     f"\tIntervening in {full_run_name} with policy {policy} and "
+            #     f"competence {competence_level}"
+            # )
             if competence_level == 1:
                 key = f'test_acc_y_{policy}_ints_{full_run_name}'
                 int_time_key = f'avg_int_time_{policy}_ints_{full_run_name}'

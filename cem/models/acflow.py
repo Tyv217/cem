@@ -815,7 +815,7 @@ class ACTransformDataset(Dataset):
         y = y.to(torch.int64)
         return {'x': x, 'b': b, 'm': m, 'y': y}
 
-    def transform_batch(x, y, intervention_style = False):
+    def transform_batch(x, y):
         B = x.shape[0]
         d = x.shape[-1]
         b = np.zeros([B, d], dtype=np.float32)
@@ -845,7 +845,6 @@ class ACTransformDataset(Dataset):
 def ac_transform_dataloader(dataloader, n_tasks, batch_size, use_concepts = False):
     dataset = ACTransformDataset(dataloader.dataset, n_tasks, use_concepts = use_concepts)
     return torch.utils.data.DataLoader(dataset, batch_size = batch_size, shuffle = isinstance(dataloader.sampler, RandomSampler), num_workers = dataloader.num_workers)
-
 
 class ACInpaintTransformDataset(Dataset):
     def __init__(self, dataset, n_tasks, use_concepts = False, train = True):

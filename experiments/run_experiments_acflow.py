@@ -60,7 +60,7 @@ def main(
     logging.debug(
         f"Applying transformations..."
     )
-    train_dl = ac_transform_dataloader(train_dl, n_tasks)
+    train_dl = ac_transform_dataloader(train_dl, n_tasks, experiment_config["batch_size"])
     # For now, we assume that all concepts have the same
     # aquisition cost
     experiment_config["shared_params"]["n_concepts"] = \
@@ -81,8 +81,8 @@ def main(
     logging.info(
         f"\tNumber of training concepts: {n_concepts}"
     )
-    val_dl = ac_transform_dataloader(val_dl, n_tasks)
-    test_dl = ac_transform_dataloader(test_dl, n_tasks)
+    val_dl = ac_transform_dataloader(val_dl, n_tasks, experiment_config["batch_size"])
+    test_dl = ac_transform_dataloader(test_dl, n_tasks, experiment_config["batch_size"])
 
     sample = next(iter(train_dl.dataset))
 

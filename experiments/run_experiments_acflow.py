@@ -219,8 +219,8 @@ def main(
             pdb.set_trace()
 
             for p in path:
-                b[p[0]][p[1]] = 0
-                pred[p[0]][p[1]] = 0
+                b[p[0] * 6  + p[1]] = 0
+                pred[p[0] * 6  + p[1]] = 0
 
             def array_to_image(tensor):
                 image_size = tensor.shape[-1]
@@ -239,10 +239,10 @@ def main(
             for p in path:
                 pred_with = pred.clone()
                 pred_without = pred.clone()
-                pred_with[p[0]][p[1]] = 1
-                pred_without[p[0]][p[1]] = 0
+                pred_with[p[0] * 6  + p[1]] = 1
+                pred_without[p[0] * 6  + p[1]] = 0
                 m = b.clone()
-                m[p[0]][p[1]] = 1
+                m[p[0] * 6  + p[1]] = 1
                 batch_with = {}
                 batch_with['x'] = pred_with
                 batch_with['b'] = b
@@ -259,13 +259,13 @@ def main(
                 logpu_without, logpo_without = model.predict_step(batch_without, counter)
                 loglikel_without = torch.mean(torch.logsumexp(logpu_without + logpo_without, dim = 1) - torch.logsumexp(logpo_without, dim = 1))
 
-                pred[p[0]][p[1]] = 1 if loglikel_with > loglikel_without else 0
+                pred[p[0] * 6  + p[1]] = 1 if loglikel_with > loglikel_without else 0
 
                 inpainted = np.where(m.clone().cpu().numpy() == 1, pred.clone().cpu().numpy(), 0.5)
                 inpainted = array_to_image(inpainted)
                 inpainted.save(f"results/inpainted_{i}_{counter}.png")
                 
-                b[p[0]][p[1]] = 1
+                b[p[0] * 6  + p[1]] = 1
 
     return results
 

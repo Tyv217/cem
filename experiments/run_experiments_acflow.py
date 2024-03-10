@@ -271,7 +271,9 @@ def main(
 
                 inpainted = np.where(m.clone().cpu().numpy() == 1, pred.clone().cpu().numpy(), 0.5)
                 inpainted = array_to_image(inpainted)
-                inpainted.save(f"results/inpainted_{i}_{counter}.png")
+                inpainted.save(f"{results_dir}/inpainted_{i}_{counter}.png")
+
+                counter += 1
                 
                 b[p[0] * (image_size - 1)  + p[1]] = 1
 

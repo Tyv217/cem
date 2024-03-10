@@ -34,6 +34,10 @@ class ACFlow(pl.LightningModule):
         B = x.shape[0]
         d = self.n_concepts
         N = self.n_tasks
+        if(len(x.shape) == 1):
+            x = torch.unsqueeze(x, dim = 0)
+            b = torch.unsqueeze(b, dim = 0)
+            m = torch.unsqueeze(m, dim = 0)
         x = torch.tile(torch.unsqueeze(x, dim = 1), [1, N, 1])
         x = torch.reshape(x, [B * N, d])
         b = torch.tile(torch.unsqueeze(b, dim = 1), [1, N, 1])

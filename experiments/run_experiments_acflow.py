@@ -190,6 +190,12 @@ def main(
 
         for i in range(10):
             data = next(it)
+            logging.debug(
+                f"x_shape: {data['x'].shape}, "
+                f"b_shape: {data['b'].shape}, "
+                f"m_shape: {data['m'].shape}, "
+                f"y_shape: {data['y'].shape}"
+            )
 
             inpaint_iters = int(np.random.rand() * 10) + 1
 
@@ -256,7 +262,7 @@ def main(
                 logpu_with, logpo_with = model.predict_step(batch_with, counter)
                 loglikel_with = torch.mean(torch.logsumexp(logpu_with + logpo_with, dim = 1) - torch.logsumexp(logpo_with, dim = 1))
                 batch_without = {}
-                batch_without['x'] = pred_with
+                batch_without['x'] = pred_without
                 batch_without['b'] = b
                 batch_without['m'] = m
                 batch_without['y'] = None

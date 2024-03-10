@@ -246,6 +246,13 @@ def main(
                 batch_with['m'] = m
                 batch_with['y'] = None
                 
+                logging.debug(
+                    f"x_shape: {batch_with['x'].shape}, "
+                    f"b_shape: {batch_with['b'].shape}, "
+                    f"m_shape: {batch_with['m'].shape}, "
+                    f"y_shape: {batch_with['y'].shape}"
+                )
+
                 logpu_with, logpo_with = model.predict_step(batch_with, counter)
                 loglikel_with = torch.mean(torch.logsumexp(logpu_with + logpo_with, dim = 1) - torch.logsumexp(logpo_with, dim = 1))
                 batch_without = {}

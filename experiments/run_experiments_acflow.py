@@ -180,7 +180,7 @@ def main(
         model.freeze()
 
         sample = next(iter(test_dl))
-        image_size = sample[0].shape[-1]
+        image_size = sample['x'].shape[-1]
 
         print(
             f"Testing inpaint on image size {image_size}x{image_size}..."

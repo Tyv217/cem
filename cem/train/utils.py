@@ -376,7 +376,7 @@ class WrapperModule(pl.LightningModule):
     def training_step(self, batch, batch_no):
         loss, result = self._run_step(batch, batch_no, train=True)
         for name, val in result.items():
-            self.log(name, val, prog_bar=("accuracy" in name))
+            self.log(name, val, prog_bar=("accuracy" in name), sync_dist = True)
         return {
             "loss": loss,
             "log": {
@@ -390,7 +390,7 @@ class WrapperModule(pl.LightningModule):
     def validation_step(self, batch, batch_no):
         loss, result = self._run_step(batch, batch_no, train=False)
         for name, val in result.items():
-            self.log("val_" + name, val, prog_bar=("accuracy" in name))
+            self.log("val_" + name, val, prog_bar=("accuracy" in name), sync_dist = True)
         return {
             "val_" + key: val
             for key, val in result.items()
@@ -399,7 +399,7 @@ class WrapperModule(pl.LightningModule):
     def test_step(self, batch, batch_no):
         loss, result = self._run_step(batch, batch_no, train=False)
         for name, val in result.items():
-            self.log("test_" + name, val, prog_bar=True)
+            self.log("test_" + name, val, prog_bar=True, sync_dist = True)
         return result['loss']
 
     def configure_optimizers(self):

@@ -183,10 +183,10 @@ def main(
         image_size = sample['x'].shape[-1]
 
         print(
-            f"Testing inpaint on image size {image_size}x{image_size}..."
+            f"Testing inpaint on image size {image_size}..."
         )
 
-        it = iter(test_dl)
+        it = iter(test_dl.dataset)
 
         for i in range(10):
             data = next(it)

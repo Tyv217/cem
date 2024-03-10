@@ -743,7 +743,7 @@ class ConceptBottleneckModel(pl.LightningModule):
                     ("num_rollouts" in name)
 
                 )
-            self.log(name, val, prog_bar=prog_bar)
+            self.log(name, val, prog_bar=prog_bar, sync_dist = True)
         return {
             "loss": loss,
             "log": {
@@ -767,7 +767,7 @@ class ConceptBottleneckModel(pl.LightningModule):
                 prog_bar = (("auc" in name))
             else:
                 prog_bar = (("c_auc" in name) or ("y_accuracy" in name))
-            self.log("val_" + name, val, prog_bar=prog_bar)
+            self.log("val_" + name, val, prog_bar=prog_bar, sync_dist = True)
         result = {
             "val_" + key: val
             for key, val in result.items()
@@ -777,7 +777,7 @@ class ConceptBottleneckModel(pl.LightningModule):
     def test_step(self, batch, batch_no):
         loss, result = self._run_step(batch, batch_no, train=False)
         for name, val in result.items():
-            self.log("test_" + name, val, prog_bar=True)
+            self.log("test_" + name, val, prog_bar=True, sync_dist = True)
         return result['loss']
 
     def configure_optimizers(self):

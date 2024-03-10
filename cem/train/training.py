@@ -1355,6 +1355,8 @@ def train_ac_model(
     else:
         raise ValueError(f"AC {architecture} model current not supported.")
     
+    return save_path
+    
     
     
     if test_dl is not None:

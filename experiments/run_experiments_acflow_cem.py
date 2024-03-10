@@ -251,7 +251,7 @@ def main(
                         split=split,
                         full_run_name=full_run_name,
                     )
-                    training.train_ac_model(
+                    ac_model_saved_path = training.train_ac_model(
                         n_concepts=n_concepts,
                         n_tasks=n_tasks,
                         ac_model_config = experiment_config['shared_params']['ac_model_config'],
@@ -267,6 +267,7 @@ def main(
                         full_run_name=full_run_name
                     )
 
+                    experiment_config['shared_params']['save_path'] = ac_model_saved_path
 
                 if run_config["architecture"] in [
                     "IndependentConceptBottleneckModel",

@@ -181,9 +181,11 @@ def main(
 
         sample = next(iter(test_dl))
         image_size = sample['x'].shape[-1]
+        
+        image_size = int(np.sqrt(image_size))
 
         print(
-            f"Testing inpaint on image size {image_size}..."
+            f"Testing inpaint on image size {image_size} x {image_size}..."
         )
 
         it = iter(test_dl.dataset)
@@ -204,7 +206,7 @@ def main(
             b = torch.ones_like(data['x'])
 
             directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-            start_point = (random.randint(0, 6), random.randint(0, 6))
+            start_point = (random.randint(0, (image_size - 1)), random.randint(0, (image_size - 1)))
             path = [start_point]
             while len(path) < inpaint_iters:
                 current_point = path[-1]
@@ -222,13 +224,10 @@ def main(
             pred = data['x'].clone()
 
             for p in path:
-                b[p[0] * 6  + p[1]] = 0
-                pred[p[0] * 6  + p[1]] = 0
+                b[p[0] * (image_size - 1)  + p[1]] = 0
+                pred[p[0] * (image_size - 1)  + p[1]] = 0
 
             def array_to_image(tensor):
-                image_size = tensor.shape[-1]
-                image_size = int(np.sqrt(image_size))
-                image_size = (image_size, image_size)
                 tensor = tensor*255
                 tensor = np.array(tensor, dtype=np.uint8)
                 tensor = np.reshape(tensor, image_size)
@@ -247,10 +246,10 @@ def main(
                 )
                 pred_with = pred.clone()
                 pred_without = pred.clone()
-                pred_with[p[0] * 6  + p[1]] = 1
-                pred_without[p[0] * 6  + p[1]] = 0
+                pred_with[p[0] * (image_size - 1)  + p[1]] = 1
+                pred_without[p[0] * (image_size - 1)  + p[1]] = 0
                 m = b.clone()
-                m[p[0] * 6  + p[1]] = 1
+                m[p[0] * (image_size - 1)  + p[1]] = 1
                 batch_with = {}
                 batch_with['x'] = pred_with
                 batch_with['b'] = b
@@ -261,7 +260,6 @@ def main(
                     f"x_shape: {batch_with['x'].shape}, "
                     f"b_shape: {batch_with['b'].shape}, "
                     f"m_shape: {batch_with['m'].shape}, "
-                    f"y_shape: {batch_with['y'].shape}"
                 )
 
                 logpu_with, logpo_with = model.predict_step(batch_with, counter)
@@ -274,13 +272,13 @@ def main(
                 logpu_without, logpo_without = model.predict_step(batch_without, counter)
                 loglikel_without = torch.mean(torch.logsumexp(logpu_without + logpo_without, dim = 1) - torch.logsumexp(logpo_without, dim = 1))
 
-                pred[p[0] * 6  + p[1]] = 1 if loglikel_with > loglikel_without else 0
+                pred[p[0] * (image_size - 1)  + p[1]] = 1 if loglikel_with > loglikel_without else 0
 
                 inpainted = np.where(m.clone().cpu().numpy() == 1, pred.clone().cpu().numpy(), 0.5)
                 inpainted = array_to_image(inpainted)
                 inpainted.save(f"results/inpainted_{i}_{counter}.png")
                 
-                b[p[0] * 6  + p[1]] = 1
+                b[p[0] * (image_size - 1)  + p[1]] = 1
 
     return results
 

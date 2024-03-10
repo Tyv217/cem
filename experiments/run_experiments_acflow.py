@@ -239,11 +239,6 @@ def main(
             original = array_to_image(data['x'].clone().cpu().numpy())
             original.save(f"{results_dir}/original_{i}.png")
             for p in path:
-                import pdb
-                pdb.set_trace()
-                logging.debug(
-                    f"pred: {pred}"
-                )
                 pred_with = pred.clone()
                 pred_without = pred.clone()
                 pred_with[p[0] * (image_size - 1)  + p[1]] = 1

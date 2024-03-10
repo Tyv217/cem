@@ -1262,6 +1262,18 @@ def train_ac_model(
             lambda_xent = 1, 
             lambda_nll = 1
         )
+
+        if test_dl is not None:
+            test_dl = ac_transform_dataloader(test_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
+            ac_model.freeze()
+            [test_results] = trainer.test(ac_model, test_dl)
+            logging.debug(
+                f"AC Model test results before training:\n"
+            )
+            for key, val in test_results.items():
+                logging.debug(
+                    f"\t{key}: {val}"
+                )
         save_path = result_dir + ("" if result_dir[-1] == "/" else "/")  + f"acflow_model_trial_{split}.pt"
         ac_model_config['save_path'] = save_path
 

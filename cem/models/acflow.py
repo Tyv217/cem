@@ -5,7 +5,6 @@ import logging
 import pytorch_lightning as pl
 import torch.nn.functional as F
 import numpy as np
-import tensorflow as tf
 
 from torch.distributions import kl_divergence
 from torch.nn import Module

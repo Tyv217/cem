@@ -230,7 +230,7 @@ def main(
             def array_to_image(tensor):
                 tensor = tensor*255
                 tensor = np.array(tensor, dtype=np.uint8)
-                tensor = np.reshape(tensor, image_size)
+                tensor = np.reshape(tensor, (image_size, image_size))
                 if np.ndim(tensor)>3:
                     assert tensor.shape[0] == 1
                     tensor = tensor[0]

@@ -213,7 +213,7 @@ def main(
 
             inpaint_iters = len(path)
 
-            pred = data[0].clone()
+            pred = data['x'].clone()
 
             for p in path:
                 b[p[0]][p[1]] = 0

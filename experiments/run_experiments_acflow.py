@@ -215,6 +215,9 @@ def main(
 
             pred = data['x'].clone()
 
+            import pdb
+            pdb.set_trace()
+
             for p in path:
                 b[p[0]][p[1]] = 0
                 pred[p[0]][p[1]] = 0

@@ -2,7 +2,7 @@ trials: 1
 results_dir: results/afa/mnist_acflow_cem
 dataset: mnist_add
 num_workers: 8
-batch_size: 1024
+batch_size: 512
 num_operands: 12
 selected_digits:
   - [0,1,2]
@@ -28,7 +28,7 @@ skip_repr_evaluation: True
 
 # Intervention Parameters
 intervention_freq: 1
-intervention_batch_size: 256
+intervention_batch_size: 512
 intervention_policies:
     - "intcem_policy"
     - "optimal_greedy_no_prior"
@@ -62,7 +62,7 @@ shared_params:
     ac_model_config:
       architecture: flow
       max_epochs: 100
-      batch_size: 1024
+      batch_size: 512
       transformations: [AF, TL, TL, TL, TL, AF]
       layer_cfg: [LR, CP2]
       rnncp_units: 256

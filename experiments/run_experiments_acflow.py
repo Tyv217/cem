@@ -195,7 +195,7 @@ def main(
 
             print(data.keys())
 
-            b = torch.ones_like(data[0])
+            b = torch.ones_like(data['x'])
 
             directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
             start_point = (random.randint(0, 6), random.randint(0, 6))
@@ -231,7 +231,7 @@ def main(
                     tensor = tensor[0]
                 return PIL.Image.fromarray(tensor, mode='L')
             counter = 0
-            original = array_to_image(data[0].clone().cpu().numpy())
+            original = array_to_image(data['x'].clone().cpu().numpy())
             original.save(f"{results_dir}/original_{i}.png")
             for p in path:
                 pred_with = pred.clone()

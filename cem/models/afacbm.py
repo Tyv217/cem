@@ -686,16 +686,18 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
                     # unseen concepts to indicate which one we should intervene
                     # on next!
                     self.horizon_index = j
-                    concept_group_scores = self._prior_int_distribution(
-                        prob=c_sem,
-                        pos_embeddings=pos_embeddings,
-                        neg_embeddings=neg_embeddings,
-                        competencies=competencies,
-                        prev_interventions=intervention_idxs,
-                        c=c_used,
-                        horizon=(current_horizon - i),
-                        train=train,
-                    )
+                    # concept_group_scores = self._prior_int_distribution(
+                    #     prob=c_sem,
+                    #     pos_embeddings=pos_embeddings,
+                    #     neg_embeddings=neg_embeddings,
+                    #     competencies=competencies,
+                    #     prev_interventions=intervention_idxs,
+                    #     c=c_used,
+                    #     horizon=(current_horizon - i),
+                    #     train=train,
+                    # )
+                    batch_size = c_sem.shape[0]
+                    concept_group_scores = torch.zeros((batch_size, len(self.concept_map) if self.use_concept_groups else self.n_concepts))
                     # Generate as a label the concept which increases the
                     # probability of the correct class the most when
                     # intervened on

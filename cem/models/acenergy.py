@@ -13,7 +13,7 @@ def generate_random_numbers(n,n_concept):
 
 
 
-class EBM(pl.LightningModule):
+class ACEnergy(pl.LightningModule):
     
     # def __init__(self,args,num_classes, input_size=1000, hid_size=1000, cpt_size=None):
     def __init__(self,n_concepts, n_tasks, c_embed_size, y_embed_size, energy_model_architecture = "linear", optimizer = None, learning_rate = None, weight_decay = None, momentum = None):
@@ -37,6 +37,9 @@ class EBM(pl.LightningModule):
         self.smx_y = torch.nn.Softmax(dim=-2)
         self.smx_c = torch.nn.Softmax(dim=-1)
         self.dropout = torch.nn.Dropout(p=0.2)
+    
+    def compute_concept_probabilities(self, x, b, m, y):
+        pass
 
             
     def cy_augment(self,c_gt,permute_ratio,permute_prob=0.2):
@@ -143,8 +146,6 @@ class EBM(pl.LightningModule):
             xc_energy.append(xc_energy_single)
         xc_energy=torch.cat(xc_energy,dim=1)
 
-            
-
         #### c->y energy.####
         if use_cy:
             if not is_training:
@@ -159,7 +160,7 @@ class EBM(pl.LightningModule):
                 cy_embed = c_embed * y_embed
                 cy_embed = c_embed + cy_embed
                 cy_embed = F.relu(cy_embed) # [bs,label_size, hidden_size]
-                # c_y_energy_embed=z_cy.view(bs*self.num_classes,-1)
+                # c_y_energy_embererund=z_cy.view(bs*self.num_classes,-1)
                 cy_energy = self.classifier_cy(cy_embed) # [bs, 1, 1]
                 # do a class-wise energy transpose.
                 cy_energy = cy_energy.view(bs, -1)
@@ -195,3 +196,17 @@ class EBM(pl.LightningModule):
             return xy_energy,cy_energy,xc_energy,(y_prob,c_prob)
         else:
             return xy_energy,cy_energy,xc_energy
+        
+    def forward(self, x, m, y = None, train = False):
+        # x -> concepts, m -> 0 = missing data, y = label
+
+        # (batch_size, n_concepts)
+        x = self.
+
+        
+# [0,1]^k concepts -> [0,1]^n tasks
+# E(c,y) = concept embeddings + class embeddings -> energy 
+# [batch_size, n_concepts, c_hidden_size] -> [batch_size, n_tasks, y_hidden_size] -> [batch_size, energy]
+# n_concepts, c_hidden_size -> hidden_size
+# n_tasks, y_hidden_size -> hidden_size 
+# hidden_size -> 1

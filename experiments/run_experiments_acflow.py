@@ -190,7 +190,7 @@ def main(
 
         it = iter(test_dl.dataset)
 
-        for i in range(10):
+        for i in range(30):
             data = next(it)
             logging.debug(
                 f"x_shape: {data['x'].shape}, "

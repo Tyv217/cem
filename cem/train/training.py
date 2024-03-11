@@ -1356,7 +1356,7 @@ def train_ac_model(
         raise ValueError(f"AC {architecture} model current not supported.")    
     
     if test_dl is not None:
-        test_dl = ac_transform_dataloader(test_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
+        # test_dl = ac_transform_dataloader(test_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
         ac_model.freeze()
 
         def _inner_call(trainer, model):

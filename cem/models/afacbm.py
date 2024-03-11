@@ -184,8 +184,8 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
                 )
                 self.train_ac_model = False
             else:
-                raise ValueError(f"ACFlow model checkpoint at {ac_model_config['save_path']} incorrect / not found")
-            self.train_ac_model = False
+                logging.debug(f"ACFlow model checkpoint at {ac_model_config['save_path']} incorrect / not found")
+                self.train_ac_model = 
         else:
             self.train_ac_model = True
             logging.debug(
@@ -347,7 +347,11 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             for b in range(used_groups.shape[0]):
                 for concept in concept_map_vals[int(unintervened_groups[b][i])]:
                     missing[b][concept] = 1.
-            loglikel = self.ac_model.compute_concept_probabilities(x = predicted_and_intervened_concepts, b = mask, m = missing, y = None)
+            if self.train_ac_model:
+                with torch.no_grad():
+                    loglikel = self.ac_model.compute_concept_probabilities(x = predicted_and_intervened_concepts, b = mask, m = missing, y = None)
+            else:
+                loglikel = self.ac_model.compute_concept_probabilities(x = predicted_and_intervened_concepts, b = mask, m = missing, y = None)
             likel = torch.logsumexp(loglikel, dim = -1)
             batches = torch.arange(used_groups.shape[0])
             indices = unintervened_groups[batches, i].cpu()
@@ -356,6 +360,8 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             for b in range(used_groups.shape[0]):
                 for concept in concept_map_vals[int(unintervened_groups[b][i])]:
                     missing[b][concept] = 0.
+
+        
         cat_inputs = [
             likel_sparse,
             torch.reshape(embeddings, [-1, self.emb_size * self.n_concepts]),
@@ -461,7 +467,7 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             ac_model_loss_scalar = ac_model_loss.detach() * self.ac_model_weight
 
         else:
-            self.ac_model.freeze()
+            self.ac_model.eval()
 
         intervention_task_loss = 0.0
 
@@ -1192,8 +1198,9 @@ class ACConceptEmbeddingModel(
                 )
                 self.train_ac_model = False
             else:
-                raise ValueError(f"ACFlow model checkpoint at {ac_model_config['save_path']} incorrect / not found")
-            self.train_ac_model = False
+                logging.debug(f"ACFlow model checkpoint at {ac_model_config['save_path']} incorrect / not found")
+                self.train_ac_model = True
+            
         else:
             self.train_ac_model = True
             logging.debug(

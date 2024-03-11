@@ -961,9 +961,9 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             concept_loss_scalar = 0.0
 
         loss = (
-            # self.concept_loss_weight * concept_loss +
+            self.concept_loss_weight * concept_loss +
             self.intervention_weight * intervention_loss +
-            self.ac_model_weight * ac_model_loss +
+            # self.ac_model_weight * ac_model_loss +
             self.task_loss_weight * task_loss +
             self.intervention_task_loss_weight * intervention_task_loss
         )

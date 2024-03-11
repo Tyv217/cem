@@ -135,7 +135,7 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             len(concept_map) if self.use_concept_groups else n_concepts
         self.include_probs = include_probs
         units = [
-            (n_concepts if self.use_concept_groups else len(self.concept_map)) * 2 +
+            (n_concepts if self.use_concept_groups else len(self.concept_map)) +
             n_concepts + # Bottleneck
             n_concepts + # Prev interventions
             (n_concepts if self.include_probs else 0) + # Predicted Probs
@@ -334,8 +334,7 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             unintervened_groups = torch.stack(padded_list)
             num_groups = max_length
                     
-        logpus_sparse = torch.zeros(used_groups.shape, dtype = torch.float32, device = used_groups.device)
-        logpos_sparse = torch.zeros(used_groups.shape, dtype = torch.float32, device = used_groups.device)
+        likel_sparse = torch.zeros(used_groups.shape, dtype = torch.float32, device = used_groups.device)
 
         mask = prev_interventions.clone().float()
         missing = prev_interventions.clone().float()
@@ -345,20 +344,17 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             for b in range(used_groups.shape[0]):
                 for concept in concept_map_vals[int(unintervened_groups[b][i])]:
                     missing[b][concept] = 1.
-            logpu, logpo, _, _, _ = self.ac_model(x = predicted_and_intervened_concepts, b = mask, m = missing, y = None)
-            pu = torch.logsumexp(logpu, dim = -1)
-            po = torch.logsumexp(logpo, dim = -1)
+            loglikel = self.ac_model.compute_concept_probabilities(x = predicted_and_intervened_concepts, b = mask, m = missing, y = None)
+            likel = torch.logsumexp(loglikel, dim = -1)
             batches = torch.arange(used_groups.shape[0])
             indices = unintervened_groups[batches, i].cpu()
-            logpus_sparse[batches, indices] = pu[batches]            
-            logpos_sparse[batches, indices] = po[batches]
+            likel_sparse[batches, indices] = likel[batches] 
 
             for b in range(used_groups.shape[0]):
                 for concept in concept_map_vals[int(unintervened_groups[b][i])]:
                     missing[b][concept] = 0.
         cat_inputs = [
-            logpus_sparse,
-            logpos_sparse,
+            likel_sparse,
             torch.reshape(embeddings, [-1, self.emb_size * self.n_concepts]),
             prev_interventions,
 #                 competencies,
@@ -1145,7 +1141,7 @@ class ACConceptEmbeddingModel(
         max_horizon_val = len(concept_map) if use_concept_groups else n_concepts
         self.include_probs = include_probs
         units = [
-            (len(self.concept_map) if self.use_concept_groups else n_concepts) * 2 +
+            (len(self.concept_map) if self.use_concept_groups else n_concepts) +
             n_concepts * emb_size + # Bottleneck
             n_concepts + # Prev interventions
             (n_concepts if include_probs else 0) + # Predicted probs

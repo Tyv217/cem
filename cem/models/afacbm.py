@@ -169,6 +169,9 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             prior_hids = ac_model_config['prior_hids'],
             n_components = ac_model_config['n_components']
         )
+        logging.debug(
+            f"AC Model Configuration: {ac_model_config}"
+        )
         if ac_model_config.get("save_path", None) is not None:
             chpt_exists = (
                 os.path.exists(ac_model_config['save_path'])

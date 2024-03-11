@@ -287,10 +287,10 @@ class FlowInterventionPolicy(CooP):
         )
 
         for i in range(self.num_groups_intervened):
-            logging.debug(
-                f"Intervening with {i + 1}/{self.num_groups_intervened} "
-                f"concepts in CooP"
-            )
+            # logging.debug(
+            #     f"Intervening with {i + 1}/{self.num_groups_intervened} "
+            #     f"concepts in CooP"
+            # )
             mask, latent, y_preds = self._coop_step(
                 x=x,
                 c=c,

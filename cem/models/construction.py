@@ -202,7 +202,7 @@ def construct_model(
             "legacy_mode": config.get("legacy_mode", False),
             "include_certainty": config.get("include_certainty", True),
         }
-    elif config["architecture"] in ["ACConceptBottleneckModel", "ACFCBM"]:
+    elif config["architecture"] in ["ACConceptBottleneckModel", "ACCBM"]:
         model_cls = models_afacbm.ACConceptBottleneckModel
         extra_params = {
             "bool": config["bool"],

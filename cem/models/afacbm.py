@@ -348,10 +348,10 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
                 for concept in concept_map_vals[int(unintervened_groups[b][i])]:
                     missing[b][concept] = 1.
             if self.train_ac_model:
-                with torch.no_grad():
                     loglikel = self.ac_model.compute_concept_probabilities(x = predicted_and_intervened_concepts, b = mask, m = missing, y = None)
             else:
-                loglikel = self.ac_model.compute_concept_probabilities(x = predicted_and_intervened_concepts, b = mask, m = missing, y = None)
+                with torch.no_grad():
+                    loglikel = self.ac_model.compute_concept_probabilities(x = predicted_and_intervened_concepts, b = mask, m = missing, y = None)
             likel = torch.logsumexp(loglikel, dim = -1)
             batches = torch.arange(used_groups.shape[0])
             indices = unintervened_groups[batches, i].cpu()

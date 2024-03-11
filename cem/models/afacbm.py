@@ -185,7 +185,7 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
                 self.train_ac_model = False
             else:
                 logging.debug(f"ACFlow model checkpoint at {ac_model_config['save_path']} incorrect / not found")
-                self.train_ac_model = 
+                self.train_ac_model = True
         else:
             self.train_ac_model = True
             logging.debug(
@@ -352,7 +352,7 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             else:
                 with torch.no_grad():
                     loglikel = self.ac_model.compute_concept_probabilities(x = predicted_and_intervened_concepts, b = mask, m = missing, y = None)
-                    loglikel = torch.zeros_lke(loglikel)
+                    # loglikel = torch.zeros_lke(loglikel)
             likel = torch.logsumexp(loglikel, dim = -1)
             batches = torch.arange(used_groups.shape[0])
             indices = unintervened_groups[batches, i].cpu()
@@ -686,18 +686,18 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
                     # unseen concepts to indicate which one we should intervene
                     # on next!
                     self.horizon_index = j
-                    # concept_group_scores = self._prior_int_distribution(
-                    #     prob=c_sem,
-                    #     pos_embeddings=pos_embeddings,
-                    #     neg_embeddings=neg_embeddings,
-                    #     competencies=competencies,
-                    #     prev_interventions=intervention_idxs,
-                    #     c=c_used,
-                    #     horizon=(current_horizon - i),
-                    #     train=train,
-                    # )
-                    batch_size = c_sem.shape[0]
-                    concept_group_scores = torch.zeros((batch_size, len(self.concept_map) if self.use_concept_groups else self.n_concepts))
+                    concept_group_scores = self._prior_int_distribution(
+                        prob=c_sem,
+                        pos_embeddings=pos_embeddings,
+                        neg_embeddings=neg_embeddings,
+                        competencies=competencies,
+                        prev_interventions=intervention_idxs,
+                        c=c_used,
+                        horizon=(current_horizon - i),
+                        train=train,
+                    )
+                    # batch_size = c_sem.shape[0]
+                    # concept_group_scores = torch.zeros((batch_size, len(self.concept_map) if self.use_concept_groups else self.n_concepts))
                     # Generate as a label the concept which increases the
                     # probability of the correct class the most when
                     # intervened on
@@ -963,7 +963,7 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
         loss = (
             self.concept_loss_weight * concept_loss +
             self.intervention_weight * intervention_loss +
-            # self.ac_model_weight * ac_model_loss +
+            self.ac_model_weight * ac_model_loss +
             self.task_loss_weight * task_loss +
             self.intervention_task_loss_weight * intervention_task_loss
         )

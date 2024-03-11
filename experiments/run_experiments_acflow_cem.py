@@ -267,7 +267,11 @@ def main(
                         full_run_name=full_run_name
                     )
 
-                    experiment_config['shared_params']['save_path'] = ac_model_saved_path
+                    experiment_config['shared_params']['ac_model_config']['save_path'] = ac_model_saved_path
+
+                    logging.debug(
+                        f"Setting ac model save path to be {ac_model_saved_path}"
+                    )
 
                 if run_config["architecture"] in [
                     "IndependentConceptBottleneckModel",

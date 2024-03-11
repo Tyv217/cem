@@ -446,6 +446,9 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
         ac_model_loss_scalar = 0.0
         # Do some rollouts for flow model
         if self.ac_model_weight != 0 and train and self.train_ac_model:
+            logging.debug(
+                f"Passing through ac model"
+            )
             if self.rollout_aneal_rate != 1:
                 ac_model_rollouts = int(round(
                     self.ac_model_rollouts * (

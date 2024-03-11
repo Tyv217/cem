@@ -1263,6 +1263,14 @@ def train_ac_model(
             lambda_nll = 1
         )
 
+        trainer = pl.Trainer(
+            accelerator=accelerator,
+            devices=devices,
+            max_epochs=ac_model_config.get('max_epochs', 100),
+            logger=False,
+            enable_checkpointing=False
+        )
+
         if test_dl is not None:
             test_dl = ac_transform_dataloader(test_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
             ac_model.freeze()
@@ -1294,14 +1302,6 @@ def train_ac_model(
             f"AC Data loader batch size: {train_dl.batch_size}"
         )
 
-        trainer = pl.Trainer(
-            accelerator=accelerator,
-            devices=devices,
-            max_epochs=ac_model_config.get('max_epochs', 100),
-            logger=False,
-            enable_checkpointing=False
-        )
-        
         training_time, num_epochs = 0, 0
         if (not rerun) and chpt_exists:
             try:
@@ -1353,9 +1353,7 @@ def train_ac_model(
                     np.array([training_time, num_epochs]),
                 )
     else:
-        raise ValueError(f"AC {architecture} model current not supported.")
-    
-    
+        raise ValueError(f"AC {architecture} model current not supported.")    
     
     if test_dl is not None:
         test_dl = ac_transform_dataloader(test_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
@@ -1416,7 +1414,7 @@ def train_ac_model(
         )
     else:
         test_results = None
-    return ac_model, test_results
+    return ac_model, test_results, save_path
 
 
 def update_statistics(results, config, model, test_results, save_model=True):

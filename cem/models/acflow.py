@@ -116,7 +116,6 @@ class ACFlow(pl.LightningModule):
         
         class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1]).to(logpu.device)
 
-
         loglikel = torch.logsumexp(logpu + logpo + class_weights, dim = 1) - torch.logsumexp(logpo + class_weights, dim = 1)
         nll = torch.mean(-loglikel)
         

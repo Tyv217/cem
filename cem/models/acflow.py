@@ -109,12 +109,13 @@ class ACFlow(pl.LightningModule):
         
         x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
         
-        class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1]).to(logpu.device)
-
         logpu, logpo, _, _, _ = self(x,b,m,y)
 
         logits = logpu + logpo
         xent = self.xent_loss(logits, y)
+        
+        class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1]).to(logpu.device)
+
 
         loglikel = torch.logsumexp(logpu + logpo + class_weights, dim = 1) - torch.logsumexp(logpo + class_weights, dim = 1)
         nll = torch.mean(-loglikel)
@@ -134,13 +135,13 @@ class ACFlow(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
 
         x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
-        
-        class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1]).to(logpu.device)
-
+    
         logpu, logpo, _, _, _ = self(x,b,m,y)
 
         logits = logpu + logpo
         xent = self.xent_loss(logits, y)
+
+        class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1]).to(logpu.device)
 
         loglikel = torch.logsumexp(logpu + logpo + class_weights, dim = 1) - torch.logsumexp(logpo + class_weights, dim = 1)
         nll = torch.mean(-loglikel)
@@ -161,11 +162,11 @@ class ACFlow(pl.LightningModule):
         
         x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
 
-        class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1]).to(logpu.device)
-
         logpu, logpo, _, _, _ = self(x,b,m,y)
 
         logits = logpu + logpo
+
+        class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1]).to(logpu.device)
 
         loglikel = torch.logsumexp(logpu + logpo + class_weights, dim = 1) - torch.logsumexp(logpo + class_weights, dim = 1)
         nll = torch.mean(-loglikel)

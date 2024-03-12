@@ -202,7 +202,12 @@ def construct_model(
             "legacy_mode": config.get("legacy_mode", False),
             "include_certainty": config.get("include_certainty", True),
         }
-    elif config["architecture"] in ["ACConceptBottleneckModel", "ACCBM"]:
+    long_ac_architecture = ""
+    short_ac_architecture = ""
+    if config.get("ac_model_config", None) is not None:
+        long_ac_architecture = config["ac_model_config"]["architecture"]
+        short_ac_architecture = long_ac_architecture[0].upper()
+    elif config["architecture"] in [f"AC{long_ac_architecture}ConceptBottleneckModel", f"AC{short_ac_architecture}CBM"]:
         model_cls = models_afacbm.ACConceptBottleneckModel
         extra_params = {
             "bool": config["bool"],
@@ -274,7 +279,7 @@ def construct_model(
             "legacy_mode": config.get("legacy_mode", False),
             "include_certainty": config.get("include_certainty", True),
         }
-    elif config["architecture"] in ["ACConceptEmbeddingModel", "ACFCEM"]:
+    elif config["architecture"] in [f"AC{long_ac_architecture}ConceptEmbeddingModel", f"AC{short_ac_architecture}CEM"]:
         model_cls = models_afacbm.ACConceptEmbeddingModel
         extra_params = {
             "emb_size": config["emb_size"],

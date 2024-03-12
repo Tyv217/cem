@@ -180,7 +180,6 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
                 self.ac_model.load_state_dict(torch.load(ac_model_config['save_path']))
                 logging.debug(
                     f"AC CBM loaded AC model checkpoint from {ac_model_config['save_path']}"
-                    f"AC model trained with {self.ac_model.current_epoch} epochs"
                 )
                 self.train_ac_model = False
             else:
@@ -1199,7 +1198,6 @@ class ACConceptEmbeddingModel(
                 self.ac_model.load_state_dict(torch.load(ac_model_config['save_path']))
                 logging.debug(
                     f"AC CBM loaded AC model checkpoint from {ac_model_config['save_path']}"
-                    f"AC model trained with {self.ac_model.current_epoch} epochs"
                 )
                 self.train_ac_model = False
             else:

@@ -1028,14 +1028,20 @@ def get_int_policy(
             policy_params["x_train"] = x_train
             policy_params["y_train"] = y_train
             policy_params["c_train"] = c_train
+            
+            long_ac_architecture = ""
+            short_ac_architecture = ""
+            if config.get("ac_model_config", None) is not None:
+                long_ac_architecture = config["ac_model_config"]["architecture"]
+                short_ac_architecture = long_ac_architecture[0].upper()
             policy_params["emb_size"] = (
                 config["emb_size"] if config["architecture"] in [
                     "CEM",
                     "ConceptEmbeddingModel",
                     "IntAwareConceptEmbeddingModel",
                     "IntCEM",
-                    "ACConceptEmbeddingModel",
-                    "ACCEM",
+                    f"AC{long_ac_architecture}ConceptEmbeddingModel",
+                    f"AC{short_ac_architecture}CEM",
                 ]
                 else 1
             )

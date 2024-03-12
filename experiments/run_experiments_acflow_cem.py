@@ -269,7 +269,7 @@ def main(
 
                     run_config['ac_model_config']['save_path'] = ac_model_saved_path
 
-                    logging.debug(
+                logging.debug(
                         f"Setting ac model save path to be {ac_model_saved_path}"
                     )
 

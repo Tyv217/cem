@@ -714,6 +714,12 @@ def _build_arg_parser():
         default=False,
         help="starts debug mode in our program.",
     )
+    parser.add_argument(
+        "--devices",
+        default=-1,
+        help="Devices for training",
+        type=int,
+    )
 
     parser.add_argument(
         "--force_cpu",
@@ -898,6 +904,7 @@ if __name__ == '__main__':
             "gpu" if (not args.force_cpu) and (torch.cuda.is_available())
             else "cpu"
         ),
+        devices=args.devices,
         experiment_config=loaded_config,
         activation_freq=args.activation_freq,
         single_frequency_epochs=args.single_frequency_epochs,

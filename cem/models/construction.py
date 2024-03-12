@@ -49,7 +49,8 @@ def construct_model(
     short_ac_architecture = ""
     if config.get("ac_model_config", None) is not None:
         long_ac_architecture = config["ac_model_config"]["architecture"]
-        long_ac_architecture[0] = short_ac_architecture = long_ac_architecture[0].upper()
+        short_ac_architecture = long_ac_architecture[0].upper()
+        long_ac_architecture = short_ac_architecture + long_ac_architecture[1:]
     # if long_ac_architecture != "":
     #     logging.debug(
     #         long_ac_architecture

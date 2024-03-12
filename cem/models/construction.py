@@ -49,11 +49,11 @@ def construct_model(
     short_ac_architecture = ""
     if config.get("ac_model_config", None) is not None:
         long_ac_architecture = config["ac_model_config"]["architecture"]
-        short_ac_architecture = long_ac_architecture[0].upper()
-    if long_ac_architecture != "":
-        logging.debug(
-            long_ac_architecture
-        )
+        long_ac_architecture[0] = short_ac_architecture = long_ac_architecture[0].upper()
+    # if long_ac_architecture != "":
+    #     logging.debug(
+    #         long_ac_architecture
+    #     )
     if config["architecture"] in ["ConceptEmbeddingModel", "MixtureEmbModel"]:
         model_cls = models_cem.ConceptEmbeddingModel
         extra_params = {

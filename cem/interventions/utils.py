@@ -1033,7 +1033,8 @@ def get_int_policy(
             short_ac_architecture = ""
             if config.get("ac_model_config", None) is not None:
                 long_ac_architecture = config["ac_model_config"]["architecture"]
-                long_ac_architecture[0] = short_ac_architecture = long_ac_architecture[0].upper()
+                short_ac_architecture = long_ac_architecture[0].upper()
+                long_ac_architecture = short_ac_architecture + long_ac_architecture[1:]
             policy_params["emb_size"] = (
                 config["emb_size"] if config["architecture"] in [
                     "CEM",

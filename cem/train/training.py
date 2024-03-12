@@ -1388,11 +1388,12 @@ def train_ac_model(
                 top_k_args = [top_k_args]
             for top_k in sorted(top_k_args):
                 keys.append(f'test_top_{top_k}_acc_y')
+        long_ac_architecture = architecture[0].upper() + architecture[1:]
         values, _ = utils.load_call(
             function=_inner_call,
             keys=keys,
             full_run_name=(
-                f"ACModel{ac_model_config.get('extra_name', '')}"
+                f"AC{long_ac_architecture}Model{ac_model_config.get('extra_name', '')}"
             ),
             old_results=ac_old_results,
             rerun=rerun,

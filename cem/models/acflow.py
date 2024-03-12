@@ -100,7 +100,7 @@ class ACFlow(pl.LightningModule):
     def compute_concept_probabilities(self, x, b, m, y):
         logpu, logpo, _, _, _ = self(x, b, m, y)
 
-        class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1])
+        class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1]).to(logpu.device)
         loglikel = torch.logsumexp(logpu + logpo + class_weights, dim = 1) - torch.logsumexp(logpo + self.class_weights, dim = 1)
 
         return loglikel
@@ -109,7 +109,7 @@ class ACFlow(pl.LightningModule):
         
         x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
         
-        class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1])
+        class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1]).to(logpu.device)
 
         logpu, logpo, _, _, _ = self(x,b,m,y)
 
@@ -135,7 +135,7 @@ class ACFlow(pl.LightningModule):
 
         x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
         
-        class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1])
+        class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1]).to(logpu.device)
 
         logpu, logpo, _, _, _ = self(x,b,m,y)
 
@@ -161,7 +161,7 @@ class ACFlow(pl.LightningModule):
         
         x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
 
-        class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1])
+        class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1]).to(logpu.device)
 
         logpu, logpo, _, _, _ = self(x,b,m,y)
 
@@ -183,10 +183,6 @@ class ACFlow(pl.LightningModule):
     def predict_step(self, batch, batch_idx):
         
         x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
-        class_weights = torch.tensor(np.array(batch.get('class_weights', [1. for _ in range(self.n_tasks)])).astype(self.float_type)).to(x.device)
-        class_weights /= torch.sum(class_weights)
-        class_weights = torch.log(class_weights)
-        class_weights = torch.tile(torch.unsqueeze(class_weights, dim = 0), [x.shape[0], 1])
 
         logpu, logpo, _, _, _ = self(x,b,m,y)
         

@@ -181,14 +181,16 @@ class IntAwareConceptBottleneckModel(ConceptBottleneckModel):
         self.intervention_task_loss_weight = intervention_task_loss_weight
 
         if horizon_uniform_distr:
-            self._horizon_distr = lambda init, end: np.random.randint(
-                init,
-                end,
-            )
+            def horizon_dist(init, end):
+                return np.random.randint(init,end,)
+            self._horizon_distr = horizon_dist
         else:
-            self._horizon_distr = lambda init, end: int(
-                np.random.beta(beta_a, beta_b) * (end - init) + init
-            )
+            def horizon_dist(init, end):
+                return int(np.random.beta(beta_a, beta_b) * (end - init) + init)
+            self._horizon_distr = horizon_dist
+            # self._horizon_distr = lambda init, end: int(
+            #     np.random.beta(beta_a, beta_b) * (end - init) + init
+            # )
 
 
     def get_concept_int_distribution(
@@ -1072,14 +1074,16 @@ class IntAwareConceptEmbeddingModel(
         self.use_concept_groups = use_concept_groups
 
         if horizon_uniform_distr:
-            self._horizon_distr = lambda init, end: np.random.randint(
-                init,
-                end,
-            )
+            def horizon_dist(init, end):
+                return np.random.randint(init,end,)
+            self._horizon_distr = horizon_dist
         else:
-            self._horizon_distr = lambda init, end: int(
-                np.random.beta(beta_a, beta_b) * (end - init) + init
-            )
+            def horizon_dist(init, end):
+                return int(np.random.beta(beta_a, beta_b) * (end - init) + init)
+            self._horizon_distr = horizon_dist
+            # self._horizon_distr = lambda init, end: int(
+            #     np.random.beta(beta_a, beta_b) * (end - init) + init
+            # )
 
     def _after_interventions(
         self,

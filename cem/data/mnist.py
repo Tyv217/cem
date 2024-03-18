@@ -67,6 +67,7 @@ def load_mnist(
         download=True,
         transform = transformations
     )
+    test_dataset_size = max(test_dataset_size, len(ds_test))
 
     logging.debug(
         f"Loading {test_dataset_size}/{len(ds_test)} samples for testing"
@@ -117,6 +118,7 @@ def load_mnist(
         download=True,
         transform=transformations,
     )
+    train_dataset_size = max(train_dataset_size, len(ds_train))
 
     logging.debug(
         f"Loading {train_dataset_size}/{len(ds_train)} samples for testing"

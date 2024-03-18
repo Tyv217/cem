@@ -68,7 +68,12 @@ def load_mnist(
         transform = transformations
     )
 
-    ds_test.transform = transformations
+    logging.debug(
+        f"Loading {test_dataset_size}/{len(ds_test)} samples for testing"
+    )
+
+    indices = torch.randperm(len(ds_test)).tolist()[:test_dataset_size]
+    ds_test = torch.utils.data.Subset(ds_test, indices)
 
     # Put all the images into a single np array for easy
     # manipulation
@@ -112,6 +117,13 @@ def load_mnist(
         download=True,
         transform=transformations,
     )
+
+    logging.debug(
+        f"Loading {train_dataset_size}/{len(ds_train)} samples for testing"
+    )
+
+    indices = torch.randperm(len(ds_train)).tolist()[:train_dataset_size]
+    ds_train = torch.utils.data.Subset(ds_train, indices)
 
     x_train = []
     y_train = []

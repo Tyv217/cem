@@ -12,13 +12,6 @@ def generate_random_numbers(n,n_concept):
     return list(numbers)
 
 
-# y: [batch_size, n_tasks, hidden_size]
-# c: [batch_size, n_concepts, hidden_size]
-
-# c -> y energy
-
-
-
 
 class EBM(pl.LightningModule):
     

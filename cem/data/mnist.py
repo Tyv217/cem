@@ -123,7 +123,7 @@ def load_mnist(
     logging.debug(
         f"Loading {train_dataset_size}/{len(ds_train)} samples for testing"
     )
-
+    
     indices = torch.randperm(len(ds_train)).tolist()[:train_dataset_size]
     ds_train = torch.utils.data.Subset(ds_train, indices)
 

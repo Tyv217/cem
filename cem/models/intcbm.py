@@ -184,7 +184,7 @@ class IntAwareConceptBottleneckModel(ConceptBottleneckModel):
         self.beta_a = beta_a
         self.beta_b = beta_b
 
-    def _horizon_dist(self, init, end):
+    def _horizon_distr(self, init, end):
         if self.horizon_uniform_distr:
             return np.random.randint(init,end)
         else:
@@ -1075,7 +1075,7 @@ class IntAwareConceptEmbeddingModel(
         self.beta_a = beta_a
         self.beta_b = beta_b
 
-    def _horizon_dist(self, init, end):
+    def _horizon_distr(self, init, end):
         if self.horizon_uniform_distr:
             return np.random.randint(init,end)
         else:

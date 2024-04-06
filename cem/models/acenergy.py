@@ -30,8 +30,8 @@ class ACEnergy(pl.LightningModule):
         
         # self.c_prob = torch.nn.Parameter(torch.randn((self.n_concepts)))
         self.c_embedding = torch.nn.Parameter(torch.randn((self.n_concepts*2, embed_size)))
-
         self.classifier_cy = torch.nn.Linear(embed_size, 1)
+        self.concept_proj = torch.nn.Linear(self.n_concepts * embed_size, embed_size)
         self.smx_y = torch.nn.Softmax(dim=-2)
         self.smx_c = torch.nn.Softmax(dim=-1)
         self.dropout = torch.nn.Dropout(p=0.2)
@@ -76,8 +76,6 @@ class ACEnergy(pl.LightningModule):
         return c_gt
 
     def forward(self, c_gt, train):
-        import pdb
-        pdb.set_trace()
         # input x is encoded image.
         bs = c_gt.shape[0]
 
@@ -207,6 +205,8 @@ class ACEnergy(pl.LightningModule):
         #     c_embed.append(single_c_embed)
         # c_embed=torch.cat(c_embed,dim=1).view(bs,-1)
         c_embed = c_embed.view(bs, -1)
+        import pdb
+        pdb.set_trace()
         c_embed=self.concept_proj(c_embed)
         c_embed = c_embed[:,None,:].expand_as(y_embed) # [bs,label_size, hidden_size]
         cy_embed = c_embed * y_embed
@@ -392,14 +392,17 @@ class ACEnergy(pl.LightningModule):
             optimizer = torch.optim.Adam(
                 self.y_embedding.parameters()
                 + self.c_embedding.parameters() 
+                + self.concept_proj.parameters()
                 + self.classifier_cy.parameters(),
                 lr=self.learning_rate,
                 weight_decay=self.weight_decay,
             )
         else:
             optimizer = torch.optim.SGD(
-                filter(lambda p: p.requires_grad, self.y_embedding.parameters()
+                filter(lambda p: p.requires_grad, 
+                self.y_embedding.parameters()
                 + self.c_embedding.parameters() 
+                + self.concept_proj.parameters()
                 + self.classifier_cy.parameters()),
                 lr=self.learning_rate,
                 momentum=self.momentum,

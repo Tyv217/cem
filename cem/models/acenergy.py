@@ -351,10 +351,10 @@ class ACEnergy(pl.LightningModule):
             f"class_weights.shape: {class_weights.shape}"
         )
 
-        concept_probabilities = concept_probabilities * class_weights
+        # concept_probabilities = concept_probabilities * class_weights
         
     
-        concept_probabilities = torch.sum(concept_probabilities, dim = 2)
+        concept_probabilities = torch.sum(concept_probabilities, dim = 1)
 
         return concept_probabilities
     

@@ -52,6 +52,9 @@ def main(
     single_frequency_epochs=0,
     activation_freq=0,
 ):
+    logging.debug(
+        f"devices: {devices}"
+    )
     seed_everything(42)
     # parameters for data, model, and training
     experiment_config = copy.deepcopy(experiment_config)

@@ -205,8 +205,6 @@ class ACEnergy(pl.LightningModule):
         #     c_embed.append(single_c_embed)
         # c_embed=torch.cat(c_embed,dim=1).view(bs,-1)
         c_embed = c_embed.view(bs, -1)
-        import pdb
-        pdb.set_trace()
         c_embed=self.concept_proj(c_embed)
         c_embed = c_embed[:,None,:].expand_as(y_embed) # [bs,label_size, hidden_size]
         cy_embed = c_embed * y_embed

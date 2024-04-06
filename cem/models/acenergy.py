@@ -19,12 +19,13 @@ class ACEnergy(pl.LightningModule):
         super().__init__()
 
         self.n_concepts = n_concepts
-        self.n_tasks = n_tasks
+        self.n_tasks = n_tasks if n_tasks > 1 else 2
         self.embed_size = embed_size
         self.cy_perturb_prob = cy_perturb_prob
         self.cy_permute_prob = cy_permute_prob
 
         # self.y_prob = torch.nn.Parameter(torch.randn((self.n_tasks)))
+        
         self.y_embedding = torch.nn.Parameter(torch.randn((self.n_tasks, embed_size)))
         
         # self.c_prob = torch.nn.Parameter(torch.randn((self.n_concepts)))

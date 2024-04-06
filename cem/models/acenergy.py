@@ -394,8 +394,8 @@ class ACEnergy(pl.LightningModule):
             optimizer = torch.optim.Adam(
                 [self.y_embedding,
                 self.c_embedding]
-                + self.concept_proj.parameters()
-                + self.classifier_cy.parameters(),
+                + list(self.concept_proj.parameters())
+                + list(self.classifier_cy.parameters()),
                 lr=self.learning_rate,
                 weight_decay=self.weight_decay,
             )
@@ -404,8 +404,8 @@ class ACEnergy(pl.LightningModule):
                 filter(lambda p: p.requires_grad, 
                 [self.y_embedding,
                 self.c_embedding]
-                + self.concept_proj.parameters()
-                + self.classifier_cy.parameters()),
+                + list(self.concept_proj.parameters())
+                + list(self.classifier_cy.parameters())),
                 lr=self.learning_rate,
                 momentum=self.momentum,
                 weight_decay=self.weight_decay,

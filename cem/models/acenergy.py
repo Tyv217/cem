@@ -40,6 +40,11 @@ class ACEnergy(pl.LightningModule):
         self.class_weights = torch.log(class_weights)
 
         self.class_list = [i for i in range(self.n_tasks)]
+
+        self.optimizer_name = optimizer
+        self.learning_rate = learning_rate
+        self.weight_decay = weight_decay
+        self.momentum = momentum
             
     def cy_augment(self,c_gt,permute_ratio,permute_prob=0.2):
         """
@@ -328,6 +333,36 @@ class ACEnergy(pl.LightningModule):
         concept_probabilities = torch.sum(concept_probabilities, dim = 2)
 
         return concept_probabilities
+    
+    
+    def configure_optimizers(self):
+        if self.optimizer_name.lower() == "adam":
+            optimizer = torch.optim.Adam(
+                self.y_embedding.parameters()
+                + self.c_embedding.parameters() 
+                + self.classifier_cy.parameters(),
+                lr=self.learning_rate,
+                weight_decay=self.weight_decay,
+            )
+        else:
+            optimizer = torch.optim.SGD(
+                filter(lambda p: p.requires_grad, self.y_embedding.parameters()
+                + self.c_embedding.parameters() 
+                + self.classifier_cy.parameters()),
+                lr=self.learning_rate,
+                momentum=self.momentum,
+                weight_decay=self.weight_decay,
+            )
+        lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer,
+            verbose=True,
+        )
+        
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": lr_scheduler,
+            "monitor": "loss",
+        }
 
 
 

@@ -392,8 +392,8 @@ class ACEnergy(pl.LightningModule):
     def configure_optimizers(self):
         if self.optimizer_name.lower() == "adam":
             optimizer = torch.optim.Adam(
-                self.y_embedding.parameters()
-                + self.c_embedding.parameters() 
+                [self.y_embedding,
+                self.c_embedding]
                 + self.concept_proj.parameters()
                 + self.classifier_cy.parameters(),
                 lr=self.learning_rate,
@@ -402,8 +402,8 @@ class ACEnergy(pl.LightningModule):
         else:
             optimizer = torch.optim.SGD(
                 filter(lambda p: p.requires_grad, 
-                self.y_embedding.parameters()
-                + self.c_embedding.parameters() 
+                [self.y_embedding,
+                self.c_embedding]
                 + self.concept_proj.parameters()
                 + self.classifier_cy.parameters()),
                 lr=self.learning_rate,

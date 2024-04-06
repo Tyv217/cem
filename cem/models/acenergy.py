@@ -310,6 +310,13 @@ class ACEnergy(pl.LightningModule):
     def test_step(self, batch, batch_idx):
         x, b, m, y = batch
 
+        logging.debug(
+            f"x:{x}\n"
+            f"b:{b}\n"
+            f"m:{m}\n"
+            f"y:{y}\n"
+        )
+
         all_concepts = x * m
 
         all_concepts_energy = self(all_concepts)

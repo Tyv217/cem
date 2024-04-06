@@ -681,11 +681,6 @@ def _build_arg_parser():
 
     )
     parser.add_argument(
-        '--devices',
-        default = "auto",
-        type=str
-    )
-    parser.add_argument(
         '--rerun',
         '-r',
         default=False,
@@ -902,5 +897,4 @@ if __name__ == '__main__':
         experiment_config=loaded_config,
         activation_freq=args.activation_freq,
         single_frequency_epochs=args.single_frequency_epochs,
-        devices = args.devices,
     )

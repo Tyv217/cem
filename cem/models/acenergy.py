@@ -276,6 +276,9 @@ class ACEnergy(pl.LightningModule):
 
         concepts = x * m
 
+        import pdb
+        pdb.set_trace()
+
         energy = self.forward(concepts, train = True)
         predL = self._run_step(energy, y, train = True)
 

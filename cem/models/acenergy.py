@@ -64,8 +64,8 @@ class ACEnergy(pl.LightningModule):
         bs,all_length=c_gt.shape[0],c_gt.shape[-1]
         permute_concept_number=all_length*permute_ratio
         permute_sample_number=bs*permute_prob
-        permute_concept_idx=torch.tensor(generate_random_numbers(permute_concept_number,all_length)).to(c_gt.device_)
-        permute_samps=torch.tensor(generate_random_numbers(permute_sample_number,bs)).to(c_gt.device_)
+        permute_concept_idx=torch.tensor(generate_random_numbers(permute_concept_number,all_length)).to(c_gt.device)
+        permute_samps=torch.tensor(generate_random_numbers(permute_sample_number,bs)).to(c_gt.device)
         c_gt=c_gt.long()
         to_be_interf=c_gt[permute_samps]
         to_be_interf[:,permute_concept_idx]=to_be_interf[:,permute_concept_idx]^1

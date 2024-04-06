@@ -272,7 +272,7 @@ class ACEnergy(pl.LightningModule):
         
 
     def training_step(self, batch, batch_idx):
-        x, b, m, y = batch
+        x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
 
         concepts = x * m
 
@@ -291,7 +291,7 @@ class ACEnergy(pl.LightningModule):
         return result
     
     def validation_step(self, batch, batch_idx):
-        x, b, m, y = batch
+        x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
 
         concepts = x * m
 

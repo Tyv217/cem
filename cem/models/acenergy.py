@@ -234,8 +234,9 @@ class ACEnergy(pl.LightningModule):
         # p(x_u, x_o | y) = e^(E(x_u + x_o, y)) / sum_y(E(x_u + x_o, y))
 
         # e^(E(x_u + x_o, y))
-        import pdb
-        pdb.set_trace()
+        if y is not None:
+            import pdb
+            pdb.set_trace()
         
         if y is None:
             # p(c | y)

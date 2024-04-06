@@ -1334,12 +1334,12 @@ def train_ac_model(
             )
     if rerun or not(chpt_exists):
         logging.warning(
-            f"We will rerun model ac_flow_split_{split} "
+            f"We will rerun model ac_{architecture}_split_{split} "
             f"as requested by the config"
         )
         logging.debug(
             f"Starting AC Flow Model training...\n"
-            f"\tTransformations: {ac_model_config['transformations']}\n"
+            # f"\tTransformations: {ac_model_config['transformations']}\n"
             f"\tSave path: {ac_model_config['save_path']}"
         )
         training_time = time.time()

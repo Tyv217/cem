@@ -181,7 +181,7 @@ class ACEnergy(pl.LightningModule):
         c_pos=c_gt
         c_pos=c_pos.unsqueeze(-1)
         if train:
-            c_pos=self.cy_augment(c_gt=c_pos,permute_ratio=self.cy_concept_perturb_prob,permute_prob=self.cy_sample_perturb_prob)
+            c_pos=self.cy_augment(c_gt=c_pos,permute_ratio=self.cy_perturb_prob,permute_prob=self.cy_permute_prob)
         # for k in range(c_pos.shape[1]):
         #     single_c_embed=torch.where(c_pos[:,k]==1,c_embed_cy[:,k,:],c_embed_cy[:,k+self.n_concepts,:])
         #     # print(single_c_embed.shape)

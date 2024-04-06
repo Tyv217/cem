@@ -310,27 +310,43 @@ class ACEnergy(pl.LightningModule):
     def test_step(self, batch, batch_idx):
         x, b, m, y = batch
 
-        import pdb
-        pdb.set_trace()
-
         all_concepts = x * m
 
         all_concepts_energy = self(all_concepts)
 
         all_concepts_probabilities = self._run_step(all_concepts_energy, y, train = False)
 
+        logging.debug(
+            f"all_concepts.shape: {all_concepts.shape}\n"
+            f"all_concepts_energy.shape: {all_concepts_energy.shape}\n"
+            f"all_concepts_probabilities.shape: {all_concepts_probabilities.shape}\n"
+        )
+
         # p(x_o | y)
         observed_concepts = x * m * b
         observed_concepts_energy = self(observed_concepts)
-
         observed_concepts_probabilities = self._run_step(observed_concepts_energy, y, train = False)
+
+        logging.debug(
+            f"observed_concepts.shape: {all_concepts.shape}\n"
+            f"observed_concepts_energy.shape: {all_concepts_energy.shape}\n"
+            f"observed_concepts_probabilities.shape: {all_concepts_probabilities.shape}\n"
+        )
 
         # p(x_u | x_o, y)
         concept_probabilities = all_concepts_probabilities / observed_concepts_probabilities
 
         # p(x_u | x_o)
         class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1])
+
+
+        logging.debug(
+            f"concept_probabilities.shape: {concept_probabilities.shape}\n"
+            f"class_weights.shape: {class_weights.shape}"
+        )
+
         concept_probabilities = concept_probabilities * class_weights
+        
     
         concept_probabilities = torch.sum(concept_probabilities, dim = 2)
 

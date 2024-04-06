@@ -11,6 +11,7 @@ from torchvision.models import resnet50
 from cem.models.cbm import ConceptBottleneckModel, compute_accuracy
 from cem.models.cem import ConceptEmbeddingModel
 from cem.models.acflow import ACFlow, ACTransformDataset
+from cem.models.acenergy import ACEnergy
 import cem.train.utils as utils
 
 class ACConceptBottleneckModel(ConceptBottleneckModel):
@@ -156,19 +157,30 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             if i != len(units) - 1:
                 layers.append(torch.nn.LeakyReLU())
         self.concept_rank_model = torch.nn.Sequential(*layers)
-        self.ac_model = ACFlow(
-            n_concepts = n_concepts,
-            n_tasks = n_tasks,
-            layer_cfg = ac_model_config['layer_cfg'],
-            affine_hids = ac_model_config['affine_hids'],
-            linear_rank = ac_model_config['linear_rank'],
-            linear_hids = ac_model_config['linear_hids'],
-            transformations = ac_model_config['transformations'],
-            prior_units = ac_model_config['prior_units'],
-            prior_layers = ac_model_config['prior_layers'],
-            prior_hids = ac_model_config['prior_hids'],
-            n_components = ac_model_config['n_components']
-        )
+        if "flow" in ac_model_config['architecture']:
+            self.ac_model = ACFlow(
+                n_concepts = n_concepts,
+                n_tasks = n_tasks,
+                layer_cfg = ac_model_config['layer_cfg'],
+                affine_hids = ac_model_config['affine_hids'],
+                linear_rank = ac_model_config['linear_rank'],
+                linear_hids = ac_model_config['linear_hids'],
+                transformations = ac_model_config['transformations'],
+                prior_units = ac_model_config['prior_units'],
+                prior_layers = ac_model_config['prior_layers'],
+                prior_hids = ac_model_config['prior_hids'],
+                n_components = ac_model_config['n_components']
+            )
+        elif "energy" in ac_model_config['architecture']:
+            self.ac_model = ACEnergy(
+                n_concepts = n_concepts,
+                n_tasks = n_tasks,
+                # embed_size = ac_model_config["embed_size"],
+                # cy_perturb_prob = ac_model_config.get("cy_perturb_prob", None),
+                # cy_perturb_prob = ac_model_config.get("", None)
+            )
+        else:
+            raise ValueError(f"AC{ac_model_config['architecture']} architecture not supported")
         if ac_model_config.get("save_path", None) is not None:
             chpt_exists = (
                 os.path.exists(ac_model_config['save_path'])
@@ -181,7 +193,7 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
                 )
                 self.train_ac_model = False
             else:
-                raise ValueError(f"ACFlow model checkpoint at {ac_model_config['save_path']} incorrect / not found")
+                raise ValueError(f"AC{ac_model_config['architecture']} model checkpoint at {ac_model_config['save_path']} incorrect / not found")
             self.train_ac_model = False
         else:
             self.train_ac_model = True
@@ -1164,7 +1176,8 @@ class ACConceptEmbeddingModel(
         # DEBUG
         self.units = units
         self.concept_rank_model = torch.nn.Sequential(*layers)
-        self.ac_model = ACFlow(
+        if "flow" in ac_model_config['architecture']:
+            self.ac_model = ACFlow(
                 n_concepts = n_concepts,
                 n_tasks = n_tasks,
                 layer_cfg = ac_model_config['layer_cfg'],
@@ -1177,6 +1190,16 @@ class ACConceptEmbeddingModel(
                 prior_hids = ac_model_config['prior_hids'],
                 n_components = ac_model_config['n_components']
             )
+        elif "energy" in ac_model_config['architecture']:
+            self.ac_model = ACEnergy(
+                n_concepts = n_concepts,
+                n_tasks = n_tasks,
+                # embed_size = ac_model_config["embed_size"],
+                # cy_perturb_prob = ac_model_config.get("cy_perturb_prob", None),
+                # cy_perturb_prob = ac_model_config.get("", None)
+            )
+        else:
+            raise ValueError(f"AC{ac_model_config['architecture']} architecture not supported")
         if ac_model_config.get("save_path", None) is not None:
             chpt_exists = (
                 os.path.exists(ac_model_config['save_path'])
@@ -1189,7 +1212,7 @@ class ACConceptEmbeddingModel(
                 )
                 self.train_ac_model = False
             else:
-                raise ValueError(f"ACFlow model checkpoint at {ac_model_config['save_path']} incorrect / not found")
+                raise ValueError(f"AC{ac_model_config['architecture']} model checkpoint at {ac_model_config['save_path']} incorrect / not found")
             self.train_ac_model = False
         else:
             self.train_ac_model = True

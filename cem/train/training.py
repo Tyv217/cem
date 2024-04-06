@@ -26,6 +26,7 @@ from cem.models.construction import (
     load_trained_model,
 )
 from cem.models.acflow import ACFlow, ac_transform_dataloader
+from cem.models.acenergy import ACEnergy
 
 
 ################################################################################
@@ -1242,7 +1243,7 @@ def train_ac_model(
 ):  
     architecture = ac_model_config["architecture"]
     full_run_name = full_run_name or f"ac_{architecture}_model_split_{split}"
-    if("flow" in architecture):
+    if "flow" in architecture:
         ac_model = ACFlow(
             n_concepts = n_concepts, 
             n_tasks = n_tasks,
@@ -1262,98 +1263,104 @@ def train_ac_model(
             lambda_xent = 1, 
             lambda_nll = 1
         )
-
-        trainer = pl.Trainer(
-            accelerator=accelerator,
-            devices=devices,
-            max_epochs=ac_model_config.get('max_epochs', 100),
-            logger=False,
-            enable_checkpointing=False
+    elif "energy" in architecture:
+        ac_model = ACEnergy(
+            n_concepts = n_concepts, 
+            n_tasks = n_tasks,
         )
-
-        if test_dl is not None:
-            test_dl = ac_transform_dataloader(test_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
-            ac_model.freeze()
-            [test_results] = trainer.test(ac_model, test_dl)
-            logging.debug(
-                f"AC Model test results before training:\n"
-            )
-            for key, val in test_results.items():
-                logging.debug(
-                    f"\t{key}: {val}"
-                )
-        save_path = result_dir + ("" if result_dir[-1] == "/" else "/")  + f"acflow_model_trial_{split}.pt"
-        ac_model_config['save_path'] = save_path
-
-        chpt_exists = (
-            os.path.exists(save_path)
-        )
-
-        train_dl = ac_transform_dataloader(train_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
-        val_dl = ac_transform_dataloader(val_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
-        
-        sample = next(iter(train_dl.dataset))
-        logging.debug(
-            f"AC Model input shape:"
-            f"\tx:{sample['x'].shape}"
-            f"\tb:{sample['b'].shape}"
-            f"\tm:{sample['m'].shape}"
-            f"\ty:{sample['y'].shape}"
-            f"AC Data loader batch size: {train_dl.batch_size}"
-        )
-
-        training_time, num_epochs = 0, 0
-        if (not rerun) and chpt_exists:
-            try:
-                logging.debug(
-                    f"Found AC Flow model saved in {ac_model_config['save_path']}"
-                )
-                ac_model.load_state_dict(torch.load(save_path))
-            except:
-                logging.warning(
-                    f"Model at {ac_model_config['save_path']} not found. Defaulting to rerunning."
-                )
-                rerun = True
-            if os.path.exists(
-                save_path.replace(".pt", "_training_times.npy")
-            ):
-                [training_time, num_epochs] = np.load(
-                    save_path.replace(".pt", "_training_times.npy")
-                )
-        if rerun or not(chpt_exists):
-            logging.warning(
-                f"We will rerun model ac_flow_split_{split} "
-                f"as requested by the config"
-            )
-            logging.debug(
-                f"Starting AC Flow Model training...\n"
-                f"\tTransformations: {ac_model_config['transformations']}\n"
-                f"\tSave path: {ac_model_config['save_path']}"
-            )
-            training_time = time.time()
-            trainer.fit(ac_model, train_dl, val_dl)
-
-            training_time = time.time() - training_time
-            num_epochs = trainer.current_epoch
-            config_copy = copy.deepcopy(ac_model_config)
-            joblib.dump(
-                config_copy,
-                os.path.join(
-                    result_dir,
-                    f'{full_run_name}_experiment_config.joblib',
-                ),
-            )
-            if save_model:
-                torch.save(
-                    ac_model.state_dict(),
-                    save_path,
-                )
-                np.save(
-                    save_path.replace(".pt", "_training_times.npy"),
-                    np.array([training_time, num_epochs]),
-                )
     else:
         raise ValueError(f"AC {architecture} model current not supported.")    
+    
+
+    trainer = pl.Trainer(
+        accelerator=accelerator,
+        devices=devices,
+        max_epochs=ac_model_config.get('max_epochs', 100),
+        logger=False,
+        enable_checkpointing=False
+    )
+
+    if test_dl is not None:
+        test_dl = ac_transform_dataloader(test_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
+        ac_model.freeze()
+        [test_results] = trainer.test(ac_model, test_dl)
+        logging.debug(
+            f"AC Model test results before training:\n"
+        )
+        for key, val in test_results.items():
+            logging.debug(
+                f"\t{key}: {val}"
+            )
+    save_path = result_dir + ("" if result_dir[-1] == "/" else "/")  + f"acflow_model_trial_{split}.pt"
+    ac_model_config['save_path'] = save_path
+
+    chpt_exists = (
+        os.path.exists(save_path)
+    )
+
+    train_dl = ac_transform_dataloader(train_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
+    val_dl = ac_transform_dataloader(val_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
+    
+    sample = next(iter(train_dl.dataset))
+    logging.debug(
+        f"AC Model input shape:"
+        f"\tx:{sample['x'].shape}"
+        f"\tb:{sample['b'].shape}"
+        f"\tm:{sample['m'].shape}"
+        f"\ty:{sample['y'].shape}"
+        f"AC Data loader batch size: {train_dl.batch_size}"
+    )
+
+    training_time, num_epochs = 0, 0
+    if (not rerun) and chpt_exists:
+        try:
+            logging.debug(
+                f"Found AC Flow model saved in {ac_model_config['save_path']}"
+            )
+            ac_model.load_state_dict(torch.load(save_path))
+        except:
+            logging.warning(
+                f"Model at {ac_model_config['save_path']} not found. Defaulting to rerunning."
+            )
+            rerun = True
+        if os.path.exists(
+            save_path.replace(".pt", "_training_times.npy")
+        ):
+            [training_time, num_epochs] = np.load(
+                save_path.replace(".pt", "_training_times.npy")
+            )
+    if rerun or not(chpt_exists):
+        logging.warning(
+            f"We will rerun model ac_flow_split_{split} "
+            f"as requested by the config"
+        )
+        logging.debug(
+            f"Starting AC Flow Model training...\n"
+            f"\tTransformations: {ac_model_config['transformations']}\n"
+            f"\tSave path: {ac_model_config['save_path']}"
+        )
+        training_time = time.time()
+        trainer.fit(ac_model, train_dl, val_dl)
+
+        training_time = time.time() - training_time
+        num_epochs = trainer.current_epoch
+        config_copy = copy.deepcopy(ac_model_config)
+        joblib.dump(
+            config_copy,
+            os.path.join(
+                result_dir,
+                f'{full_run_name}_experiment_config.joblib',
+            ),
+        )
+        if save_model:
+            torch.save(
+                ac_model.state_dict(),
+                save_path,
+            )
+            np.save(
+                save_path.replace(".pt", "_training_times.npy"),
+                np.array([training_time, num_epochs]),
+            )
     
     if test_dl is not None:
         # test_dl = ac_transform_dataloader(test_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)

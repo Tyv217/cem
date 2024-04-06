@@ -35,7 +35,7 @@ class ACEnergy(pl.LightningModule):
         self.smx_c = torch.nn.Softmax(dim=-1)
         self.dropout = torch.nn.Dropout(p=0.2)
 
-        class_weights = torch.tensor(np.array(class_weights or [1. for _ in range(self.n_tasks)]).astype(self.float_type)).to(self.device)
+        class_weights = torch.tensor(np.array(class_weights or [1. for _ in range(self.n_tasks)]).astype("float32")).to(self.device)
         class_weights /= torch.sum(class_weights)
         self.class_weights = torch.log(class_weights)
 

@@ -61,7 +61,7 @@ shared_params:
     training_intervention_prob: 0.25
     separate_ac_model_training: True
     ac_model_config:
-      architecture: cem
+      architecture: energy
       max_epochs: 100
       batch_size: 1024
       optimizer: adam

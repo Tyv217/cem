@@ -216,7 +216,9 @@ class ConceptBottleneckModel(pl.LightningModule):
         elif (bottleneck_nonlinear is None) or (
             bottleneck_nonlinear == "identity"
         ):
-            self.bottleneck_nonlin = lambda x: x
+            def bottleneck_nonlin(x):
+                return x
+            self.bottleneck_nonlin = bottleneck_nonlin
         else:
             raise ValueError(
                 f"Unsupported nonlinearity '{bottleneck_nonlinear}'"
@@ -788,8 +790,10 @@ class ConceptBottleneckModel(pl.LightningModule):
                 weight_decay=self.weight_decay,
             )
         else:
+            def filter_grad(p):
+                return p.requires_grad
             optimizer = torch.optim.SGD(
-                filter(lambda p: p.requires_grad, self.parameters()),
+                filter(filter_grad, self.parameters()),
                 lr=self.learning_rate,
                 momentum=self.momentum,
                 weight_decay=self.weight_decay,

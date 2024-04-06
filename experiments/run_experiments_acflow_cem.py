@@ -267,7 +267,11 @@ def main(
                         full_run_name=full_run_name
                     )
 
-                    experiment_config['shared_params']['save_path'] = ac_model_saved_path
+                    run_config['ac_model_config']['save_path'] = ac_model_saved_path
+
+                logging.debug(
+                        f"Setting ac model save path to be {ac_model_saved_path}"
+                    )
 
                 if run_config["architecture"] in [
                     "IndependentConceptBottleneckModel",
@@ -710,6 +714,12 @@ def _build_arg_parser():
         default=False,
         help="starts debug mode in our program.",
     )
+    parser.add_argument(
+        "--devices",
+        default=-1,
+        help="Devices for training",
+        type=int,
+    )
 
     parser.add_argument(
         "--force_cpu",
@@ -894,6 +904,7 @@ if __name__ == '__main__':
             "gpu" if (not args.force_cpu) and (torch.cuda.is_available())
             else "cpu"
         ),
+        devices=args.devices,
         experiment_config=loaded_config,
         activation_freq=args.activation_freq,
         single_frequency_epochs=args.single_frequency_epochs,

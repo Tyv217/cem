@@ -189,7 +189,6 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
                 self.ac_model.load_state_dict(torch.load(ac_model_config['save_path']))
                 logging.debug(
                     f"AC CBM loaded AC model checkpoint from {ac_model_config['save_path']}"
-                    f"AC model trained with {self.ac_model.current_epoch} epochs"
                 )
                 self.train_ac_model = False
             else:
@@ -237,16 +236,16 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
         self.include_only_last_trajectory_loss = \
             include_only_last_trajectory_loss
         self.intervention_task_loss_weight = intervention_task_loss_weight
+        
+        self.horizon_uniform_distr = horizon_uniform_distr
+        self.beta_a = beta_a
+        self.beta_b = beta_b
 
-        if horizon_uniform_distr:
-            self._horizon_distr = lambda init, end: np.random.randint(
-                init,
-                end,
-            )
+    def _horizon_distr(self, init, end):
+        if self.horizon_uniform_distr:
+            return np.random.randint(init,end)
         else:
-            self._horizon_distr = lambda init, end: int(
-                np.random.beta(beta_a, beta_b) * (end - init) + init
-            )
+            return int(np.random.beta(self.beta_a, self.beta_b) * (end - init) + init)
 
 
     def get_concept_int_distribution(
@@ -356,15 +355,21 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             for b in range(used_groups.shape[0]):
                 for concept in concept_map_vals[int(unintervened_groups[b][i])]:
                     missing[b][concept] = 1.
-            loglikel = self.ac_model.compute_concept_probabilities(x = predicted_and_intervened_concepts, b = mask, m = missing, y = None)
-            likel = torch.logsumexp(loglikel, dim = -1)
+            if self.train_ac_model:
+                    loglikel = self.ac_model.compute_concept_probabilities(x = predicted_and_intervened_concepts, b = mask, m = missing, y = None)
+            else:
+                with torch.no_grad():
+                    loglikel = self.ac_model.compute_concept_probabilities(x = predicted_and_intervened_concepts, b = mask, m = missing, y = None)
+                    # loglikel = torch.zeros_lke(loglikel)
             batches = torch.arange(used_groups.shape[0])
             indices = unintervened_groups[batches, i].cpu()
-            likel_sparse[batches, indices] = likel[batches] 
+            likel_sparse[batches, indices] = loglikel[batches] 
 
             for b in range(used_groups.shape[0]):
                 for concept in concept_map_vals[int(unintervened_groups[b][i])]:
                     missing[b][concept] = 0.
+
+        
         cat_inputs = [
             likel_sparse,
             torch.reshape(embeddings, [-1, self.emb_size * self.n_concepts]),
@@ -448,6 +453,9 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
         ac_model_loss_scalar = 0.0
         # Do some rollouts for flow model
         if self.ac_model_weight != 0 and train and self.train_ac_model:
+            logging.debug(
+                f"Passing through ac model"
+            )
             if self.rollout_aneal_rate != 1:
                 ac_model_rollouts = int(round(
                     self.ac_model_rollouts * (
@@ -470,7 +478,7 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             ac_model_loss_scalar = ac_model_loss.detach() * self.ac_model_weight
 
         else:
-            self.ac_model.freeze()
+            self.ac_model.eval()
 
         intervention_task_loss = 0.0
 
@@ -695,6 +703,8 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
                         horizon=(current_horizon - i),
                         train=train,
                     )
+                    # batch_size = c_sem.shape[0]
+                    # concept_group_scores = torch.zeros((batch_size, len(self.concept_map) if self.use_concept_groups else self.n_concepts))
                     # Generate as a label the concept which increases the
                     # probability of the correct class the most when
                     # intervened on
@@ -1208,7 +1218,6 @@ class ACConceptEmbeddingModel(
                 self.ac_model.load_state_dict(torch.load(ac_model_config['save_path']))
                 logging.debug(
                     f"AC CBM loaded AC model checkpoint from {ac_model_config['save_path']}"
-                    f"AC model trained with {self.ac_model.current_epoch} epochs"
                 )
                 self.train_ac_model = False
             else:
@@ -1255,15 +1264,15 @@ class ACConceptEmbeddingModel(
         self.intervention_task_loss_weight = intervention_task_loss_weight
         self.use_concept_groups = use_concept_groups
 
-        if horizon_uniform_distr:
-            self._horizon_distr = lambda init, end: np.random.randint(
-                init,
-                end,
-            )
+        self.horizon_uniform_distr = horizon_uniform_distr
+        self.beta_a = beta_a
+        self.beta_b = beta_b
+
+    def _horizon_distr(self, init, end):
+        if self.horizon_uniform_distr:
+            return np.random.randint(init,end)
         else:
-            self._horizon_distr = lambda init, end: int(
-                np.random.beta(beta_a, beta_b) * (end - init) + init
-            )
+            return int(np.random.beta(self.beta_a, self.beta_b) * (end - init) + init)
 
     def _after_interventions(
         self,

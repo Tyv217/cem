@@ -312,7 +312,7 @@ class ACEnergy(pl.LightningModule):
             f"batch: {batch}"
         )
 
-        x, b, m, y = batch
+        x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
 
         logging.debug(
             f"x:{x}\n"

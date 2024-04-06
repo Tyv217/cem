@@ -865,7 +865,7 @@ if __name__ == '__main__':
             "gpu" if (not args.force_cpu) and (torch.cuda.is_available())
             else "cpu"
         ),
-        devices=args.devices
+        devices=args.devices if args.devices != -1 else "auto",
         experiment_config=loaded_config,
         activation_freq=args.activation_freq,
         single_frequency_epochs=args.single_frequency_epochs,

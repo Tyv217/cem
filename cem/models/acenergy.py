@@ -15,7 +15,7 @@ def generate_random_numbers(n, n_concepts):
 class ACEnergy(pl.LightningModule):
     
     # def __init__(self,args,num_classes, input_size=1000, hid_size=1000, cpt_size=None):
-    def __init__(self, n_concepts, n_tasks, embed_size = 1000, cy_perturb_prob = 0.2, cy_permute_prob = 0.2, energy_model_architecture = "linear", optimizer = None, learning_rate = None, weight_decay = None, momentum = None):
+    def __init__(self, n_concepts, n_tasks, embed_size = 1000, cy_perturb_prob = 0.2, cy_permute_prob = 0.2, energy_model_architecture = "linear", class_weights = None, optimizer = None, learning_rate = None, weight_decay = None, momentum = None):
         super().__init__()
 
         self.n_concepts = n_concepts

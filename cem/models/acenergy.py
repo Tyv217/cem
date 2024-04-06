@@ -356,6 +356,8 @@ class ACEnergy(pl.LightningModule):
     
         concept_probabilities = torch.sum(concept_probabilities, dim = 1)
 
+        acc = (concept_probabilities > 0.5)
+
         return concept_probabilities
     
     def compute_concept_probabilities(self, x, b, m, y):
@@ -378,10 +380,11 @@ class ACEnergy(pl.LightningModule):
         concept_probabilities = all_concepts_probabilities / observed_concepts_probabilities
 
         # p(x_u | x_o)
-        class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1])
-        concept_probabilities = concept_probabilities * class_weights
+        if y is None:
+            class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1])
+            concept_probabilities = concept_probabilities * class_weights
     
-        concept_probabilities = torch.sum(concept_probabilities, dim = 2)
+        concept_probabilities = torch.sum(concept_probabilities, dim = 1)
 
         return concept_probabilities
     

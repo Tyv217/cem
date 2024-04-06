@@ -74,7 +74,7 @@ class ACEnergy(pl.LightningModule):
 
         return c_gt
 
-    def forward(self, c_gt, is_training):
+    def forward(self, c_gt, train):
         # input x is encoded image.
         bs = c_gt.shape[0]
 
@@ -179,7 +179,7 @@ class ACEnergy(pl.LightningModule):
         # else:
         c_pos=c_gt
         c_pos=c_pos.unsqueeze(-1)
-        if is_training:
+        if train:
             c_pos=self.cy_augment(c_gt=c_pos,permute_ratio=self.cy_concept_perturb_prob,permute_prob=self.cy_sample_perturb_prob)
         # for k in range(c_pos.shape[1]):
         #     single_c_embed=torch.where(c_pos[:,k]==1,c_embed_cy[:,k,:],c_embed_cy[:,k+self.n_concepts,:])
@@ -245,7 +245,7 @@ class ACEnergy(pl.LightningModule):
 
             class_weights = self.class_weights.to(p_y.device)
             
-            energy_sum = s.sum(energy, dim=1, keepdim=True)
+            energy_sum = torch.sum(energy, dim=1, keepdim=True)
 
             energy = torch.exp(-energy)
 
@@ -274,7 +274,7 @@ class ACEnergy(pl.LightningModule):
 
         concepts = x * m
 
-        energy = self.forward(concepts)
+        energy = self.forward(concepts, train = True)
         predL = self._run_step(energy, y, train = True)
 
         loss = predL.mean()
@@ -293,7 +293,7 @@ class ACEnergy(pl.LightningModule):
 
         concepts = x * m
 
-        energy = self.forward(concepts)
+        energy = self.forward(concepts, train = False)
         predL = self._run_step(energy, y, train = False)
 
         loss = predL.mean()
@@ -314,16 +314,9 @@ class ACEnergy(pl.LightningModule):
 
         x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
 
-        logging.debug(
-            f"x:{x}\n"
-            f"b:{b}\n"
-            f"m:{m}\n"
-            f"y:{y}\n"
-        )
-
         all_concepts = x * m
 
-        all_concepts_energy = self(all_concepts)
+        all_concepts_energy = self(all_concepts, train = False)
 
         all_concepts_probabilities = self._run_step(all_concepts_energy, y, train = False)
 
@@ -335,7 +328,7 @@ class ACEnergy(pl.LightningModule):
 
         # p(x_o | y)
         observed_concepts = x * m * b
-        observed_concepts_energy = self(observed_concepts)
+        observed_concepts_energy = self(observed_concepts, train = False)
         observed_concepts_probabilities = self._run_step(observed_concepts_energy, y, train = False)
 
         logging.debug(
@@ -369,13 +362,13 @@ class ACEnergy(pl.LightningModule):
         pdb.set_trace()
         all_concepts = x * m
 
-        all_concepts_energy = self(all_concepts)
+        all_concepts_energy = self(all_concepts, train = False)
 
         all_concepts_probabilities = self._run_step(all_concepts_energy, y, train = False)
 
         # p(x_o | y)
         observed_concepts = x * m * b
-        observed_concepts_energy = self(observed_concepts)
+        observed_concepts_energy = self(observed_concepts, train = False)
 
         observed_concepts_probabilities = self._run_step(observed_concepts_energy, y, train = False)
 

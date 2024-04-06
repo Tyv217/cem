@@ -28,7 +28,7 @@ class ACFlow(pl.LightningModule):
         self.weight_decay = weight_decay
         self.momentum = momentum
         self.float_type = float_type
-        class_weights = torch.tensor(np.array(class_weights or [1. for _ in range(self.n_tasks)])).astype(self.float_type).to(x.device)
+        class_weights = torch.tensor(np.array(class_weights or [1. for _ in range(self.n_tasks)]).astype(self.float_type))
         class_weights /= torch.sum(class_weights)
         self.class_weights = torch.log(class_weights)
 

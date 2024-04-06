@@ -1267,10 +1267,13 @@ def train_ac_model(
         ac_model = ACEnergy(
             n_concepts = n_concepts, 
             n_tasks = n_tasks,
+            optimizer = ac_model_config['optimizer'], 
+            learning_rate = ac_model_config['learning_rate'], 
+            weight_decay = ac_model_config['decay_rate'], 
+            momentum = ac_model_config.get('momentum', 0.9), 
         )
     else:
         raise ValueError(f"AC {architecture} model current not supported.")    
-    
 
     trainer = pl.Trainer(
         accelerator=accelerator,
@@ -1291,7 +1294,7 @@ def train_ac_model(
             logging.debug(
                 f"\t{key}: {val}"
             )
-    save_path = result_dir + ("" if result_dir[-1] == "/" else "/")  + f"acflow_model_trial_{split}.pt"
+    save_path = result_dir + ("" if result_dir[-1] == "/" else "/")  + f"ac{architecture}_model_trial_{split}.pt"
     ac_model_config['save_path'] = save_path
 
     chpt_exists = (

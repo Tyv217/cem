@@ -1284,7 +1284,7 @@ def train_ac_model(
     )
 
     if test_dl is not None:
-        # test_dl = ac_transform_dataloader(test_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
+        test_dl = ac_transform_dataloader(test_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
         ac_model.freeze()
         [test_results] = trainer.test(ac_model, test_dl)
         logging.debug(

@@ -251,8 +251,6 @@ def main(
                         split=split,
                         full_run_name=full_run_name,
                     )
-                    import pdb
-                    pdb.set_trace()
                     _, _, ac_model_saved_path = training.train_ac_model(
                         n_concepts=n_concepts,
                         n_tasks=n_tasks,

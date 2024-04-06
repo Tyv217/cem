@@ -682,7 +682,8 @@ def _build_arg_parser():
     )
     parser.add_argument(
         '--devices',
-        default = "auto"
+        default = "auto",
+        type=str
     )
     parser.add_argument(
         '--rerun',

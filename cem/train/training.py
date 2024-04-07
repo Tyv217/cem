@@ -1374,7 +1374,7 @@ def train_ac_model(
             [test_results] = trainer.test(model, test_dl)
             output = [
                 test_results["test_accuracy"],
-                test_results["test_nll"],
+                test_results.get("test_nll", 0)
             ]
             top_k_vals = []
             for key, val in test_results.items():

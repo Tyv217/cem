@@ -234,7 +234,7 @@ class ACEnergy(pl.LightningModule):
         # p(x_u, x_o | y) = e^(E(x_u + x_o, y)) / sum_y(E(x_u + x_o, y))
 
         # e^(E(x_u + x_o, y))
-        if y is None:
+        if y is None or train:
             import pdb
             pdb.set_trace()
         
@@ -275,9 +275,6 @@ class ACEnergy(pl.LightningModule):
         x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
 
         concepts = x * m
-
-        import pdb
-        pdb.set_trace()
 
         energy = self.forward(concepts, train = True)
         predL = self._run_step(energy, y, train = True)

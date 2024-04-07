@@ -292,7 +292,7 @@ class ACEnergy(pl.LightningModule):
         for name, val in result.items():
             self.log("train_" + name, val, prog_bar=("accuracy" in name), sync_dist = True)
 
-        return result
+        return {"loss": loss}
     
     def validation_step(self, batch, batch_idx):
         x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
@@ -316,7 +316,7 @@ class ACEnergy(pl.LightningModule):
         for name, val in result.items():
             self.log("val_" + name, val, prog_bar=("accuracy" in name), sync_dist = True)
 
-        return result
+        return {"loss": loss, **test_results}
     
     def _test(self, x, b, m, y):
         all_concepts = x * m

@@ -1343,6 +1343,7 @@ def train_ac_model(
             f"\tSave path: {ac_model_config['save_path']}"
         )
         training_time = time.time()
+        ac_model.unfreeze()
         trainer.fit(ac_model, train_dl, val_dl)
 
         training_time = time.time() - training_time

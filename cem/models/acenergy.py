@@ -25,7 +25,6 @@ class ACEnergy(pl.LightningModule):
         self.cy_permute_prob = cy_permute_prob
 
         # self.y_prob = torch.nn.Parameter(torch.randn((self.n_tasks)))
-        
         self.y_embedding = torch.nn.Parameter(torch.randn((self.n_tasks, embed_size), requires_grad = True))
         
         # self.c_prob = torch.nn.Parameter(torch.randn((self.n_concepts)))
@@ -46,6 +45,10 @@ class ACEnergy(pl.LightningModule):
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
         self.momentum = momentum
+
+    def unfreeze(self):
+        self.y_embedding.requires_grad = True
+        self.c_embedding.requires_grad = True
             
     def cy_augment(self,c_gt,permute_ratio,permute_prob=0.2):
         """

@@ -373,8 +373,6 @@ class ACEnergy(pl.LightningModule):
         return results
     
     def test_step(self, batch, batch_idx):
-        import pdb
-        pdb.set_trace()
         x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
 
         test_results = self._test(x, b, m, y)

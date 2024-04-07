@@ -819,7 +819,6 @@ class ACTransformDataset(Dataset):
         x.requires_grad_()
         b.requires_grad_()
         m.requires_grad_()
-        y.requires_grad_()
         return {'x': x, 'b': b, 'm': m, 'y': y}
 
     def transform_batch(x, y):
@@ -842,7 +841,6 @@ class ACTransformDataset(Dataset):
         x.requires_grad_()
         b.requires_grad_()
         m.requires_grad_()
-        y.requires_grad_()
         return x, b, m, y
 
     def __getitem__(self, index):

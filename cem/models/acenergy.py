@@ -439,7 +439,7 @@ class ACEnergy(pl.LightningModule):
         return {
             "optimizer": optimizer,
             "lr_scheduler": lr_scheduler,
-            "monitor": "loss",
+            "monitor": "val_loss",
         }
 
 

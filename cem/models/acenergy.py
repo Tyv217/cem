@@ -382,11 +382,6 @@ class ACEnergy(pl.LightningModule):
 
         return result
     
-    def test_epoch_end(self, outputs):
-        import pdb
-        pdb.set_trace()
-        return outputs
-    
     def compute_concept_probabilities(self, x, b, m, y):
         # p(x_o, x_u | y)
         all_concepts = x * m

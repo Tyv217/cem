@@ -367,16 +367,14 @@ class ACEnergy(pl.LightningModule):
         acc = (concept_probabilities > 0.5).float().mean()
 
         results = {
-            "acc": acc
+            "acc": acc.detach()
         }
 
         return results
     
     def test_step(self, batch, batch_idx):
-        logging.debug(
-            f"batch: {batch}"
-        )
-
+        import pdb
+        pdb.set_trace()
         x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
 
         test_results = self._test(x, b, m, y)

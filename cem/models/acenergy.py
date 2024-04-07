@@ -307,15 +307,15 @@ class ACEnergy(pl.LightningModule):
             "loss": loss.detach()
         }
 
-        test_results = self._test(x, b, m, y)
+        test_result = self._test(x, b, m, y)
 
-        for key, val in test_results.items():
+        for key, val in test_result.items():
             result[key] = val
 
         for name, val in result.items():
             self.log("val_" + name, val, prog_bar=("accuracy" in name), sync_dist = True)
 
-        return {"loss": loss, **test_results}
+        return {"loss": loss, **test_result}
     
     def _test(self, x, b, m, y):
         all_concepts = x * m
@@ -366,18 +366,26 @@ class ACEnergy(pl.LightningModule):
 
         acc = (concept_probabilities > 0.5).float().mean()
 
-        results = {
-            "acc": acc.detach()
+        result = {
+            "accuracy": acc.detach()
         }
 
-        return results
+        return result
     
     def test_step(self, batch, batch_idx):
         x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
 
-        test_results = self._test(x, b, m, y)
+        result = self._test(x, b, m, y)
 
-        return test_results
+        for name, val in result.items():
+            self.log("test_" + name, val, prog_bar=("accuracy" in name), sync_dist = True)
+
+        return result
+    
+    def test_epoch_end(self, outputs):
+        import pdb
+        pdb.set_trace()
+        return outputs
     
     def compute_concept_probabilities(self, x, b, m, y):
         # p(x_o, x_u | y)

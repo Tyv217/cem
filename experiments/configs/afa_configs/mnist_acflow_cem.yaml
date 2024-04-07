@@ -66,7 +66,7 @@ shared_params:
     separate_ac_model_training: True
     ac_model_config:
       architecture: flow
-      max_epochs: 100
+      max_epochs: 0
       batch_size: 512
       transformations: [AF, TL, TL, TL, TL, AF]
       layer_cfg: [LR, CP2]

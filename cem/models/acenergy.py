@@ -359,10 +359,7 @@ class ACEnergy(pl.LightningModule):
     
         concept_probabilities = torch.sum(concept_probabilities, dim = 1)
 
-        import pdb
-        pdb.set_trace()
-
-        acc = (concept_probabilities > 0.5)
+        acc = (concept_probabilities > 0.5).float().mean()
 
         return concept_probabilities
     

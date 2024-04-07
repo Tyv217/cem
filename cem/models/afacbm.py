@@ -369,6 +369,11 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
                 for concept in concept_map_vals[int(unintervened_groups[b][i])]:
                     missing[b][concept] = 0.
 
+        import pdb
+        pdb.set_trace()
+
+        likel_sparse = 
+
         
         cat_inputs = [
             likel_sparse,

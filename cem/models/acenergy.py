@@ -388,7 +388,7 @@ class ACEnergy(pl.LightningModule):
         # p(x_o, x_u | y)
         all_concepts = x * m
 
-        all_concepts_energy = self(all_concepts, train = False)
+        all_concepts_energy = self(all_concepts, m, train = False)
 
         all_concepts_probabilities = self._run_step(all_concepts_energy, y, train = False)
 

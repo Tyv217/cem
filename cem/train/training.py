@@ -1290,8 +1290,6 @@ def train_ac_model(
         logging.debug(
             f"AC Model test results before training:\n"
         )
-        import pdb
-        pdb.set_trace()
         for key, val in test_results.items():
             logging.debug(
                 f"\t{key}: {val}"

@@ -77,6 +77,9 @@ class ACEnergy(pl.LightningModule):
 
     def forward(self, c_gt, train):
         # input x is encoded image.
+        if train:
+            import pdb
+            pdb.set_trace()
         bs = c_gt.shape[0]
 
         # #### X->Y energy ###

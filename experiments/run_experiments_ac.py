@@ -235,8 +235,6 @@ def main(
                         old_results = joblib.load(f)
 
                 if "AC" in run_config["architecture"] and experiment_config['shared_params'].get("separate_ac_model_training", False):    
-                    import pdb
-                    pdb.set_trace()
                     full_run_name = f"ac_{experiment_config['shared_params']['ac_model_config']['architecture']}_model_split_{split}"
                     
                     ac_old_results = None

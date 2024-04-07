@@ -47,6 +47,8 @@ def construct_model(
 ):
     long_ac_architecture = ""
     short_ac_architecture = ""
+    import pdb
+    pdb.set_trace()
     if config.get("ac_model_config", None) is not None:
         long_ac_architecture = config["ac_model_config"]["architecture"]
         short_ac_architecture = long_ac_architecture[0].upper()

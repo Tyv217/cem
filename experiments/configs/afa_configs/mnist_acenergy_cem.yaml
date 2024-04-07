@@ -74,7 +74,7 @@ shared_params:
     ac_model_weight: 2
     ac_model_rollouts: 1
 runs:
-  - architecture: "ACConceptEmbeddingModel"
+  - architecture: "ACEnergyConceptEmbeddingModel"
     extra_name: "Retry_intervention_weight_{intervention_weight}_horizon_rate_{horizon_rate}_intervention_discount_{intervention_discount}_task_discount_{intervention_task_discount}"
     training_intervention_prob: 0.25
     horizon_binary_representation:  True

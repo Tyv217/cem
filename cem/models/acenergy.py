@@ -80,9 +80,6 @@ class ACEnergy(pl.LightningModule):
 
     def forward(self, c_gt, train):
         # input x is encoded image.
-        if train:
-            import pdb
-            pdb.set_trace()
         bs = c_gt.shape[0]
 
         # #### X->Y energy ###
@@ -240,7 +237,7 @@ class ACEnergy(pl.LightningModule):
         # p(x_u, x_o | y) = e^(E(x_u + x_o, y)) / sum_y(E(x_u + x_o, y))
 
         # e^(E(x_u + x_o, y))
-        if y is None or train:
+        if y is None:
             import pdb
             pdb.set_trace()
         
@@ -361,6 +358,9 @@ class ACEnergy(pl.LightningModule):
         
     
         concept_probabilities = torch.sum(concept_probabilities, dim = 1)
+
+        import pdb
+        pdb.set_trace()
 
         acc = (concept_probabilities > 0.5)
 

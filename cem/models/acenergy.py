@@ -26,10 +26,10 @@ class ACEnergy(pl.LightningModule):
 
         # self.y_prob = torch.nn.Parameter(torch.randn((self.n_tasks)))
         
-        self.y_embedding = torch.nn.Parameter(torch.randn((self.n_tasks, embed_size)))
+        self.y_embedding = torch.nn.Parameter(torch.randn((self.n_tasks, embed_size), requires_grad = True))
         
         # self.c_prob = torch.nn.Parameter(torch.randn((self.n_concepts)))
-        self.c_embedding = torch.nn.Parameter(torch.randn((self.n_concepts*2, embed_size)))
+        self.c_embedding = torch.nn.Parameter(torch.randn((self.n_concepts*2, embed_size), requires_grad = True))
         self.classifier_cy = torch.nn.Linear(embed_size, 1)
         self.concept_proj = torch.nn.Linear(self.n_concepts * embed_size, embed_size)
         self.smx_y = torch.nn.Softmax(dim=-2)

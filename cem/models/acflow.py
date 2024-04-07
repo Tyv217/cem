@@ -816,9 +816,6 @@ class ACTransformDataset(Dataset):
         b = torch.tensor(b)
         m = torch.tensor(m)
         y = y.to(torch.int64)
-        x.requires_grad_()
-        b.requires_grad_()
-        m.requires_grad_()
         return {'x': x, 'b': b, 'm': m, 'y': y}
 
     def transform_batch(x, y):
@@ -838,9 +835,6 @@ class ACTransformDataset(Dataset):
         b = torch.tensor(b).to(x.device)
         m = torch.tensor(m).to(x.device)
         y = y.to(torch.int64)
-        x.requires_grad_()
-        b.requires_grad_()
-        m.requires_grad_()
         return x, b, m, y
 
     def __getitem__(self, index):

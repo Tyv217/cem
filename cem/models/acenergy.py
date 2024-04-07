@@ -206,7 +206,7 @@ class ACEnergy(pl.LightningModule):
             mask = torch.unsqueeze(mask, dim = -1)
         mask = mask.expand_as(c_embed).bool()
 
-        c_embed = torch.where(mask, c_embed, -1000)
+        c_embed = torch.where(mask, c_embed, 0)
         # for k in range(c_prob.shape[1]):
         #     single_c_embed=torch.where(c_prob[:,k,1:2]>0.5,c_embed_cy[:,k,:],c_embed_cy[:,k+self.n_concepts,:])
         #     single_c_embed=single_c_embed.unsqueeze(1)

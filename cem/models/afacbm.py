@@ -372,7 +372,7 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
         import pdb
         pdb.set_trace()
 
-        likel_sparse = 
+        likel_sparse = torch.normalize(likel_sparse, dim = 1)
 
         
         cat_inputs = [

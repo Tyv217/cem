@@ -307,18 +307,17 @@ class ACEnergy(pl.LightningModule):
             "loss": loss.detach()
         }
 
+        test_results = self._test(x, b, m, y)
+
+        for key, val in test_results.items():
+            result[key] = val
+
         for name, val in result.items():
             self.log("val_" + name, val, prog_bar=("accuracy" in name), sync_dist = True)
 
         return result
     
-    def test_step(self, batch, batch_idx):
-        logging.debug(
-            f"batch: {batch}"
-        )
-
-        x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
-
+    def _test(self, x, b, m, y):
         all_concepts = x * m
 
         all_concepts_energy = self(all_concepts, train = False)
@@ -345,28 +344,47 @@ class ACEnergy(pl.LightningModule):
         # p(x_u | x_o, y)
         concept_probabilities = all_concepts_probabilities / observed_concepts_probabilities
 
+        # p(x_o | y)
+        unobserved_concepts = x * (1 - b)
+        reversed_unobserved_concepts = 1 - unobserved_concepts
+        reversed_new_concept = reversed_unobserved_concepts * m
+        incorrect_all_concepts = reversed_new_concept + x * b
+        incorrect_all_concepts_energy = self(incorrect_all_concepts, train = False)
+        incorrect_all_concepts_probabilities = self._run_step(incorrect_all_concepts_energy, y, train = False)
+
+        # p(x_u | x_o, y)
+        incorrect_concept_probabilities = incorrect_all_concepts_probabilities / observed_concepts_probabilities
+
+        incorrect_concept_probabilities = torch.sum(incorrect_concept_probabilities, dim = 1)
+
         # p(x_u | x_o)
         class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1])
 
+        sum_probabilities = concept_probabilities + incorrect_concept_probabilities
 
-        logging.debug(
-            f"concept_probabilities.shape: {concept_probabilities.shape}\n"
-            f"class_weights.shape: {class_weights.shape}"
-        )
-
-        # concept_probabilities = concept_probabilities * class_weights
-        
-    
-        concept_probabilities = torch.sum(concept_probabilities, dim = 1)
+        concept_probabilities = concept_probabilities / sum_probabilities
 
         acc = (concept_probabilities > 0.5).float().mean()
 
-        return concept_probabilities
+        results = {
+            "acc": acc
+        }
+
+        return results
+    
+    def test_step(self, batch, batch_idx):
+        logging.debug(
+            f"batch: {batch}"
+        )
+
+        x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
+
+        test_results = self._test(x, b, m, y)
+
+        return test_results
     
     def compute_concept_probabilities(self, x, b, m, y):
         # p(x_o, x_u | y)
-        import pdb
-        pdb.set_trace()
         all_concepts = x * m
 
         all_concepts_energy = self(all_concepts, train = False)

@@ -354,6 +354,12 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
         missing = prev_interventions.clone().float()
         predicted_and_intervened_concepts = prob.clone()
         concept_map_vals = list(self.concept_map.values())
+        logging.debug(
+            f"ac_model.device:{self.ac_model.device}"
+            f"mask.device:{mask.device}"
+            f"missing.device:{missing.device}"
+            f"predicted_and_intervened_concepts.device:{predicted_and_intervened_concepts.device}"
+        )
         for i in range(num_groups):
             for b in range(used_groups.shape[0]):
                 for concept in concept_map_vals[int(unintervened_groups[b][i])]:

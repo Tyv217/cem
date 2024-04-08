@@ -203,6 +203,7 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
         self.ac_model_nll_ratio = ac_model_nll_ratio
         self.ac_model_weight = ac_model_weight
         self.ac_model_rollouts = ac_model_rollouts
+        self.ac_softmax = torch.nn.Softmax(dim = 1)
 
         self.intervention_discount = intervention_discount
         self.intervention_task_discount = intervention_task_discount
@@ -370,11 +371,7 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             for b in range(used_groups.shape[0]):
                 for concept in concept_map_vals[int(unintervened_groups[b][i])]:
                     missing[b][concept] = 0.
-
-        import pdb
-        pdb.set_trace()
-
-        likel_sparse = torch.normalize(likel_sparse, dim = 1)
+        likel_sparse = self.ac_softmax(likel_sparse)
 
         
         cat_inputs = [

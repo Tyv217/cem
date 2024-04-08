@@ -1203,7 +1203,7 @@ class ACConceptEmbeddingModel(
                 prior_layers = ac_model_config['prior_layers'],
                 prior_hids = ac_model_config['prior_hids'],
                 n_components = ac_model_config['n_components']
-            )
+            ).to(self.device)
         elif "energy" in ac_model_config['architecture']:
             self.ac_model = ACEnergy(
                 n_concepts = n_concepts,
@@ -1211,7 +1211,7 @@ class ACConceptEmbeddingModel(
                 # embed_size = ac_model_config["embed_size"],
                 # cy_perturb_prob = ac_model_config.get("cy_perturb_prob", None),
                 # cy_perturb_prob = ac_model_config.get("", None)
-            )
+            ).to(self.device)
         else:
             raise ValueError(f"AC{ac_model_config['architecture']} architecture not supported")
         if ac_model_config.get("save_path", None) is not None:

@@ -61,7 +61,7 @@ shared_params:
     separate_ac_model_training: True
     ac_model_config:
       architecture: energy
-      max_epochs: 0
+      max_epochs: 100
       batch_size: 1024
       optimizer: adam
       learning_rate: 0.001
@@ -80,7 +80,7 @@ runs:
     include_task_trajectory_loss: True
     include_only_last_trajectory_loss: True
     task_loss_weight: 0
-    intervention_weight: [5,1,0.1,0]
+    intervention_weight: 1 # [5,1,0.1,0]
     intervention_task_loss_weight: 1
     initial_horizon: 2
     use_concept_groups: True # DIFF False
@@ -95,7 +95,7 @@ runs:
     horizon_uniform_distr: True
     beta_a: 1
     beta_b: 3
-    intervention_task_discount: [1.5, 1.1]
+    intervention_task_discount: 1.1 # [1.5, 1.1]
     average_trajectory: True
     use_horizon: False # DIFF True
     initialize_discount: False
@@ -115,7 +115,7 @@ runs:
     include_task_trajectory_loss: True
     include_only_last_trajectory_loss: True
     task_loss_weight: 0
-    intervention_weight: [5,1,0.1,0]
+    intervention_weight: 1 # [5,1,0.1,0]
     intervention_task_loss_weight: 1
     initial_horizon: 2
     use_concept_groups: True # DIFF False
@@ -130,7 +130,7 @@ runs:
     horizon_uniform_distr: True
     beta_a: 1
     beta_b: 3
-    intervention_task_discount: [1.5, 1.1]
+    intervention_task_discount: 1.1 # [1.5, 1.1]
     average_trajectory: True
     use_horizon: False # DIFF True
     initialize_discount: False

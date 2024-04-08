@@ -197,7 +197,7 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
         else:
             self.train_ac_model = True
             logging.debug(
-                f"Training AC Flow model simultaneously with CEM model."
+                f"Training AC {ac_model_config['architecture']} model simultaneously with CEM model."
             )
 
         self.ac_model_nll_ratio = ac_model_nll_ratio

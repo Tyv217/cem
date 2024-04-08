@@ -1318,7 +1318,7 @@ def train_ac_model(
     if (not rerun) and chpt_exists:
         try:
             logging.debug(
-                f"Found AC Flow model saved in {ac_model_config['save_path']}"
+                f"Found AC {ac_model_config['architecture']} model saved in {ac_model_config['save_path']}"
             )
             ac_model.load_state_dict(torch.load(save_path))
         except:

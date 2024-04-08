@@ -103,10 +103,10 @@ runs:
     horizon_rate: 1.005
     intervention_discount: 1
     legacy_mode: False # Diff True
-    grid_variables:
-        - intervention_task_discount
-        - intervention_weight
-    grid_search_mode: exhaustive
+    # grid_variables:
+    #     - intervention_task_discount
+    #     - intervention_weight
+    # grid_search_mode: exhaustive
   
   - architecture: "IntAwareConceptEmbeddingModel"
     extra_name: "Retry_intervention_weight_{intervention_weight}_horizon_rate_{horizon_rate}_intervention_discount_{intervention_discount}_task_discount_{intervention_task_discount}"
@@ -138,7 +138,7 @@ runs:
     horizon_rate: 1.005
     intervention_discount: 1
     legacy_mode: False # Diff True
-    grid_variables:
-        - intervention_task_discount
-        - intervention_weight
-    grid_search_mode: exhaustive
+    # grid_variables:
+    #     - intervention_task_discount
+    #     - intervention_weight
+    # grid_search_mode: exhaustive

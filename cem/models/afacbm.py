@@ -1246,6 +1246,7 @@ class ACConceptEmbeddingModel(
         self.ac_model_nll_ratio = ac_model_nll_ratio
         self.ac_model_weight = ac_model_weight
         self.ac_model_rollouts = ac_model_rollouts
+        self.ac_softmax = torch.nn.Softmax(dim = 1).to(self.device)
 
         self.intervention_discount = intervention_discount
         self.intervention_task_discount = intervention_task_discount

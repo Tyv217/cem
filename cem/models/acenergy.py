@@ -400,7 +400,7 @@ class ACEnergy(pl.LightningModule):
 
         # p(x_u | x_o)
         if y is None:
-            class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1])
+            class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1]).to(concept_probabilities.device)
             concept_probabilities = concept_probabilities * class_weights
     
         concept_probabilities = torch.sum(concept_probabilities, dim = 1)

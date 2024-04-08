@@ -250,7 +250,7 @@ class ACEnergy(pl.LightningModule):
             # p(c | y)
             batch_size=energy.size(0)
 
-            class_weights = self.class_weights.to(p_y.device)
+            class_weights = self.class_weights.to(energy.device)
             
             energy_sum = torch.sum(energy, dim=1, keepdim=True)
 

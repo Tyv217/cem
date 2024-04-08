@@ -1338,7 +1338,7 @@ def train_ac_model(
             f"as requested by the config"
         )
         logging.debug(
-            f"Starting AC Flow Model training...\n"
+            f"Starting AC {architecture} Model training...\n"
             # f"\tTransformations: {ac_model_config['transformations']}\n"
             f"\tSave path: {ac_model_config['save_path']}"
         )

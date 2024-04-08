@@ -203,7 +203,7 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
         self.ac_model_nll_ratio = ac_model_nll_ratio
         self.ac_model_weight = ac_model_weight
         self.ac_model_rollouts = ac_model_rollouts
-        self.ac_softmax = torch.nn.Softmax(dim = 1)
+        self.ac_softmax = torch.nn.Softmax(dim = 1).to(self.device)
 
         self.intervention_discount = intervention_discount
         self.intervention_task_discount = intervention_task_discount
@@ -368,8 +368,6 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
                     loglikel = self.ac_model.compute_concept_probabilities(x = predicted_and_intervened_concepts, b = mask, m = missing, y = None)
             else:
                 with torch.no_grad():
-                    import pdb
-                    pdb.set_trace()
                     loglikel = self.ac_model.compute_concept_probabilities(x = predicted_and_intervened_concepts, b = mask, m = missing, y = None)
                     # loglikel = torch.zeros_lke(loglikel)
             batches = torch.arange(used_groups.shape[0])

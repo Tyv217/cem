@@ -345,7 +345,9 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             unintervened_groups = torch.stack(padded_list)
             num_groups = max_length
                     
-        likel_sparse = torch.zeros(used_groups.shape, dtype = torch.float32, device = used_groups.device)
+        likel_sparse = torch.ones(used_groups.shape, dtype = torch.float32, device = used_groups.device)
+
+        likel_sparse = likel_sparse * -1000
 
         mask = prev_interventions.clone().float()
         missing = prev_interventions.clone().float()

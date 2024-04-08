@@ -5,6 +5,7 @@ import json
 import logging
 import numpy as np
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import sys
 import torch
 import yaml

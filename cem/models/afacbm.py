@@ -362,6 +362,8 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
                     loglikel = self.ac_model.compute_concept_probabilities(x = predicted_and_intervened_concepts, b = mask, m = missing, y = None)
             else:
                 with torch.no_grad():
+                    import pdb
+                    pdb.set_trace()
                     loglikel = self.ac_model.compute_concept_probabilities(x = predicted_and_intervened_concepts, b = mask, m = missing, y = None)
                     # loglikel = torch.zeros_lke(loglikel)
             batches = torch.arange(used_groups.shape[0])

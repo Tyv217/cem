@@ -365,13 +365,14 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
                     try:
                         loglikel = self.ac_model.compute_concept_probabilities(x = predicted_and_intervened_concepts, b = mask, m = missing, y = None)
                     except:
-                        logging.debug(
-                            f"ac_model.device:{self.ac_model.device}"
-                            f"mask.device:{mask.device}"
-                            f"missing.device:{missing.device}"
-                            f"predicted_and_intervened_concepts.device:{predicted_and_intervened_concepts.device}"
+                        logging.warning(
+                            f"ac_model.device:{self.ac_model.device}\n"
+                            f"mask.device:{mask.device}\n"
+                            f"missing.device:{missing.device}\n"
+                            f"predicted_and_intervened_concepts.device:{predicted_and_intervened_concepts.device}\n"
                         )
-                        raise ValueError()
+                        import pdb
+                        pdb.set_trace()
                     # loglikel = torch.zeros_lke(loglikel)
             batches = torch.arange(used_groups.shape[0])
             indices = unintervened_groups[batches, i].cpu()

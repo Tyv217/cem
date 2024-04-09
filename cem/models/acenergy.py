@@ -349,7 +349,7 @@ class ACEnergy(pl.LightningModule):
 
         # p(x_o | y)
         reversed_concepts = 1 - x
-        reversed_new_concept = reversed_concepts * torch.logical_and(m, b)
+        reversed_new_concept = reversed_concepts * torch.logical_xor(m, b)
         incorrect_all_concepts = reversed_new_concept + x * b
         incorrect_all_concepts_energy = self(incorrect_all_concepts, m, train = False)
         incorrect_all_concepts_probabilities = self._run_step(incorrect_all_concepts_energy, y, train = False)

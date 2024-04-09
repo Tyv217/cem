@@ -355,11 +355,6 @@ class ACEnergy(pl.LightningModule):
         # p(x_u | x_o, y)
         incorrect_concept_probabilities = incorrect_all_concepts_probabilities / observed_concepts_probabilities
 
-        import pdb
-        pdb.set_trace()
-
-        incorrect_concept_probabilities = torch.sum(incorrect_concept_probabilities, dim = 1)
-
         # p(x_u | x_o)
         class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1])
 

@@ -203,9 +203,6 @@ class ACEnergy(pl.LightningModule):
 
         c_embed = c_embed_positive + c_embed_negative
 
-        import pdb
-        pdb.set_trace()
-
         while len(mask.shape) < len(c_embed.shape):
             mask = torch.unsqueeze(mask, dim = -1)
         mask = mask.expand_as(c_embed).bool()
@@ -351,9 +348,8 @@ class ACEnergy(pl.LightningModule):
         concept_probabilities = all_concepts_probabilities / observed_concepts_probabilities
 
         # p(x_o | y)
-        unobserved_concepts = x * (1 - b)
-        reversed_unobserved_concepts = 1 - unobserved_concepts
-        reversed_new_concept = reversed_unobserved_concepts * m
+        reversed_concepts = 1 - x
+        reversed_new_concept = reversed_concepts * torch.logical_and(m, b)
         incorrect_all_concepts = reversed_new_concept + x * b
         incorrect_all_concepts_energy = self(incorrect_all_concepts, m, train = False)
         incorrect_all_concepts_probabilities = self._run_step(incorrect_all_concepts_energy, y, train = False)

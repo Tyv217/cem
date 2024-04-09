@@ -270,6 +270,9 @@ def main(
 
                     run_config['ac_model_config']['save_path'] = ac_model_saved_path
 
+                    if experiment_config['shared_params'].get("only_train_ac_model", False):
+                        continue
+
                 logging.debug(
                         f"Setting ac model save path to be {ac_model_saved_path}"
                     )

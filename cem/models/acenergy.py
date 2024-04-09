@@ -317,6 +317,9 @@ class ACEnergy(pl.LightningModule):
         return {"loss": loss, **test_result}
     
     def _test(self, x, b, m, y):
+        import pdb
+        pdb.set_trace()
+
         all_concepts = x
 
         all_concepts_energy = self(all_concepts, m, train = False)

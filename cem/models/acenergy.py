@@ -202,6 +202,10 @@ class ACEnergy(pl.LightningModule):
         c_embed_negative = (1 - concepts) * c_embed_cy[:, self.n_concepts:, :]
 
         c_embed = c_embed_positive + c_embed_negative
+
+        import pdb
+        pdb.set_trace()
+
         while len(mask.shape) < len(c_embed.shape):
             mask = torch.unsqueeze(mask, dim = -1)
         mask = mask.expand_as(c_embed).bool()

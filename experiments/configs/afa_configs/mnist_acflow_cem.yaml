@@ -59,6 +59,7 @@ shared_params:
     sigmoidal_prob: False
     training_intervention_prob: 0.25
     separate_ac_model_training: True
+    only_train_ac_model: True
     ac_model_config:
       architecture: flow
       max_epochs: 100

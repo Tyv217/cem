@@ -60,7 +60,7 @@ def main(
     logging.debug(
         f"Applying transformations..."
     )
-    train_dl = ac_transform_dataloader(train_dl, n_tasks)
+    train_dl = ac_transform_dataloader(train_dl, n_tasks, experiment_config["batch_size"])
     # For now, we assume that all concepts have the same
     # aquisition cost
     experiment_config["shared_params"]["n_concepts"] = \
@@ -81,8 +81,8 @@ def main(
     logging.info(
         f"\tNumber of training concepts: {n_concepts}"
     )
-    val_dl = ac_transform_dataloader(val_dl, n_tasks)
-    test_dl = ac_transform_dataloader(test_dl, n_tasks)
+    val_dl = ac_transform_dataloader(val_dl, n_tasks, experiment_config["batch_size"])
+    test_dl = ac_transform_dataloader(test_dl, n_tasks, experiment_config["batch_size"])
 
     sample = next(iter(train_dl.dataset))
 
@@ -179,26 +179,41 @@ def main(
         trainer.fit(model, train_dl, val_dl)
         model.freeze()
 
-        it = iter(test_dl)
+        sample = next(iter(test_dl))
+        image_size = sample['x'].shape[-1]
+        
+        image_size = int(np.sqrt(image_size))
 
-        for i in range(10):
+        print(
+            f"Testing inpaint on image size {image_size} x {image_size}..."
+        )
+
+        it = iter(test_dl.dataset)
+
+        for i in range(30):
             data = next(it)
+            logging.debug(
+                f"x_shape: {data['x'].shape}, "
+                f"b_shape: {data['b'].shape}, "
+                f"m_shape: {data['m'].shape}, "
+                f"y_shape: {data['y'].shape}"
+            )
 
             inpaint_iters = int(np.random.rand() * 10) + 1
 
             print(data.keys())
 
-            b = torch.ones_like(data[0])
+            b = torch.ones_like(data['x'])
 
             directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-            start_point = (random.randint(0, 6), random.randint(0, 6))
+            start_point = (random.randint(0, (image_size - 1)), random.randint(0, (image_size - 1)))
             path = [start_point]
             while len(path) < inpaint_iters:
                 current_point = path[-1]
                 possible_moves = []
                 for d in directions:
                     next_point = (current_point[0] + d[0], current_point[1] + d[1])
-                    if (0 <= next_point[0] < 7) and (0 <= next_point[1] < 7) and (next_point not in path):
+                    if (0 <= next_point[0] < image_size) and (0 <= next_point[1] < image_size) and (next_point not in path):
                         possible_moves.append(next_point)
                 if not possible_moves:
                     break
@@ -206,56 +221,61 @@ def main(
 
             inpaint_iters = len(path)
 
-            pred = data[0].clone()
+            pred = data['x'].clone()
 
             for p in path:
-                b[p[0]][p[1]] = 0
-                pred[p[0]][p[1]] = 0
+                b[p[0] * (image_size - 1)  + p[1]] = 0
+                pred[p[0] * (image_size - 1)  + p[1]] = 0
 
             def array_to_image(tensor):
-                image_size = tensor.shape[-1]
-                image_size = int(np.sqrt(image_size))
-                image_size = (image_size, image_size)
                 tensor = tensor*255
                 tensor = np.array(tensor, dtype=np.uint8)
-                tensor = np.reshape(tensor, image_size)
+                tensor = np.reshape(tensor, (image_size, image_size))
                 if np.ndim(tensor)>3:
                     assert tensor.shape[0] == 1
                     tensor = tensor[0]
                 return PIL.Image.fromarray(tensor, mode='L')
             counter = 0
-            original = array_to_image(data[0].clone().cpu().numpy())
+            original = array_to_image(data['x'].clone().cpu().numpy())
             original.save(f"{results_dir}/original_{i}.png")
             for p in path:
                 pred_with = pred.clone()
                 pred_without = pred.clone()
-                pred_with[p[0]][p[1]] = 1
-                pred_without[p[0]][p[1]] = 0
+                pred_with[p[0] * (image_size - 1)  + p[1]] = 1
+                pred_without[p[0] * (image_size - 1)  + p[1]] = 0
                 m = b.clone()
-                m[p[0]][p[1]] = 1
+                m[p[0] * (image_size - 1)  + p[1]] = 1
                 batch_with = {}
                 batch_with['x'] = pred_with
                 batch_with['b'] = b
                 batch_with['m'] = m
                 batch_with['y'] = None
                 
+                logging.debug(
+                    f"x_shape: {batch_with['x'].shape}, "
+                    f"b_shape: {batch_with['b'].shape}, "
+                    f"m_shape: {batch_with['m'].shape}, "
+                )
+
                 logpu_with, logpo_with = model.predict_step(batch_with, counter)
                 loglikel_with = torch.mean(torch.logsumexp(logpu_with + logpo_with, dim = 1) - torch.logsumexp(logpo_with, dim = 1))
                 batch_without = {}
-                batch_without['x'] = pred_with
+                batch_without['x'] = pred_without
                 batch_without['b'] = b
                 batch_without['m'] = m
                 batch_without['y'] = None
                 logpu_without, logpo_without = model.predict_step(batch_without, counter)
                 loglikel_without = torch.mean(torch.logsumexp(logpu_without + logpo_without, dim = 1) - torch.logsumexp(logpo_without, dim = 1))
 
-                pred[p[0]][p[1]] = 1 if loglikel_with > loglikel_without else 0
+                pred[p[0] * (image_size - 1)  + p[1]] = 1 if loglikel_with > loglikel_without else 0
 
                 inpainted = np.where(m.clone().cpu().numpy() == 1, pred.clone().cpu().numpy(), 0.5)
                 inpainted = array_to_image(inpainted)
-                inpainted.save(f"results/inpainted_{i}_{counter}.png")
+                inpainted.save(f"{results_dir}/inpainted_{i}_{counter}.png")
+
+                counter += 1
                 
-                b[p[0]][p[1]] = 1
+                b[p[0] * (image_size - 1)  + p[1]] = 1
 
     return results
 

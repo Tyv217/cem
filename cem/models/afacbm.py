@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pytorch_lightning as pl
 import sklearn.metrics
@@ -10,6 +11,7 @@ from torchvision.models import resnet50
 from cem.models.cbm import ConceptBottleneckModel, compute_accuracy
 from cem.models.cem import ConceptEmbeddingModel
 from cem.models.acflow import ACFlow, ACTransformDataset
+from cem.models.acenergy import ACEnergy
 import cem.train.utils as utils
 
 class ACConceptBottleneckModel(ConceptBottleneckModel):
@@ -134,7 +136,7 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             len(concept_map) if self.use_concept_groups else n_concepts
         self.include_probs = include_probs
         units = [
-            (n_concepts if self.use_concept_groups else len(self.concept_map)) * 2 +
+            (n_concepts if self.use_concept_groups else len(self.concept_map)) +
             n_concepts + # Bottleneck
             n_concepts + # Prev interventions
             (n_concepts if self.include_probs else 0) + # Predicted Probs
@@ -155,19 +157,7 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             if i != len(units) - 1:
                 layers.append(torch.nn.LeakyReLU())
         self.concept_rank_model = torch.nn.Sequential(*layers)
-        
-        if ac_model_config.get("save_path", None) is not None:
-            try:
-                self.ac_model = ACFlow.load_from_checkpoint(checkpoint_path = ac_model_config['save_path'])
-                logging.debug(
-                    f"AC CBM loaded AC model checkpoint from {ac_model_config['save_path']}"
-                    f"AC model trained with {self.ac_model.current_epoch} epochs"
-                )
-                self.train_ac_model = False
-            except:
-                raise ValueError(f"ACFlow model checkpoint at {ac_model_config['save_path']} incorrect / not found")
-            self.train_ac_model = False
-        else:
+        if "flow" in ac_model_config['architecture']:
             self.ac_model = ACFlow(
                 n_concepts = n_concepts,
                 n_tasks = n_tasks,
@@ -181,14 +171,39 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
                 prior_hids = ac_model_config['prior_hids'],
                 n_components = ac_model_config['n_components']
             )
+        elif "energy" in ac_model_config['architecture']:
+            self.ac_model = ACEnergy(
+                n_concepts = n_concepts,
+                n_tasks = n_tasks,
+                # embed_size = ac_model_config["embed_size"],
+                # cy_perturb_prob = ac_model_config.get("cy_perturb_prob", None),
+                # cy_perturb_prob = ac_model_config.get("", None)
+            )
+        else:
+            raise ValueError(f"AC{ac_model_config['architecture']} architecture not supported")
+        if ac_model_config.get("save_path", None) is not None:
+            chpt_exists = (
+                os.path.exists(ac_model_config['save_path'])
+            )
+            if chpt_exists:
+                self.ac_model.load_state_dict(torch.load(ac_model_config['save_path']))
+                logging.debug(
+                    f"AC CBM loaded AC model checkpoint from {ac_model_config['save_path']}"
+                )
+                self.train_ac_model = False
+            else:
+                raise ValueError(f"AC{ac_model_config['architecture']} model checkpoint at {ac_model_config['save_path']} incorrect / not found")
+            self.train_ac_model = False
+        else:
             self.train_ac_model = True
             logging.debug(
-                f"Training AC Flow model simultaneously with CEM model."
+                f"Training AC {ac_model_config['architecture']} model simultaneously with CEM model."
             )
 
         self.ac_model_nll_ratio = ac_model_nll_ratio
         self.ac_model_weight = ac_model_weight
         self.ac_model_rollouts = ac_model_rollouts
+        self.ac_softmax = torch.nn.Softmax(dim = 1).to(self.device)
 
         self.intervention_discount = intervention_discount
         self.intervention_task_discount = intervention_task_discount
@@ -222,16 +237,16 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
         self.include_only_last_trajectory_loss = \
             include_only_last_trajectory_loss
         self.intervention_task_loss_weight = intervention_task_loss_weight
+        
+        self.horizon_uniform_distr = horizon_uniform_distr
+        self.beta_a = beta_a
+        self.beta_b = beta_b
 
-        if horizon_uniform_distr:
-            self._horizon_distr = lambda init, end: np.random.randint(
-                init,
-                end,
-            )
+    def _horizon_distr(self, init, end):
+        if self.horizon_uniform_distr:
+            return np.random.randint(init,end)
         else:
-            self._horizon_distr = lambda init, end: int(
-                np.random.beta(beta_a, beta_b) * (end - init) + init
-            )
+            return int(np.random.beta(self.beta_a, self.beta_b) * (end - init) + init)
 
 
     def get_concept_int_distribution(
@@ -331,8 +346,9 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             unintervened_groups = torch.stack(padded_list)
             num_groups = max_length
                     
-        logpus_sparse = torch.zeros(used_groups.shape, dtype = torch.float32, device = used_groups.device)
-        logpos_sparse = torch.zeros(used_groups.shape, dtype = torch.float32, device = used_groups.device)
+        likel_sparse = torch.ones(used_groups.shape, dtype = torch.float32, device = used_groups.device)
+
+        likel_sparse = likel_sparse * -1000
 
         mask = prev_interventions.clone().float()
         missing = prev_interventions.clone().float()
@@ -342,20 +358,34 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             for b in range(used_groups.shape[0]):
                 for concept in concept_map_vals[int(unintervened_groups[b][i])]:
                     missing[b][concept] = 1.
-            logpu, logpo, _, _, _ = self.ac_model(x = predicted_and_intervened_concepts, b = mask, m = missing, y = None)
-            pu = torch.logsumexp(logpu, dim = -1)
-            po = torch.logsumexp(logpo, dim = -1)
+            if self.train_ac_model:
+                    loglikel = self.ac_model.compute_concept_probabilities(x = predicted_and_intervened_concepts, b = mask, m = missing, y = None)
+            else:
+                with torch.no_grad():
+                    try:
+                        loglikel = self.ac_model.compute_concept_probabilities(x = predicted_and_intervened_concepts, b = mask, m = missing, y = None)
+                    except:
+                        logging.warning(
+                            f"ac_model.device:{self.ac_model.device}\n"
+                            f"mask.device:{mask.device}\n"
+                            f"missing.device:{missing.device}\n"
+                            f"predicted_and_intervened_concepts.device:{predicted_and_intervened_concepts.device}\n"
+                        )
+                        import pdb
+                        pdb.set_trace()
+                    # loglikel = torch.zeros_lke(loglikel)
             batches = torch.arange(used_groups.shape[0])
             indices = unintervened_groups[batches, i].cpu()
-            logpus_sparse[batches, indices] = pu[batches]            
-            logpos_sparse[batches, indices] = po[batches]
+            likel_sparse[batches, indices] = loglikel[batches] 
 
             for b in range(used_groups.shape[0]):
                 for concept in concept_map_vals[int(unintervened_groups[b][i])]:
                     missing[b][concept] = 0.
+        likel_sparse = self.ac_softmax(likel_sparse)
+
+        
         cat_inputs = [
-            logpus_sparse,
-            logpos_sparse,
+            likel_sparse,
             torch.reshape(embeddings, [-1, self.emb_size * self.n_concepts]),
             prev_interventions,
 #                 competencies,
@@ -437,6 +467,9 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
         ac_model_loss_scalar = 0.0
         # Do some rollouts for flow model
         if self.ac_model_weight != 0 and train and self.train_ac_model:
+            logging.debug(
+                f"Passing through ac model"
+            )
             if self.rollout_aneal_rate != 1:
                 ac_model_rollouts = int(round(
                     self.ac_model_rollouts * (
@@ -459,7 +492,7 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             ac_model_loss_scalar = ac_model_loss.detach() * self.ac_model_weight
 
         else:
-            self.ac_model.freeze()
+            self.ac_model.eval()
 
         intervention_task_loss = 0.0
 
@@ -684,6 +717,8 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
                         horizon=(current_horizon - i),
                         train=train,
                     )
+                    # batch_size = c_sem.shape[0]
+                    # concept_group_scores = torch.zeros((batch_size, len(self.concept_map) if self.use_concept_groups else self.n_concepts))
                     # Generate as a label the concept which increases the
                     # probability of the correct class the most when
                     # intervened on
@@ -1142,7 +1177,7 @@ class ACConceptEmbeddingModel(
         max_horizon_val = len(concept_map) if use_concept_groups else n_concepts
         self.include_probs = include_probs
         units = [
-            (len(self.concept_map) if self.use_concept_groups else n_concepts) * 2 +
+            (len(self.concept_map) if self.use_concept_groups else n_concepts) +
             n_concepts * emb_size + # Bottleneck
             n_concepts + # Prev interventions
             (n_concepts if include_probs else 0) + # Predicted probs
@@ -1165,19 +1200,7 @@ class ACConceptEmbeddingModel(
         # DEBUG
         self.units = units
         self.concept_rank_model = torch.nn.Sequential(*layers)
-
-        if ac_model_config.get("save_path", None) is not None:
-            try:
-                self.ac_model = ACFlow.load_from_checkpoint(checkpoint_path = ac_model_config['save_path'])
-                logging.debug(
-                    f"AC CBM loaded AC model checkpoint from {ac_model_config['save_path']}"
-                    f"AC model trained with {self.ac_model.current_epoch} epochs"
-                )
-                self.train_ac_model = False
-            except:
-                raise ValueError(f"ACFlow model checkpoint at {ac_model_config['save_path']} incorrect / not found")
-            self.train_ac_model = False
-        else:
+        if "flow" in ac_model_config['architecture']:
             self.ac_model = ACFlow(
                 n_concepts = n_concepts,
                 n_tasks = n_tasks,
@@ -1190,12 +1213,40 @@ class ACConceptEmbeddingModel(
                 prior_layers = ac_model_config['prior_layers'],
                 prior_hids = ac_model_config['prior_hids'],
                 n_components = ac_model_config['n_components']
+            ).to(self.device)
+        elif "energy" in ac_model_config['architecture']:
+            self.ac_model = ACEnergy(
+                n_concepts = n_concepts,
+                n_tasks = n_tasks,
+                # embed_size = ac_model_config["embed_size"],
+                # cy_perturb_prob = ac_model_config.get("cy_perturb_prob", None),
+                # cy_perturb_prob = ac_model_config.get("", None)
+            ).to(self.device)
+        else:
+            raise ValueError(f"AC{ac_model_config['architecture']} architecture not supported")
+        if ac_model_config.get("save_path", None) is not None:
+            chpt_exists = (
+                os.path.exists(ac_model_config['save_path'])
             )
+            if chpt_exists:
+                self.ac_model.load_state_dict(torch.load(ac_model_config['save_path']))
+                logging.debug(
+                    f"AC CBM loaded AC model checkpoint from {ac_model_config['save_path']}"
+                )
+                self.train_ac_model = False
+            else:
+                raise ValueError(f"AC{ac_model_config['architecture']} model checkpoint at {ac_model_config['save_path']} incorrect / not found")
+            self.train_ac_model = False
+        else:
             self.train_ac_model = True
+            logging.debug(
+                f"Training AC Flow model simultaneously with CEM model."
+            )
 
         self.ac_model_nll_ratio = ac_model_nll_ratio
         self.ac_model_weight = ac_model_weight
         self.ac_model_rollouts = ac_model_rollouts
+        self.ac_softmax = torch.nn.Softmax(dim = 1).to(self.device)
 
         self.intervention_discount = intervention_discount
         self.intervention_task_discount = intervention_task_discount
@@ -1228,15 +1279,15 @@ class ACConceptEmbeddingModel(
         self.intervention_task_loss_weight = intervention_task_loss_weight
         self.use_concept_groups = use_concept_groups
 
-        if horizon_uniform_distr:
-            self._horizon_distr = lambda init, end: np.random.randint(
-                init,
-                end,
-            )
+        self.horizon_uniform_distr = horizon_uniform_distr
+        self.beta_a = beta_a
+        self.beta_b = beta_b
+
+    def _horizon_distr(self, init, end):
+        if self.horizon_uniform_distr:
+            return np.random.randint(init,end)
         else:
-            self._horizon_distr = lambda init, end: int(
-                np.random.beta(beta_a, beta_b) * (end - init) + init
-            )
+            return int(np.random.beta(self.beta_a, self.beta_b) * (end - init) + init)
 
     def _after_interventions(
         self,

@@ -440,10 +440,10 @@ class CooP(InterventionPolicy):
         if self.num_groups_intervened == len(self.concept_group_map):
             return np.ones(c.shape, dtype=np.int64), c
         for i in range(self.num_groups_intervened):
-            logging.debug(
-                f"Intervening with {i + 1}/{self.num_groups_intervened} "
-                f"concepts in CooP"
-            )
+            # logging.debug(
+            #     f"Intervening with {i + 1}/{self.num_groups_intervened} "
+            #     f"concepts in CooP"
+            # )
             mask, latent, y_preds, next_concepts = self._coop_step(
                 x=x,
                 c=c,

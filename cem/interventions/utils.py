@@ -1028,14 +1028,21 @@ def get_int_policy(
             policy_params["x_train"] = x_train
             policy_params["y_train"] = y_train
             policy_params["c_train"] = c_train
+            
+            long_ac_architecture = ""
+            short_ac_architecture = ""
+            if config.get("ac_model_config", None) is not None:
+                long_ac_architecture = config["ac_model_config"]["architecture"]
+                short_ac_architecture = long_ac_architecture[0].upper()
+                long_ac_architecture = short_ac_architecture + long_ac_architecture[1:]
             policy_params["emb_size"] = (
                 config["emb_size"] if config["architecture"] in [
                     "CEM",
                     "ConceptEmbeddingModel",
                     "IntAwareConceptEmbeddingModel",
                     "IntCEM",
-                    "ACConceptEmbeddingModel",
-                    "ACCEM",
+                    f"AC{long_ac_architecture}ConceptEmbeddingModel",
+                    f"AC{short_ac_architecture}CEM",
                 ]
                 else 1
             )
@@ -1254,10 +1261,10 @@ def test_interventions(
                 independent=independent,
                 task_class_weights=task_class_weights,
             )
-            print(
-                f"\tIntervening in {full_run_name} with policy {policy} and "
-                f"competence {competence_level}"
-            )
+            # print(
+            #     f"\tIntervening in {full_run_name} with policy {policy} and "
+            #     f"competence {competence_level}"
+            # )
             if competence_level == 1:
                 key = f'test_acc_y_{policy}_ints_{full_run_name}'
                 int_time_key = f'avg_int_time_{policy}_ints_{full_run_name}'

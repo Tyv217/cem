@@ -216,7 +216,9 @@ class ConceptBottleneckModel(pl.LightningModule):
         elif (bottleneck_nonlinear is None) or (
             bottleneck_nonlinear == "identity"
         ):
-            self.bottleneck_nonlin = lambda x: x
+            def bottleneck_nonlin(x):
+                return x
+            self.bottleneck_nonlin = bottleneck_nonlin
         else:
             raise ValueError(
                 f"Unsupported nonlinearity '{bottleneck_nonlinear}'"
@@ -743,7 +745,7 @@ class ConceptBottleneckModel(pl.LightningModule):
                     ("num_rollouts" in name)
 
                 )
-            self.log(name, val, prog_bar=prog_bar)
+            self.log(name, val, prog_bar=prog_bar, sync_dist = True)
         return {
             "loss": loss,
             "log": {
@@ -767,7 +769,7 @@ class ConceptBottleneckModel(pl.LightningModule):
                 prog_bar = (("auc" in name))
             else:
                 prog_bar = (("c_auc" in name) or ("y_accuracy" in name))
-            self.log("val_" + name, val, prog_bar=prog_bar)
+            self.log("val_" + name, val, prog_bar=prog_bar, sync_dist = True)
         result = {
             "val_" + key: val
             for key, val in result.items()
@@ -777,7 +779,7 @@ class ConceptBottleneckModel(pl.LightningModule):
     def test_step(self, batch, batch_no):
         loss, result = self._run_step(batch, batch_no, train=False)
         for name, val in result.items():
-            self.log("test_" + name, val, prog_bar=True)
+            self.log("test_" + name, val, prog_bar=True, sync_dist = True)
         return result['loss']
 
     def configure_optimizers(self):
@@ -788,8 +790,10 @@ class ConceptBottleneckModel(pl.LightningModule):
                 weight_decay=self.weight_decay,
             )
         else:
+            def filter_grad(p):
+                return p.requires_grad
             optimizer = torch.optim.SGD(
-                filter(lambda p: p.requires_grad, self.parameters()),
+                filter(filter_grad, self.parameters()),
                 lr=self.learning_rate,
                 momentum=self.momentum,
                 weight_decay=self.weight_decay,

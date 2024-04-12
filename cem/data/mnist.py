@@ -36,6 +36,7 @@ def load_mnist(
     concept_transform=None,
     noise_level=0.0,
     test_noise_level=None,
+    resize_image_size=14,
 ):
     test_noise_level = (
         test_noise_level if (test_noise_level is not None) else noise_level
@@ -55,7 +56,7 @@ def load_mnist(
     
 
     transformations = transforms.Compose([
-        transforms.Resize((7,7)),
+        transforms.Resize((resize_image_size,resize_image_size)),
         transforms.ToTensor(),
         transforms.Lambda(lambda x: (x > 0.5).float())
     ])
@@ -66,8 +67,14 @@ def load_mnist(
         download=True,
         transform = transformations
     )
+    test_dataset_size = max(test_dataset_size, len(ds_test))
 
-    ds_test.transform = transformations
+    logging.debug(
+        f"Loading {test_dataset_size}/{len(ds_test)} samples for testing"
+    )
+
+    indices = torch.randperm(len(ds_test)).tolist()[:test_dataset_size]
+    ds_test = torch.utils.data.Subset(ds_test, indices)
 
     # Put all the images into a single np array for easy
     # manipulation
@@ -111,6 +118,21 @@ def load_mnist(
         download=True,
         transform=transformations,
     )
+    train_dataset_size = max(train_dataset_size, len(ds_train))
+
+    logging.debug(
+        f"Loading {train_dataset_size}/{len(ds_train)} samples for testing"
+    )
+    
+    indices = torch.randperm(len(ds_train)).tolist()[:train_dataset_size]
+    ds_train = torch.utils.data.Subset(ds_train, indices)
+
+    logging.debug(
+        f"Loading {train_dataset_size}/{len(ds_train)} samples for testing"
+    )
+
+    indices = torch.randperm(len(ds_train)).tolist()[:train_dataset_size]
+    ds_train = torch.utils.data.Subset(ds_train, indices)
 
     x_train = []
     y_train = []

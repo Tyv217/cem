@@ -5,6 +5,7 @@ import json
 import logging
 import numpy as np
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import sys
 import torch
 import yaml
@@ -236,13 +237,22 @@ def main(
 
                 if "AC" in run_config["architecture"] and experiment_config['shared_params'].get("separate_ac_model_training", False):    
                     full_run_name = f"ac_{experiment_config['shared_params']['ac_model_config']['architecture']}_model_split_{split}"
+                    
+                    ac_old_results = None
+                    ac_current_results_path = os.path.join(
+                        result_dir,
+                        f'{full_run_name}_results.joblib'
+                    )
+                    if os.path.exists(ac_current_results_path):
+                        with open(ac_current_results_path, 'rb') as f:
+                            ac_old_results = joblib.load(f)
                     current_rerun = determine_rerun(
                         config=run_config,
                         rerun=rerun,
                         split=split,
                         full_run_name=full_run_name,
                     )
-                    training.train_ac_model(
+                    _, _, ac_model_saved_path = training.train_ac_model(
                         n_concepts=n_concepts,
                         n_tasks=n_tasks,
                         ac_model_config = experiment_config['shared_params']['ac_model_config'],
@@ -254,8 +264,18 @@ def main(
                         accelerator=accelerator,
                         devices=devices,
                         rerun=current_rerun,
+                        ac_old_results=ac_old_results,
+                        full_run_name=full_run_name
                     )
 
+                    run_config['ac_model_config']['save_path'] = ac_model_saved_path
+
+                    if experiment_config['shared_params'].get("only_train_ac_model", False):
+                        continue
+
+                logging.debug(
+                        f"Setting ac model save path to be {ac_model_saved_path}"
+                    )
 
                 if run_config["architecture"] in [
                     "IndependentConceptBottleneckModel",
@@ -698,6 +718,12 @@ def _build_arg_parser():
         default=False,
         help="starts debug mode in our program.",
     )
+    parser.add_argument(
+        "--devices",
+        default=-1,
+        help="Devices for training",
+        type=int,
+    )
 
     parser.add_argument(
         "--force_cpu",
@@ -882,6 +908,7 @@ if __name__ == '__main__':
             "gpu" if (not args.force_cpu) and (torch.cuda.is_available())
             else "cpu"
         ),
+        devices=args.devices if args.devices != -1 else "auto",
         experiment_config=loaded_config,
         activation_freq=args.activation_freq,
         single_frequency_epochs=args.single_frequency_epochs,

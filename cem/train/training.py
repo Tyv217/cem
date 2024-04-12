@@ -1274,7 +1274,8 @@ def train_ac_model(
             momentum = ac_model_config.get('momentum', 0.9), 
         )
     else:
-        raise ValueError(f"AC {architecture} model current not supported.")    
+        raise ValueError(f"AC {architecture} model current not supported.") 
+    save_path = result_dir + ("" if result_dir[-1] == "/" else "/")  + f"ac{architecture}_model_trial_{split}.pt"
     if (project_name) and result_dir and (
         not os.path.exists(os.path.join(result_dir, f'{full_run_name}.pt'))
     ):
@@ -1283,7 +1284,7 @@ def train_ac_model(
         with wandb.init(
             project=project_name,
             name=full_run_name,
-            config=config,
+            config=ac_model_config,
             reinit=True
         ) as run:
             trainer = pl.Trainer(
@@ -1305,7 +1306,6 @@ def train_ac_model(
                     logging.debug(
                         f"\t{key}: {val}"
                     )
-            save_path = result_dir + ("" if result_dir[-1] == "/" else "/")  + f"ac{architecture}_model_trial_{split}.pt"
             ac_model_config['save_path'] = save_path
 
             chpt_exists = (

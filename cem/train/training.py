@@ -1238,6 +1238,7 @@ def train_ac_model(
     devices,
     project_name='',
     rerun=False,
+    logger=False,
     ac_old_results=None,
     save_model=True,
     full_run_name = None
@@ -1276,6 +1277,8 @@ def train_ac_model(
     else:
         raise ValueError(f"AC {architecture} model current not supported.") 
     save_path = result_dir + ("" if result_dir[-1] == "/" else "/")  + f"ac{architecture}_model_trial_{split}.pt"
+    import pdb
+    pdb.set_trace()
     if (project_name) and result_dir and (
         (not os.path.exists(os.path.join(result_dir, f'{full_run_name}.pt'))) or rerun
     ):
@@ -1291,8 +1294,14 @@ def train_ac_model(
                 accelerator=accelerator,
                 devices=devices,
                 max_epochs=ac_model_config.get('max_epochs', 100),
-                logger=False,
-                enable_checkpointing=False
+                logger=(
+                logger or
+                (WandbLogger(
+                    name=full_run_name,
+                    project=project_name,
+                    save_dir=os.path.join(result_dir, "logs"),
+                ) if project_name and (rerun or (not chpt_exists)) else False)),
+                enable_checkpointing=False,
             )
 
             if test_dl is not None:

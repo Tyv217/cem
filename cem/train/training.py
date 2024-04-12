@@ -1238,11 +1238,14 @@ def train_ac_model(
     devices,
     project_name='',
     rerun=False,
+    seed=None,
     logger=False,
     ac_old_results=None,
     save_model=True,
     full_run_name = None
 ):  
+    if seed is not None:
+        seed_everything(seed)
     architecture = ac_model_config["architecture"]
     full_run_name = full_run_name or f"ac_{architecture}_model_split_{split}"
     if "flow" in architecture:

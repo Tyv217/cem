@@ -265,6 +265,7 @@ def main(
                         devices=devices,
                         project_name=project_name,
                         rerun=current_rerun,
+                        seed = (42 + split),
                         ac_old_results=ac_old_results,
                         full_run_name=full_run_name
                     )

@@ -1236,6 +1236,7 @@ def train_ac_model(
     result_dir,
     accelerator,
     devices,
+    project_name='',
     rerun=False,
     ac_old_results=None,
     save_model=True,
@@ -1274,156 +1275,168 @@ def train_ac_model(
         )
     else:
         raise ValueError(f"AC {architecture} model current not supported.")    
+    if (project_name) and result_dir and (
+        not os.path.exists(os.path.join(result_dir, f'{full_run_name}.pt'))
+    ):
+        # Lazy import to avoid importing unless necessary
+        import wandb
+        with wandb.init(
+            project=project_name,
+            name=full_run_name,
+            config=config,
+            reinit=True
+        ) as run:
+            trainer = pl.Trainer(
+                accelerator=accelerator,
+                devices=devices,
+                max_epochs=ac_model_config.get('max_epochs', 100),
+                logger=False,
+                enable_checkpointing=False
+            )
 
-    trainer = pl.Trainer(
-        accelerator=accelerator,
-        devices=devices,
-        max_epochs=ac_model_config.get('max_epochs', 100),
-        logger=False,
-        enable_checkpointing=False
-    )
+            if test_dl is not None:
+                test_dl = ac_transform_dataloader(test_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
+                ac_model.freeze()
+                [test_results] = trainer.test(ac_model, test_dl)
+                logging.debug(
+                    f"AC Model test results before training:\n"
+                )
+                for key, val in test_results.items():
+                    logging.debug(
+                        f"\t{key}: {val}"
+                    )
+            save_path = result_dir + ("" if result_dir[-1] == "/" else "/")  + f"ac{architecture}_model_trial_{split}.pt"
+            ac_model_config['save_path'] = save_path
 
-    if test_dl is not None:
-        test_dl = ac_transform_dataloader(test_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
-        ac_model.freeze()
-        [test_results] = trainer.test(ac_model, test_dl)
-        logging.debug(
-            f"AC Model test results before training:\n"
-        )
-        for key, val in test_results.items():
+            chpt_exists = (
+                os.path.exists(save_path)
+            )
+
+            train_dl = ac_transform_dataloader(train_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
+            val_dl = ac_transform_dataloader(val_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
+            
+            sample = next(iter(train_dl.dataset))
             logging.debug(
-                f"\t{key}: {val}"
+                f"AC Model input shape:"
+                f"\tx:{sample['x'].shape}"
+                f"\tb:{sample['b'].shape}"
+                f"\tm:{sample['m'].shape}"
+                f"\ty:{sample['y'].shape}"
+                f"AC Data loader batch size: {train_dl.batch_size}"
             )
-    save_path = result_dir + ("" if result_dir[-1] == "/" else "/")  + f"ac{architecture}_model_trial_{split}.pt"
-    ac_model_config['save_path'] = save_path
 
-    chpt_exists = (
-        os.path.exists(save_path)
-    )
+            training_time, num_epochs = 0, 0
+            if (not rerun) and chpt_exists:
+                try:
+                    logging.debug(
+                        f"Found AC {ac_model_config['architecture']} model saved in {ac_model_config['save_path']}"
+                    )
+                    ac_model.load_state_dict(torch.load(save_path))
+                except:
+                    logging.warning(
+                        f"Model at {ac_model_config['save_path']} not found. Defaulting to rerunning."
+                    )
+                    rerun = True
+                if os.path.exists(
+                    save_path.replace(".pt", "_training_times.npy")
+                ):
+                    [training_time, num_epochs] = np.load(
+                        save_path.replace(".pt", "_training_times.npy")
+                    )
+            if rerun or not(chpt_exists):
+                logging.warning(
+                    f"We will rerun model ac_{architecture}_split_{split} "
+                    f"as requested by the config"
+                )
+                logging.debug(
+                    f"Starting AC {architecture} Model training...\n"
+                    # f"\tTransformations: {ac_model_config['transformations']}\n"
+                    f"\tSave path: {ac_model_config['save_path']}"
+                )
+                training_time = time.time()
+                ac_model.unfreeze()
+                trainer.fit(ac_model, train_dl, val_dl)
 
-    train_dl = ac_transform_dataloader(train_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
-    val_dl = ac_transform_dataloader(val_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
-    
-    sample = next(iter(train_dl.dataset))
-    logging.debug(
-        f"AC Model input shape:"
-        f"\tx:{sample['x'].shape}"
-        f"\tb:{sample['b'].shape}"
-        f"\tm:{sample['m'].shape}"
-        f"\ty:{sample['y'].shape}"
-        f"AC Data loader batch size: {train_dl.batch_size}"
-    )
+                training_time = time.time() - training_time
+                num_epochs = trainer.current_epoch
+                config_copy = copy.deepcopy(ac_model_config)
+                joblib.dump(
+                    config_copy,
+                    os.path.join(
+                        result_dir,
+                        f'{full_run_name}_experiment_config.joblib',
+                    ),
+                )
+                if save_model:
+                    torch.save(
+                        ac_model.state_dict(),
+                        save_path,
+                    )
+                    np.save(
+                        save_path.replace(".pt", "_training_times.npy"),
+                        np.array([training_time, num_epochs]),
+                    )
+            
+            if test_dl is not None:
+                # test_dl = ac_transform_dataloader(test_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
+                ac_model.freeze()
 
-    training_time, num_epochs = 0, 0
-    if (not rerun) and chpt_exists:
-        try:
-            logging.debug(
-                f"Found AC {ac_model_config['architecture']} model saved in {ac_model_config['save_path']}"
-            )
-            ac_model.load_state_dict(torch.load(save_path))
-        except:
-            logging.warning(
-                f"Model at {ac_model_config['save_path']} not found. Defaulting to rerunning."
-            )
-            rerun = True
-        if os.path.exists(
-            save_path.replace(".pt", "_training_times.npy")
-        ):
-            [training_time, num_epochs] = np.load(
-                save_path.replace(".pt", "_training_times.npy")
-            )
-    if rerun or not(chpt_exists):
-        logging.warning(
-            f"We will rerun model ac_{architecture}_split_{split} "
-            f"as requested by the config"
-        )
-        logging.debug(
-            f"Starting AC {architecture} Model training...\n"
-            # f"\tTransformations: {ac_model_config['transformations']}\n"
-            f"\tSave path: {ac_model_config['save_path']}"
-        )
-        training_time = time.time()
-        ac_model.unfreeze()
-        trainer.fit(ac_model, train_dl, val_dl)
+                def _inner_call(trainer, model):
+                    [test_results] = trainer.test(model, test_dl)
+                    output = [
+                        test_results["test_accuracy"],
+                        test_results.get("test_nll", 0)
+                    ]
+                    top_k_vals = []
+                    for key, val in test_results.items():
+                        if "test_y_top" in key:
+                            top_k = int(key[len("test_y_top_"):-len("_accuracy")])
+                            top_k_vals.append((top_k, val))
+                    output += list(map(
+                        lambda x: x[1],
+                        sorted(top_k_vals, key=lambda x: x[0]),
+                    ))
+                    return output
 
-        training_time = time.time() - training_time
-        num_epochs = trainer.current_epoch
-        config_copy = copy.deepcopy(ac_model_config)
-        joblib.dump(
-            config_copy,
-            os.path.join(
-                result_dir,
-                f'{full_run_name}_experiment_config.joblib',
-            ),
-        )
-        if save_model:
-            torch.save(
-                ac_model.state_dict(),
-                save_path,
-            )
-            np.save(
-                save_path.replace(".pt", "_training_times.npy"),
-                np.array([training_time, num_epochs]),
-            )
-    
-    if test_dl is not None:
-        # test_dl = ac_transform_dataloader(test_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
-        ac_model.freeze()
-
-        def _inner_call(trainer, model):
-            [test_results] = trainer.test(model, test_dl)
-            output = [
-                test_results["test_accuracy"],
-                test_results.get("test_nll", 0)
-            ]
-            top_k_vals = []
-            for key, val in test_results.items():
-                if "test_y_top" in key:
-                    top_k = int(key[len("test_y_top_"):-len("_accuracy")])
-                    top_k_vals.append((top_k, val))
-            output += list(map(
-                lambda x: x[1],
-                sorted(top_k_vals, key=lambda x: x[0]),
-            ))
-            return output
-
-        keys = [
-            "test_accuracy",
-            "test_nll"
-        ]
-        if ac_model_config.get('top_k_accuracy', None):
-            top_k_args = ac_model_config['top_k_accuracy']
-            if top_k_args is None:
-                top_k_args = []
-            if not isinstance(top_k_args, list):
-                top_k_args = [top_k_args]
-            for top_k in sorted(top_k_args):
-                keys.append(f'test_top_{top_k}_acc_y')
-        long_ac_architecture = architecture[0].upper() + architecture[1:]
-        values, _ = utils.load_call(
-            function=_inner_call,
-            keys=keys,
-            full_run_name=(
-                f"AC{long_ac_architecture}Model{ac_model_config.get('extra_name', '')}"
-            ),
-            old_results=ac_old_results,
-            rerun=rerun,
-            kwargs=dict(
-                trainer=trainer,
-                model=ac_model,
-            ),
-        )
-        test_results = {
-            key: val
-            for (key, val) in zip(keys, values)
-        }
-        test_results['training_time'] = training_time
-        test_results['num_epochs'] = num_epochs
-        print(
-            f'AC Model test_accuracy: {test_results["test_accuracy"] * 100:.2f}%, '
-            f'AC Model test_nll: {test_results["test_nll"] * 100:.2f}% with '
-            f'{num_epochs} epochs in {training_time:.2f} seconds'
-        )
+                keys = [
+                    "test_accuracy",
+                    "test_nll"
+                ]
+                if ac_model_config.get('top_k_accuracy', None):
+                    top_k_args = ac_model_config['top_k_accuracy']
+                    if top_k_args is None:
+                        top_k_args = []
+                    if not isinstance(top_k_args, list):
+                        top_k_args = [top_k_args]
+                    for top_k in sorted(top_k_args):
+                        keys.append(f'test_top_{top_k}_acc_y')
+                long_ac_architecture = architecture[0].upper() + architecture[1:]
+                values, _ = utils.load_call(
+                    function=_inner_call,
+                    keys=keys,
+                    full_run_name=(
+                        f"AC{long_ac_architecture}Model{ac_model_config.get('extra_name', '')}"
+                    ),
+                    old_results=ac_old_results,
+                    rerun=rerun,
+                    kwargs=dict(
+                        trainer=trainer,
+                        model=ac_model,
+                    ),
+                )
+                test_results = {
+                    key: val
+                    for (key, val) in zip(keys, values)
+                }
+                test_results['training_time'] = training_time
+                test_results['num_epochs'] = num_epochs
+                print(
+                    f'AC Model test_accuracy: {test_results["test_accuracy"] * 100:.2f}%, '
+                    f'AC Model test_nll: {test_results["test_nll"] * 100:.2f}% with '
+                    f'{num_epochs} epochs in {training_time:.2f} seconds'
+                )
+            else:
+                test_results = None
     else:
         test_results = None
     return ac_model, test_results, save_path

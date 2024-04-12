@@ -360,10 +360,16 @@ class ACEnergy(pl.LightningModule):
 
         concept_probabilities = concept_probabilities / (concept_probabilities + incorrect_concept_probabilities)
 
-        acc = (concept_probabilities > 0.5).float().mean()
+        concept_accuracy = (concept_probabilities > 0.5).float().mean()
+
+        predicted_labels = torch.argmax(all_concepts_probabilities, dim = -1)
+        import pdb
+        pdb.set_trace()
+
+        label_accuracy = (predicted_labels == y).cpu().detach().mean().numpy()
 
         result = {
-            "accuracy": acc.detach()
+            "concept_accuracy": concept_accuracy.detach()
         }
 
         return result

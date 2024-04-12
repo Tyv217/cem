@@ -1277,7 +1277,7 @@ def train_ac_model(
         raise ValueError(f"AC {architecture} model current not supported.") 
     save_path = result_dir + ("" if result_dir[-1] == "/" else "/")  + f"ac{architecture}_model_trial_{split}.pt"
     if (project_name) and result_dir and (
-        not os.path.exists(os.path.join(result_dir, f'{full_run_name}.pt'))
+        (not os.path.exists(os.path.join(result_dir, f'{full_run_name}.pt'))) or rerun
     ):
         # Lazy import to avoid importing unless necessary
         import wandb

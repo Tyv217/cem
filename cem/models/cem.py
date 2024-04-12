@@ -352,7 +352,7 @@ class ConceptEmbeddingModel(ConceptBottleneckModel):
                 train=train,
                 horizon=horizon,
             )
-            intervention_idxs, c_int = self.intervention_policy(
+            intervention_idxs, c_int = self.intervention_policy.intervene(
                 x=x,
                 c=c,
                 pred_c=c_sem,

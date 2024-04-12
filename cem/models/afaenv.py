@@ -7,16 +7,19 @@ from gymnasium import spaces
 
 class AFAEnv(gym.Env):
 
-    def __init__(self, env_config):
+    def __init__(self, cbm, ac_model, env_config):
         
-        self.cbm = env_config["cbm"]
-        self.ac_model = env_config["ac_model"]
+        # self.cbm = env_config["cbm"]
+        # self.ac_model = env_config["ac_model"]
+        self.cbm = cbm
+        self.ac_model = ac_model
         self.use_concept_groups = env_config["use_concept_groups"]
         self.concept_group_map = env_config["concept_group_map"]
         self.n_concept_groups = len(self.concept_group_map) if self.use_concept_groups else env_config["n_concepts"]
         self.n_concepts = env_config["n_concepts"]
         self.n_tasks = env_config["n_tasks"]
         self.n_tasks = self.n_tasks if self.n_tasks > 1 else 2
+        self.step_cost = env_config.get("step_cost", )
         self.emb_size = env_config["emb_size"]
         self.cbm_dl = env_config["cbm_dl"]
         self.cbm_forward = env_config["cbm_forward"]
@@ -142,6 +145,9 @@ class AFAEnv(gym.Env):
 
         obs = self._get_obs()
         info = self._get_info()
+
+        terminated = np.array_equal(self._agent_location, self._target_location)
+        reward = 1 if terminated else 0
 
         return obs, info
 

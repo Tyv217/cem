@@ -515,7 +515,7 @@ class ConceptBottleneckModel(pl.LightningModule):
                         horizon=1,
                     )
                     current_intervention_idxs, current_c_int = \
-                        self.intervention_policy(
+                        self.intervention_policy.intervene(
                             x=x[indices],
                             c=c[indices],
                             pred_c=c_sem[indices],
@@ -545,7 +545,7 @@ class ConceptBottleneckModel(pl.LightningModule):
                     train=train,
                     horizon=1,
                 )
-                intervention_idxs, c_int = self.intervention_policy(
+                intervention_idxs, c_int = self.intervention_policy.intervene(
                     x=x,
                     c=c,
                     pred_c=c_sem,

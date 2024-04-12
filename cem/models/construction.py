@@ -418,6 +418,8 @@ def construct_model(
         **extra_params,
     )
 
+def construct_rl_model()
+
 
 def construct_sequential_models(
     n_concepts,

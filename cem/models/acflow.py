@@ -71,7 +71,7 @@ class ACFlow(pl.LightningModule):
             logits = torch.reshape(logp, [B,N])
             return logits
         else:
-            sample = self.flow.cond_inverse(x,y,b,m)
+            sample = self.flow.cond_inverse(x, y, b, m)
             sample = torch.reshape(sample, [B,N,d])
             return sample
 

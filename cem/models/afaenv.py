@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import logging
 import gymnasium as gym
+import scipy
 
 from gymnasium import spaces
 
@@ -19,13 +20,15 @@ class AFAEnv(gym.Env):
         self.n_concepts = env_config["n_concepts"]
         self.n_tasks = env_config["n_tasks"]
         self.n_tasks = self.n_tasks if self.n_tasks > 1 else 2
-        self.step_cost = env_config.get("step_cost", )
+        self.step_cost = env_config.get("step_cost", 1)
         self.emb_size = env_config["emb_size"]
         self.cbm_dl = env_config["cbm_dl"]
         self.cbm_forward = env_config["cbm_forward"]
         self.unpack_batch = env_config["unpack_batch"]
         self.torch_generator = torch.Generator()
         self.torch_generator.manual_seed(env_config["seed"])
+        self._budget = self.n_concept_groups
+        self.softmax = torch.nn.Softmax(dim = -1)
 
         self.observation_space = spaces.Dict(
             {
@@ -57,6 +60,8 @@ class AFAEnv(gym.Env):
         }
 
     def reset(self, seed=None, options=None):
+        import pdb
+        pdb.set_trace()
         super().reset(seed=seed)
         
         self._budget = options.get("budget", None) or \
@@ -94,6 +99,7 @@ class AFAEnv(gym.Env):
         self._intervened_concepts = np.zeros(self.n_concepts, dtype = int)
         self._ac_model_output = ac_model_output
         self._cbm_bottleneck = embeddings
+
         self._cbm_pred_concepts = c_pred.detach().cpu().numpy()
         self._cbm_pred_output = torch.argmax(y_logits.detach(), dim = 1).cpu().numpy()
 
@@ -104,6 +110,8 @@ class AFAEnv(gym.Env):
 
     def step(self, action):
 
+        import pdb
+        pdb.set_trace()
         prev_interventions = torch.unsqueeze(torch.IntTensor(self._intervened_concepts), dim = 0)
         new_interventions_map = self._intervened_concepts_map
         new_interventions = prev_interventions.copy()
@@ -131,9 +139,14 @@ class AFAEnv(gym.Env):
                 torch.unsqueeze(prob, dim=-1) * pos_embeddings.detach() +
                 (1 - torch.unsqueeze(prob, dim=-1)) * neg_embeddings.detach()
             ).cpu().numpy()
+            xx = torch.cat((prob, prob), dim = 0)
+            bb = torch.cat((prev_interventions, torch.unsqueeze(new_interventions.to(self.ac_model.device), dim = 0)), dim = 0)
             ac_model_output = torch.squeeze(
-                self.ac_model(
-                        b = torch.unsqueeze(new_interventions.to(self.ac_model.device), dim = 0)
+                self.ac_model.compute_concept_probabilities(
+                        x = xx,
+                        b = bb,
+                        m = bb,
+                        y = None
                     )
             .detach(), dim = 0).cpu().numpy()
         self._ac_model_output = ac_model_output
@@ -146,8 +159,16 @@ class AFAEnv(gym.Env):
         obs = self._get_obs()
         info = self._get_info()
 
-        terminated = np.array_equal(self._agent_location, self._target_location)
+        terminated = np.sum(self._intervened_concepts_map) == self._budget
         reward = 1 if terminated else 0
 
-        return obs, info
+        return obs, reward, terminated, False, info
+    
+    def calculate_reward(self, terminated):
+        if terminated:
+            return 
+        else:
+
+
+        
 

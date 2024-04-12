@@ -1280,8 +1280,6 @@ def train_ac_model(
     else:
         raise ValueError(f"AC {architecture} model current not supported.") 
     save_path = result_dir + ("" if result_dir[-1] == "/" else "/")  + f"ac{architecture}_model_trial_{split}.pt"
-    import pdb
-    pdb.set_trace()
     if (project_name) and result_dir and (
         (not os.path.exists(os.path.join(result_dir, f'{full_run_name}.pt'))) or rerun
     ):

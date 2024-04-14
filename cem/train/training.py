@@ -1401,7 +1401,10 @@ def train_ac_model(
             if test_dl is not None:
                 # test_dl = ac_transform_dataloader(test_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
                 ac_model.freeze()
-
+                logging.debug(
+                    f"{type(ac_model)}\n"
+                    f"{isinstance(ac_model, ACEnergy)}"
+                )
                 test_result_keys = ["test_concept_accuracy", "test_label_accuracy"] if isinstance(ac_model, ACEnergy) else ["test_accuracy", "test_nll"]
 
                 def _inner_call(trainer, model):

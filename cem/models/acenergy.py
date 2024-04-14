@@ -368,7 +368,7 @@ class ACEnergy(pl.LightningModule):
 
         result = {
             "concept_accuracy": concept_accuracy.detach(),
-            "label_accuracy": label_accuracy.detach()
+            "label_accuracy": label_accuracy
         }
 
         return result

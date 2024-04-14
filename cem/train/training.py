@@ -1402,12 +1402,11 @@ def train_ac_model(
                 # test_dl = ac_transform_dataloader(test_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
                 ac_model.freeze()
 
+                test_result_keys = ["test_concept_accuracy", "test_label_accuracy"] if isinstance(ac_model, ACEnergy) else ["test_accuracy", "test_nll"]
+
                 def _inner_call(trainer, model):
                     [test_results] = trainer.test(model, test_dl)
-                    output = [
-                        test_results["test_accuracy"],
-                        test_results.get("test_nll", 0)
-                    ]
+                    output = [test_results[key] for key in test_result_keys]
                     top_k_vals = []
                     for key, val in test_results.items():
                         if "test_y_top" in key:
@@ -1419,10 +1418,7 @@ def train_ac_model(
                     ))
                     return output
 
-                keys = [
-                    "test_accuracy",
-                    "test_nll"
-                ]
+                keys = test_result_keys
                 if ac_model_config.get('top_k_accuracy', None):
                     top_k_args = ac_model_config['top_k_accuracy']
                     if top_k_args is None:

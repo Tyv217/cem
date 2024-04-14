@@ -27,6 +27,7 @@ from cem.models.construction import (
 )
 from cem.models.acflow import ACFlow, ac_transform_dataloader
 from cem.models.acenergy import ACEnergy
+from cem.models.afacbm import AFAModel
 
 
 ################################################################################
@@ -114,6 +115,11 @@ def train_model(
         imbalance=imbalance,
         task_class_weights=task_class_weights,
     )
+
+    afa_config = config.get("afa_config", None) 
+    if afa_config is not None:
+        ac_model_config = config.get("ac_model_config", None) 
+        model = AFAModel(model, ac_model_config, afa_config)
     print(
         "[Number of parameters in model",
         sum(p.numel() for p in model.parameters() if p.requires_grad),

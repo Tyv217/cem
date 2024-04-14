@@ -98,12 +98,12 @@ class ACFlow(pl.LightningModule):
         return logpu, logpo, sam, cond_sam, pred_sam
 
     def compute_concept_probabilities(self, x, b, m, y):
-        logpu, logpo, _, _, _ = self(x, b, m, y)
+        logpu, logpo, sam, cond_sam, pred_sam = self(x, b, m, y)
 
         class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1]).to(logpu.device)
         loglikel = torch.logsumexp(logpu + logpo + class_weights, dim = 1) - torch.logsumexp(logpo + self.class_weights, dim = 1)
 
-        return loglikel
+        return loglikel, sam, cond_sam, pred_sam
 
     def training_step(self, batch, batch_idx):
         

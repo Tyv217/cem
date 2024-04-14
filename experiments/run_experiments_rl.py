@@ -68,8 +68,6 @@ def main(
         experiment_config['shared_params'], global_params or []
     )
 
-
-
     train_dl, val_dl, test_dl, imbalance, (n_concepts, n_tasks, concept_map) = \
         data_module.generate_data(
             config=experiment_config['shared_params'],
@@ -235,7 +233,7 @@ def main(
                     with open(current_results_path, 'rb') as f:
                         old_results = joblib.load(f)
 
-                if "AC" in run_config["architecture"] and experiment_config['shared_params'].get("separate_ac_model_training", False):    
+                if experiment_config['shared_params'].get("separate_ac_model_training", False):    
                     full_run_name = f"ac_{experiment_config['shared_params']['ac_model_config']['architecture']}_model_split_{split}"
                     
                     ac_old_results = None
@@ -276,7 +274,6 @@ def main(
                 logging.debug(
                         f"Setting ac model save path to be {ac_model_saved_path}"
                     )
-
                 if run_config["architecture"] in [
                     "IndependentConceptBottleneckModel",
                     "SequentialConceptBottleneckModel",

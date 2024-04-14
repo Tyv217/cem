@@ -34,15 +34,3 @@ class InterventionPolicy(ABC):
         prior_distribution=None,
     ):
         raise NotImplementedError("This is an abstract method!")
-    
-    def intervene(
-        self,
-        x,
-        pred_c,
-        c,
-        y=None,
-        competencies=None,
-        prev_interventions=None,
-        prior_distribution=None,
-    ):
-        return self(x, pred_c, c, y, competencies, prev_interventions, prior_distribution)

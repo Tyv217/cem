@@ -15,6 +15,7 @@ from typing import Callable
 
 from cem.train.utils import load_call
 from cem.models.construction import load_trained_model
+from cem.models.afacbm import AFAModel
 from cem.interventions.random import IndependentRandomMaskIntPolicy
 from cem.interventions.random import IndependentRandomMaskIntPolicy
 from cem.interventions.uncertainty import UncertaintyMaximizerPolicy
@@ -22,6 +23,7 @@ from cem.interventions.coop import CooPEntropy, CooP,CompetenceCooPEntropy
 from cem.interventions.optimal import GreedyOptimal, TrueOptimal
 from cem.interventions.behavioural_learning import BehavioralLearningPolicy
 from cem.interventions.intcem_policy import IntCemInterventionPolicy
+from cem.interventions.active_feature_acquisition import ReinforcementLearningPolicy
 from cem.interventions.global_policies import (
     GlobalValidationPolicy,
     GlobalValidationImprovementPolicy,
@@ -214,6 +216,7 @@ def intervene_in_cbm(
     y_test=None,
     c_test=None,
     seed=None,
+    budget=None
 ):
     if seed is not None:
         seed_everything(seed)
@@ -354,7 +357,14 @@ def intervene_in_cbm(
     logging.debug(
         f"Intervention groups: {groups}"
     )
+    if budget is None:
+        budget = len(groups)
+    if acquisition_costs is None:
+        acquisition_costs = 1
     for j, num_groups_intervened in enumerate(groups):
+        if budget < acquisition_costs:
+            break
+        budget -= acquisition_costs
         if num_groups_intervened is None:
             # Then this is the case where it is ignored
             intervention_accs.append(0)
@@ -836,7 +846,8 @@ def get_int_policy(
             concept_selection_policy = CompetenceCooPEntropy
     elif "behavioural_cloning" in policy_name:
         concept_selection_policy = BehavioralLearningPolicy
-
+    elif "reinforcement_learning" in policy_name:
+        concept_selection_policy = ReinforcementLearningPolicy
     elif "optimal_greedy" in policy_name:
         concept_selection_policy = GreedyOptimal
     elif "optimal_global" in policy_name:

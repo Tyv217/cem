@@ -59,7 +59,7 @@ class PPOLightningAgent(LightningModule):
         self.avg_value_loss = MeanMetric(**torchmetrics_kwargs)
         self.avg_ent_loss = MeanMetric(**torchmetrics_kwargs)
 
-    def get_action(self, x: Tensor, action: Tensor = None) -> Tuple[Tensor, Tensor, Tensor]:
+    def get_action(self, x: dict, action: Tensor = None) -> Tuple[Tensor, Tensor, Tensor]:
         logits = self.actor(x)
         distribution = Categorical(logits=logits)
         if action is None:

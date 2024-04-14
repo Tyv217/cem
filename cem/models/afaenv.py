@@ -29,12 +29,16 @@ class AFAEnv(gym.Env):
         self.torch_generator.manual_seed(env_config["seed"])
         self._budget = self.n_concept_groups
         self.softmax = torch.nn.Softmax(dim = -1)
+        self.entropy = scipy.stats.entropy
+        self.intermediate_reward_ratio = 0.1
+        self.xent_loss = torch.nn.CrossEntropyLoss()
 
         self.observation_space = spaces.Dict(
             {
-                "intervened_concepts_map": spaces.MultiBinary(self.n_concept_groups),
+                "intervened_concepts_map": spaces.MultiBinary(self.n_concepts),
                 "intervened_concepts": spaces.MultiBinary(self.n_concepts),
-                "ac_model_output": spaces.Box(shape = [self.n_concept_groups * self.n_tasks], dtype = np.float32),
+                "ac_model_output": spaces.Box(shape = [self.n_concepts * self.n_tasks * 2], dtype = np.float32),
+                "ac_model_output": spaces.Box(shape = [self.n_concepts * self.n_tasks * 3], dtype = np.float32),
                 "cbm_bottleneck": spaces.Box(shape = [self.n_concepts * self.emb_size], dtype = np.float32),
                 "cbm_pred_concepts": spaces.Box(shape = [self.n_concepts], dtype = np.float32),
                 "cbm_pred_output": spaces.Discrete(self.n_tasks)
@@ -49,6 +53,7 @@ class AFAEnv(gym.Env):
             "intervened_concepts_map": self._intervened_concepts_map,
             "intervened_concepts": self._intervened_concepts,
             "ac_model_output": self._ac_model_output,
+            "ac_model_info": self._ac_model_info,
             "cbm_bottleneck": self._cbm_bottleneck,
             "cbm_pred_concepts": self._cbm_pred_concepts,
             "cbm_pred_output": self._cbm_pred_output,
@@ -65,7 +70,7 @@ class AFAEnv(gym.Env):
         super().reset(seed=seed)
         
         self._budget = options.get("budget", None) or \
-            self.np_random.integers(low = 0, high = self.n_concepts + 1)
+            self.np_random.integers(low = 0, high = self.n_concept_groups + 1)
         self._cbm_data = options.get("cbm_data", None) or \
             torch.utils.data.RandomSampler(self.cbm_dl.dataset, num_samples = 1, generator = self.torch_generator)
         self._train = options.get("train", None) or True
@@ -90,11 +95,17 @@ class AFAEnv(gym.Env):
                 torch.unsqueeze(prob, dim=-1) * pos_embeddings.detach() +
                 (1 - torch.unsqueeze(prob, dim=-1)) * neg_embeddings.detach()
             ).cpu().numpy()
+            interventions = torch.zeros(self._intervened_concepts.shape).to(self.ac_model.device)
+            xx = torch.cat((prob, prob), dim = 0)
+            bb = torch.cat((interventions, interventions), dim = 0)
             ac_model_output = torch.squeeze(
-                self.ac_model(
-                        b = torch.unsqueeze(torch.tensor(self._intervened_concepts_map.to(self.ac_model.device)))
+                self.ac_model.compute_concept_probabilities(
+                        x = xx,
+                        b = bb,
+                        m = bb,
+                        y = None
                     )
-            .detach()).cpu().numpy()
+            .detach(), dim = 0).cpu().numpy()
         self._intervened_concepts_map = np.zeros(self.n_concept_groups, dtype = int)
         self._intervened_concepts = np.zeros(self.n_concepts, dtype = int)
         self._ac_model_output = ac_model_output
@@ -160,15 +171,14 @@ class AFAEnv(gym.Env):
         info = self._get_info()
 
         terminated = np.sum(self._intervened_concepts_map) == self._budget
-        reward = 1 if terminated else 0
+        reward = self.calculate_reward(terminated, y_logits, y)
 
         return obs, reward, terminated, False, info
     
-    def calculate_reward(self, terminated):
+    def calculate_reward(self, terminated, predictions, y):
         if terminated:
-            return 
+            return -self.xent_loss(predictions, y)
         else:
-
-
-        
+            pre_prob, post_prob = np.split(self._ac_model_output, 2, axis = 0)
+            return self.intermediate_reward_ratio * (self.entropy(pre_prob.T) - self.entropy(post_prob.T))
 

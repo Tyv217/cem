@@ -14,351 +14,222 @@ from cem.train.utils import WrapperModule
 ## Active Feature Acquisition Policy Definition
 ##########################
 
-class ActiveFeatureAcquisitionPolicy(InterventionPolicy):
+class ReinforcementLearningPolicy(InterventionPolicy):
     # Active Feature Acquisition Policy
     def __init__(
         self,
         concept_group_map,
         cbm,
-        n_concepts,
         n_tasks,
-        x_train,
-        y_train,
-        c_train,
-        emb_size,
-        full_run_name,
-        max_horizon=None,
-        batch_size=256,
-        teacher_policy=GreedyOptimal,
-        teacher_policy_kwargs=None,
-        result_dir=".",
-        train_epochs=100,
-        use_concept_groups=False,
+        budget,
         num_groups_intervened=0,
+        importance_weight=1,
+        acquisition_weight=1,
+        acquisition_costs=None,
         group_based=True,
-        include_prior=False,
-        dataset_size=5000,
-        horizon_rate=1.001,
-        accelerator="auto",
-        devices="auto",
-        rerun=False,
+        eps=1e-8,
         **kwargs
     ):
-        self.n_tasks = n_tasks
-        self.n_concepts = n_concepts
-        max_horizon = max_horizon or int(np.ceil(n_concepts/2))
-        self.num_groups_intervened = num_groups_intervened
-        self.concept_group_map = concept_group_map
-        self.group_based = group_based
-        self.cbm = cbm
-        self.include_prior = include_prior
-        teacher_policy_kwargs = teacher_policy_kwargs or {
-            "include_prior": False,
-        }
-        self.emb_size = emb_size
-        units = [
-            n_concepts * self.emb_size + # Bottleneck
-            n_concepts + # Prev interventions
-            1 # Horizon
-        ] + [
-            256,
-            128,
-            len(self.concept_group_map) if use_concept_groups else n_concepts,
-        ]
-        layers = []
-        for i in range(1, len(units)):
-            layers.append(torch.nn.Linear(units[i-1], units[i]))
-            if i != len(units) - 1:
-                layers.append(torch.nn.LeakyReLU())
-        self.behavior_cloner = WrapperModule(
-            model=torch.nn.Sequential(*layers),
-            n_tasks=self.n_concepts, # One output per task
-            momentum=0.9,
-            learning_rate=0.01,
-            weight_decay=4e-05,
-            optimizer="sgd",
-            top_k_accuracy=2,
-            binary_output=False,
-            weight_loss=None,
-            sigmoidal_output=False,
+        if acquisition_costs is None:
+            acquisition_costs = 1
+        kwargs.pop("concept_entropy_weight", 0)
+        kwargs.pop("include_prior", False)
+        super().__init__(
+            num_groups_intervened=num_groups_intervened,
+            concept_group_map=concept_group_map,
+            cbm=cbm,
+            concept_entropy_weight=0,
+            importance_weight=importance_weight,
+            acquisition_costs=acquisition_costs,
+            acquisition_weight=acquisition_weight,
+            group_based=group_based,
+            eps=eps,
+            include_prior=True,
+            n_tasks=n_tasks,
+            **kwargs,
         )
-        model_saved_path = os.path.join(
-            result_dir,
-            f"behaviour_clone_model_{full_run_name}.pkl",
-        )
-        if rerun or (not os.path.exists(model_saved_path)):
-            bc_train_ds = self._generate_behavioral_cloning_dataset(
-                x_train=x_train,
-                c_train=c_train,
-                y_train=y_train,
-                teacher_policy=teacher_policy,
-                teacher_policy_kwargs=teacher_policy_kwargs,
-                max_horizon=max_horizon,
-                dataset_size=dataset_size,
-                horizon_rate=horizon_rate,
-                compute_batch_size=batch_size,
-                batch_size=batch_size,
-            )
-            trainer = pl.Trainer(
-                accelerator=accelerator,
-                devices=devices,
-                max_epochs=train_epochs,
-                logger=False,
-            )
-            trainer.fit(self.behavior_cloner, bc_train_ds)
-            torch.save(
-                self.behavior_cloner.state_dict(),
-                model_saved_path,
-            )
-        else:
-            self.behavior_cloner.load_state_dict(torch.load(model_saved_path))
+        self.budget = budget
+        self.spent_cost = 0
 
-    def _compute_model_input(
+    def _importance_score(
         self,
-        prob,
-        pos_embeddings,
-        neg_embeddings,
+        x,
+        concept_group_idx,
         c,
-        horizon,
+        pred_c,
+        prev_interventions,
+        prev_entropy,
+        latent=None,
         competencies=None,
-        prev_interventions=None,
-        use_concept_groups=False,
+        prior_distribution=None,
+        intervene_with_groups=False,
     ):
-        if prev_interventions is None:
-            prev_interventions = np.zeros(prob.shape)
-        if competencies is None:
-            competencies = np.ones(prob.shape)
-        # Shape is [B, n_concepts, emb_size]
-        prob = prev_interventions * c + (1 - prev_interventions) * prob
-        embeddings = (
-            np.expand_dims(prob, axis=-1) * pos_embeddings +
-            (1 - np.expand_dims(prob, axis=-1)) * neg_embeddings
-        )
-        # Zero out embeddings of previously intervened concepts
-        if use_concept_groups:
-            available_groups = np.zeros(
-                (embeddings.shape[0], len(self.concept_group_map))
-            )
+        if intervene_with_groups:
             for group_idx, (_, group_concepts) in enumerate(
                 self.concept_group_map.items()
             ):
-                available_groups[:, group_idx] = np.logical_not(np.any(
-                    prev_interventions[:, group_concepts] > (1/len(self.concept_group_map)),
-                ))
+                if group_idx == concept_group_idx:
+                    break
         else:
-            available_groups = (1 - prev_interventions)
+            group_concepts = [concept_group_idx]
+        # And then estimating how much this would change if we intervene on the
+        # concept of interest
+        expected_new_entropy = torch.zeros((x.shape[0],)).to(pred_c.device)
+        for concept_val_idx in range(len(group_concepts)):
+            for val_to_set in [0, 1] if len(group_concepts) == 1 else [1]:
+                old_c_vals = c[:, group_concepts]
+                # Make a fake intervention in the current concept
+                new_vals = torch.zeros((x.shape[0], len(group_concepts))).to(
+                    c.device
+                )
+                new_vals[:, concept_val_idx] = val_to_set
+                c[:, group_concepts] = new_vals
+                prev_mask = prev_interventions[:, group_concepts] == 1
+                prev_interventions[:, group_concepts] = 1
+                # See how the predictions change
+                _, _, change_y_preds, _, _ = self.cbm(
+                    x,
+                    intervention_idxs=prev_interventions,
+                    c=c,
+                    latent=latent,
+                )
+                # Restore prev-interventions
+                c[:, group_concepts] = old_c_vals
+                prev_interventions[:, group_concepts] = prev_mask.type(
+                    prev_interventions.type()
+                )
+                # And compute their weighted output
+                prob = pred_c[:, group_concepts[concept_val_idx]]
+                if val_to_set == 0:
+                    prob = 1 - prob
 
-        emb_size = pos_embeddings.shape[-1]
-        return np.concatenate(
-            [
-                np.reshape(embeddings, [-1, emb_size * self.n_concepts]),
-                prev_interventions,
-                np.ones((prev_interventions.shape[0], 1)) * horizon,
-#                     competencies,
-            ],
-            axis=-1,
+                # And scale the probability by our intervention prior
+                if self.n_tasks > 1:
+                    new_class_probs = torch.nn.functional.softmax(
+                        change_y_preds,
+                        dim=-1,
+                    )
+
+                else:
+                    y_probs = torch.sigmoid(change_y_preds)
+                    new_class_probs = torch.cat(
+                        [1 - y_probs, y_probs],
+                        dim=-1,
+                    )
+                expected_new_entropy += \
+                    prior_distribution[:, concept_group_idx] * (
+                        prob * torch.sum(
+                            -torch.log(new_class_probs + self.eps) * \
+                                new_class_probs,
+                            axis=-1,
+                        )
+                    )
+        return -(
+            expected_new_entropy +
+            (1 - prior_distribution[:, concept_group_idx]) * prev_entropy
         )
 
-
-    def _generate_behavioral_cloning_dataset(
-        self,
-        x_train,
-        c_train,
-        y_train,
-        teacher_policy,
-        teacher_policy_kwargs,
-        max_horizon,
-        dataset_size=5000,
-        horizon_rate=1.001,
-        compute_batch_size=256,
-        batch_size=256,
-    ):
-        inputs = []
-        targets = []
-        horizon_limit = 1
-
-        prev_policy = self.cbm.intervention_policy
-        self.cbm.intervention_policy = teacher_policy(
-            cbm=self.cbm,
-            concept_group_map=self.concept_group_map,
-            n_concepts=self.n_concepts,
-            n_tasks=self.n_tasks,
-            num_groups_intervened=1,
-            group_based=self.group_based,
-            **teacher_policy_kwargs,
-        )
-        print("Generating BC dataset....")
-        latent = None
-        x_train = torch.FloatTensor(x_train)
-        c_train = torch.FloatTensor(c_train)
-        y_train = torch.LongTensor(y_train)
-        for sample_idx in tqdm(range(dataset_size//compute_batch_size)):
-            # Sample an initial mask to start with
-            competencies = None
-            current_horizon = np.random.randint(
-                0,
-                min(int(horizon_limit), max_horizon),
-            )
-            initially_selected = np.random.randint(
-                0,
-                min(int(horizon_limit), self.n_concepts),
-            )
-            # Generate a sample of inputs we will use to learn embeddings
-            selected_samples = np.random.choice(
-                x_train.shape[0],
-                replace=False,
-                size=compute_batch_size,
-            )
-            current_horizon = min(
-                current_horizon,
-                self.n_concepts - initially_selected,
-            )
-            prev_interventions = np.zeros(
-                (len(selected_samples), self.n_concepts)
-            )
-            for sample_idx in range(prev_interventions.shape[0]):
-                prev_interventions[
-                    sample_idx,
-                    np.random.choice(
-                        self.n_concepts,
-                        size=initially_selected,
-                        replace=False
-                    ),
-                ] = 1
-
-
-            outputs = self.cbm._forward(
-                x_train[selected_samples],
-                intervention_idxs=None,
-                c=c_train[selected_samples],
-                y=y_train[selected_samples],
-                train=False,
-                competencies=competencies,
-                prev_interventions=torch.FloatTensor(prev_interventions),
-                output_embeddings=True,
-                latent=latent,
-                output_latent=True,
-            )
-            next_mask = outputs[3].detach().cpu().numpy()
-            latent = outputs[4]
-            pos_embeddings = outputs[-2].detach().cpu().numpy()
-            neg_embeddings = outputs[-1].detach().cpu().numpy()
-            next_inputs = self._compute_model_input(
-                prob=outputs[0].detach().cpu().numpy(),
-                pos_embeddings=pos_embeddings,
-                neg_embeddings=neg_embeddings,
-                c=c_train[selected_samples].detach().cpu().numpy(),
-                competencies=competencies,
-                prev_interventions=prev_interventions,
-                use_concept_groups=False,
-                horizon=current_horizon,
-            )
-            horizon_limit = min(horizon_rate * horizon_limit, max_horizon)
-            inputs.append(next_inputs)
-            next_intervention = np.argmax(
-                next_mask - prev_interventions,
-                axis=-1,
-            )
-            targets.append(next_intervention)
-        inputs = np.concatenate(inputs, axis=0)
-        targets = np.concatenate(targets, axis=0)
-        data = torch.utils.data.TensorDataset(
-            torch.FloatTensor(inputs),
-            torch.LongTensor(targets),
-        )
-        return torch.utils.data.DataLoader(
-            data,
-            batch_size=batch_size,
-        )
-
-    def _next_intervention(
+    def _coop_step(
         self,
         x,
-        pred_c,
         c,
+        pred_c,
+        prev_interventions,
+        latent,
+        prev_entropy,
+        y=None,
+        y_preds=None,
         competencies=None,
-        prev_interventions=None,
         prior_distribution=None,
-        latent=None,
+        intervene_with_groups=True,
     ):
-        outputs = self.cbm._forward(
-            x,
-            intervention_idxs=torch.zeros(c.shape).to(c.device),
-            c=c,
-            train=False,
-            competencies=competencies,
-            prev_interventions=prev_interventions,
-            output_embeddings=True,
-            latent=latent,
-        )
-        pos_embeddings = outputs[-2]
-        neg_embeddings = outputs[-1]
-        if prev_interventions is None:
-            prev_interventions = np.zeros((x.shape[0], c.shape[-1]))
-            mask = np.zeros((x.shape[0], c.shape[-1]))
-        else:
-            mask = prev_interventions.copy()
-#         if not self.include_prior:
-#             prior_distribution = None
-#         elif prior_distribution is not None:
-#             prior_distribution = prior_distribution.detach().cpu().numpy()
-
-
-        scores = torch.softmax(
-             self.behavior_cloner(torch.FloatTensor(
-                 self._compute_model_input(
-                    prob=pred_c.detach().cpu().numpy(),
-                    pos_embeddings=pos_embeddings.detach().cpu().numpy(),
-                    neg_embeddings=neg_embeddings.detach().cpu().numpy(),
-                    c=c.detach().cpu().numpy(),
-                    competencies=competencies,
-                    prev_interventions=prev_interventions,
-                    use_concept_groups=False,
-                    horizon=1,
+        if self.spent_cost >= self.budget:
+            return prev_interventions, latent, y_preds
+        if intervene_with_groups and self.cbm.use_concept_groups:
+            n_groups = len(self.concept_group_map)
+            prev_used_groups = torch.zeros((c.shape[0], n_groups)).to(c.device)
+            for group_idx, (_, group_concepts) in enumerate(
+                self.concept_group_map.items()
+            ):
+                prev_used_groups[:, group_idx] = torch.any(
+                    prev_interventions[:, group_concepts] == 1,
+                    dim=-1,
                 )
-             )),
-            dim=-1
-        ).detach().cpu().numpy()
-
-        if prev_interventions is not None:
-            # Then zero out the scores of the concepts that have been previously
-            # intervened
-            scores = np.where(
-                prev_interventions == 1,
-                -float("inf"),
-                scores,
-            )
-
-        best_concepts = np.argsort(-scores, axis=-1)
-        for sample_idx in range(c.shape[0]):
-            if self.group_based:
-                # We will assign each group a score based on the max score of its
-                # corresponding concepts
-                group_scores = np.zeros(len(self.concept_group_map))
-                group_names = []
-                for i, key in enumerate(self.concept_group_map):
-                    group_scores[i] = np.max(
-                        scores[sample_idx, self.concept_group_map[key]],
-                        axis=-1,
-                    )
-                    group_names.append(key)
-                # Sort them out
-                best_group_scores = np.argsort(-group_scores, axis=-1)
-                for selected_group in (
-                    best_group_scores[: self.num_groups_intervened]
+        else:
+            n_groups = c.shape[-1]
+            prev_used_groups = prev_interventions
+            if self.cbm.use_concept_groups and (not prior_distribution is None):
+                new_prior = torch.zeros((c.shape[0], n_groups)).to(c.device)
+                for group_idx, (_, group_concepts) in enumerate(
+                    self.concept_group_map.items()
                 ):
-                    mask[
-                        sample_idx,
-                        self.concept_group_map[group_names[selected_group]],
-                    ] = 1
+                    new_prior[:, group_concepts] = (
+                        prior_distribution[:, group_idx]
+                    )
+                prior_distribution = new_prior
+        if prior_distribution is None:
+            denom = torch.sum(prev_used_groups, dim=-1, keepdim=True)
+            denom = torch.where(denom == 0, torch.ones_like(denom), denom)
+            prior_distribution = torch.ones(prev_used_groups.shape).to(
+                prev_used_groups.device
+            ) / denom
 
-            else:
-                # Else, previous interventions do not affect future ones
-                mask[
-                    sample_idx,
-                    best_concepts[sample_idx, : self.num_groups_intervened],
-                ] = 1
-        return mask
+        sample_importances = torch.zeros((c.shape[0], n_groups)).to(
+            pred_c.device
+        )
+        for concept_group_idx in range(n_groups):
+            sample_importances[:, concept_group_idx] = self._importance_score(
+                x=x,
+                concept_group_idx=concept_group_idx,
+                c=c,
+                pred_c=pred_c,
+                prev_interventions=prev_interventions,
+                prev_entropy=prev_entropy,
+                latent=latent,
+                competencies=competencies,
+                prior_distribution=prior_distribution,
+                intervene_with_groups=intervene_with_groups,
+            )
+        if isinstance(prev_used_groups, np.ndarray):
+            prev_used_groups = torch.from_numpy(prev_used_groups).to(c.device)
+        sample_importances = torch.where(
+            prev_used_groups == 1,
+            torch.ones_like(sample_importances) * (-np.Inf),
+            sample_importances,
+        )
+        if not self.cbm.use_concept_groups:
+            new_sample_importances = torch.zeros(
+                (c.shape[0], len(self.concept_group_map))
+            ).to(c.device)
+            for concept_group_idx, (_, group_concepts) in enumerate(
+                self.concept_group_map.items()
+            ):
+                new_sample_importances[:, concept_group_idx] = torch.mean(
+                    sample_importances[:, group_concepts],
+                    dim=-1,
+                )
+            sample_importances = new_sample_importances
+        # Updates prev_interventions rather than copying it to speed things up
+        if self.group_based:
+            group_names = []
+            for _, (group_name, _) in enumerate(
+                self.concept_group_map.items()
+            ):
+                group_names.append(group_name)
+            next_groups = torch.argmax(sample_importances, axis=-1)
+            for sample_idx, best_group_idx in enumerate(next_groups):
+                # Get the concepts corresponding to the group we will be
+                # intervening on
+                next_concepts = self.concept_group_map[
+                    group_names[best_group_idx]
+                ]
+                prev_interventions[sample_idx, next_concepts] = 1
+        else:
+            raise ValueError("Not implemented")
+            next_concepts = torch.argmax(sample_scores, axis=-1)
+            prev_interventions[:, next_concepts.detach().cpu().numpy()] = 1
+
+        return prev_interventions, latent, y_preds
 
     def __call__(
         self,
@@ -370,30 +241,83 @@ class ActiveFeatureAcquisitionPolicy(InterventionPolicy):
         prev_interventions=None,
         prior_distribution=None,
     ):
-        outputs = self.cbm._forward(
-            x,
-            intervention_idxs=torch.zeros(c.shape).to(c.device),
-            c=c,
-            y=y,
-            train=False,
-            competencies=competencies,
-            prev_interventions=prev_interventions,
-            output_embeddings=True,
-            output_latent=True,
-        )
-        latent = outputs[4]
         if prev_interventions is None:
-            mask = np.zeros((x.shape[0], c.shape[-1]))
+            mask = torch.zeros((x.shape[0], c.shape[-1])).to(c.device)
         else:
-            mask = prev_interventions.detach().cpu().numpy()
-        for _ in range(self.num_groups_intervened):
-            mask = self._next_intervention(
+            mask = prev_interventions[:]
+
+        if not self.include_prior:
+            prior_distribution = None
+
+        if self.group_based and self.cbm.use_concept_groups:
+            n_groups = len(self.concept_group_map)
+            prev_used_groups = torch.zeros((c.shape[0], n_groups)).to(c.device)
+            for group_idx, (_, group_concepts) in enumerate(
+                self.concept_group_map.items()
+            ):
+                prev_used_groups[:, group_idx] = torch.any(
+                    mask[:, group_concepts] == 1,
+                    dim=-1,
+                )
+        else:
+            n_groups = c.shape[-1]
+            prev_used_groups = mask
+            if self.cbm.use_concept_groups and (not prior_distribution is None):
+                new_prior = torch.zeros((c.shape[0], n_groups)).to(c.device)
+                for group_idx, (_, group_concepts) in enumerate(
+                    self.concept_group_map.items()
+                ):
+                    new_prior[:, group_concepts] = (
+                        prior_distribution[:, group_idx]
+                    )
+                prior_distribution = new_prior
+        if prior_distribution is None:
+            denom = torch.sum(prev_used_groups, dim=-1, keepdim=True)
+            denom = torch.where(denom == 0, torch.ones_like(denom), denom)
+            prior_distribution = torch.ones(prev_used_groups.shape).to(
+                prev_used_groups.device
+            ) / denom
+
+        if competencies is None:
+            competencies = torch.ones(c.shape).to(x.device)
+        if self.num_groups_intervened == len(self.concept_group_map):
+            return np.ones(c.shape, dtype=np.int64), c
+        if self.num_groups_intervened == 0:
+            return mask, c
+        _, _, y_preds, _, latent = self.cbm(
+            x,
+            intervention_idxs=mask,
+            c=c,
+        )
+        if self.n_tasks > 1:
+            pred_class_probs = torch.nn.functional.softmax(y_preds, dim=-1)
+        else:
+            y_probs = torch.sigmoid(y_preds)
+            pred_class_probs = torch.cat(
+                [1 - y_probs, y_probs],
+                dim=-1,
+            )
+        prev_entropy = torch.sum(
+            -torch.log(pred_class_probs + self.eps) * pred_class_probs,
+            dim=-1,
+        )
+
+        for i in range(self.num_groups_intervened):
+            # logging.debug(
+            #     f"Intervening with {i + 1}/{self.num_groups_intervened} "
+            #     f"concepts in CooP"
+            # )
+            mask, latent, y_preds = self._coop_step(
                 x=x,
-                pred_c=pred_c,
                 c=c,
-                competencies=competencies,
+                pred_c=pred_c,
                 prev_interventions=mask,
-                prior_distribution=prior_distribution,
+                y=y,
                 latent=latent,
+                y_preds=y_preds,
+                competencies=competencies,
+                prior_distribution=prior_distribution,
+                prev_entropy=prev_entropy,
+                intervene_with_groups=self.group_based,
             )
         return mask, c

@@ -164,6 +164,7 @@ def train_model(
                 ],
                 enable_checkpointing=enable_checkpointing,
                 gradient_clip_val=gradient_clip_val,
+                strategy= "ddp" if torch.cuda.is_available() and torch.cuda.device_count() > 1 else "auto",
 #                 track_grad_norm=2,
                 # Only use the wandb logger when it is a fresh run
                 logger=(
@@ -1295,6 +1296,7 @@ def train_ac_model(
                 accelerator=accelerator,
                 devices=devices,
                 max_epochs=ac_model_config.get('max_epochs', 100),
+                strategy= "ddp" if torch.cuda.is_available() and torch.cuda.device_count() > 1 else "auto",
                 logger=(
                 logger or
                 (WandbLogger(

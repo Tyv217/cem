@@ -1305,6 +1305,15 @@ def train_ac_model(
                     save_dir=os.path.join(result_dir, "logs"),
                 ) if project_name and (rerun or (not chpt_exists)) else False)),
                 enable_checkpointing=False,
+                callbacks=[
+                    EarlyStopping(
+                        monitor=ac_model_config.get("early_stopping_monitor", "val_loss"),
+                        min_delta=ac_model_config.get("early_stopping_delta", 0.00),
+                        patience=ac_model_config.get('patience', 3),
+                        verbose=ac_model_config.get("verbose", False),
+                        mode=ac_model_config.get("early_stopping_mode", "min"),
+                    ),
+                ],
             )
 
             if test_dl is not None:

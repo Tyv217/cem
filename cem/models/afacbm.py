@@ -3119,7 +3119,7 @@ class AFAModel(pl.LightningModule):
     #             self.horizon_limit.detach().cpu().numpy()[0] <
     #                 int_basis_lim + 1
     #         ):
-                self.horizon_limit *= self.horizon_rate
+    #            self.horizon_limit *= self.horizon_rate
 
         intervention_loss_scalar = \
             self.intervention_weight * intervention_loss

@@ -249,10 +249,10 @@ class ACEnergy(pl.LightningModule):
             batch_size=energy.size(0)
 
             class_weights = self.class_weights.to(energy.device)
-            
-            energy_sum = torch.sum(energy, dim=1, keepdim=True)
 
             energy = torch.exp(-energy)
+            
+            energy_sum = torch.sum(energy, dim=1, keepdim=True)
 
             energy = energy * class_weights
 
@@ -265,11 +265,12 @@ class ACEnergy(pl.LightningModule):
             batch_size=energy.size(0)
             y_tem = torch.tensor([self.class_list.index(tem) for tem in y]).long().to(self.device)
             y_tem = y_tem.view(batch_size, 1)
+
+            energy = torch.exp(-energy)
+
             energy_pos = energy.gather(dim=1, index=y_tem)
             
             energy_sum = torch.sum(energy, dim=1, keepdim=True)
-
-            energy_pos = torch.exp(-energy_pos)
 
             return energy_pos / energy_sum
         

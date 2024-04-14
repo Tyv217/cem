@@ -1450,10 +1450,11 @@ def train_ac_model(
                 }
                 test_results['training_time'] = training_time
                 test_results['num_epochs'] = num_epochs
+                for key in test_results.keys():
+                    if "top_k" not in key:
+                        print(f"AC Model {key}: {test_results[key] * 100:.2f}%, ")
                 print(
-                    f'AC Model test_accuracy: {test_results["test_accuracy"] * 100:.2f}%, '
-                    f'AC Model test_nll: {test_results["test_nll"] * 100:.2f}% with '
-                    f'{num_epochs} epochs in {training_time:.2f} seconds'
+                    f'with {num_epochs} epochs in {training_time:.2f} seconds'
                 )
             else:
                 test_results = None

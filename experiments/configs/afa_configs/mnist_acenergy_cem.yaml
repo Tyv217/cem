@@ -63,7 +63,7 @@ shared_params:
     ac_model_config:
       architecture: energy
       max_epochs: 100
-      batch_size: 2
+      batch_size: 1024
       optimizer: adam
       learning_rate: 0.0001
       decay_steps: 10000

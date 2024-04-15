@@ -15,7 +15,7 @@ class AFAEnv(gym.Env):
         self.cbm = cbm
         self.ac_model = ac_model
         self.use_concept_groups = env_config["use_concept_groups"]
-        self.concept_group_map = env_config["concept_group_map"]
+        self.concept_group_map = env_config["concept_map"]
         self.n_concept_groups = len(self.concept_group_map) if self.use_concept_groups else env_config["n_concepts"]
         self.n_concepts = env_config["n_concepts"]
         self.n_tasks = env_config["n_tasks"]

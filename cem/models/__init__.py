@@ -5,6 +5,4 @@
 # @Last Modified time: 2022-09-19 18:28:44
 from gymnasium.envs.registration import register
 
-import pdb
-pdb.set_trace()
-register(id="cem/AFAEnv-v0",entry_point="cem.models.:AFAEnv")        
+register(id="cem/AFAEnv-v0",entry_point="cem.models.afaenv:AFAEnv")        

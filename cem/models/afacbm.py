@@ -2864,6 +2864,9 @@ class AFAModel(pl.LightningModule):
         logprobs = torch.zeros((batch_size * budget, self.num_envs))
         values = torch.zeros((batch_size * budget, self.num_envs))
 
+        import pdb
+        pdb.set_trace()
+
         for _ in range(num_rollouts):
             for i in range(batch_size):
                 options = {"budget": budget, "cbm_data": [data[i] for data in batch], "train": train}
@@ -3299,7 +3302,7 @@ class AFAModel(pl.LightningModule):
         return loss, result
     
     def training_step(self, batch, batch_idx):
-        cbm_results = self.cbm._run_step(batch, batch_idx, train = True)
+        cbm_results = self._run_step(batch, batch_idx, train = True)
         import pdb
         pdb.set_trace()
         return 0

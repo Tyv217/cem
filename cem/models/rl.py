@@ -61,7 +61,8 @@ class PPOLightningAgent(pl.LightningModule):
 
     def get_shape(self, dict):
         total_shape = 0
-
+        import pdb
+        pdb.set_trace()
         for key, value in dict.items():
             shape = value.shape
             if len(shape) > 1:

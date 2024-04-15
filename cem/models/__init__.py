@@ -6,6 +6,6 @@
 from gymnasium.envs.registration import register
 
 register(
-     id="cem/models/AFAEnv-v0",
+     id="cem/AFAEnv-v0",
      entry_point="cem.envs:AFAEnv",
 )        

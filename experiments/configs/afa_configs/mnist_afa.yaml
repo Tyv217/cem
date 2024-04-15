@@ -96,6 +96,7 @@ shared_params:
       clip_coef: 0.2
       clip_vloss: False
       normalize_advantages: False
+      num_envs: 1
       
 runs:
   - architecture: "ConceptEmbeddingModel"

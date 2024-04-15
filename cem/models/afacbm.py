@@ -2673,7 +2673,8 @@ class AFAModel(pl.LightningModule):
         else:
             checkpoint_location = "" if "save_path" not in ac_model_config.keys() else f"at {ac_model_config['save_path']} "
             raise ValueError(f"AC{ac_model_config['architecture']} model checkpoint {checkpoint_location}incorrect / not found")
-        self.env = gym.make("cem/AFAEnv-v0", cbm = self.cbm, ac_model = self.ac_model, env_config = config)
+        self.num_envs = config["afa_config"]["num_envs"]
+        self.env = gym.vector.make("cem/AFAEnv-v0", num_envs = self.num_envs, cbm = self.cbm, ac_model = self.ac_model, env_config = config)
         self.agent = PPOLightningAgent(
             self.env,
             act_fun = afa_model_config["act_fun"],
@@ -2856,10 +2857,12 @@ class AFAModel(pl.LightningModule):
 
         budget = np.random.randint(1, len(self.concept_map) + 1)
 
-        obs = torch.zeros((batch_size * budget,) + self.env.single_observation_space.shape)
-        actions = torch.zeros((batch_size * budget,) + self.env.single_action_space.shape)
-        rewards = torch.zeros((batch_size * budget,))
-        dones = torch.zeros((batch_size * budget,))
+        obs = torch.zeros((batch_size * budget, self.num_envs) + self.env.single_observation_space.shape)
+        actions = torch.zeros((batch_size * budget, self.num_envs) + self.env.single_action_space.shape)
+        rewards = torch.zeros((batch_size * budget, self.num_envs))
+        dones = torch.zeros((batch_size * budget, self.num_envs))
+        logprobs = torch.zeros((batch_size * budget, self.num_envs))
+        values = torch.zeros((batch_size * budget, self.num_envs))
 
         for _ in range(num_rollouts):
             for i in range(batch_size):
@@ -3296,21 +3299,17 @@ class AFAModel(pl.LightningModule):
         return loss, result
     
     def training_step(self, batch, batch_idx):
-        cbm_results = self.cbm._run_step(batch)
+        cbm_results = self.cbm._run_step(batch, train = True)
         import pdb
         pdb.set_trace()
         return 0
 
     
     def validation_step(self, batch, batch_idx):
-        import pdb
-        pdb.set_trace()
-        return 0
-    
+        pass
+
     def testing_step(self, batch, batch_idx):
-        import pdb
-        pdb.set_trace()
-        return 0
+        pass
 
     def intervene(
         self,

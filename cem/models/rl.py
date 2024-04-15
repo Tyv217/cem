@@ -61,13 +61,14 @@ class PPOLightningAgent(pl.LightningModule):
 
     def get_shape(self, dict):
         total_shape = 0
-        import pdb
-        pdb.set_trace()
         for key, value in dict.items():
             shape = value.shape
             if len(shape) > 1:
                 raise ValueError("Get shape unable to flatten 2d shape")
-            total_shape += shape[0]
+            elif len(shape) == 0:
+                total_shape += 1
+            else:
+                total_shape += shape[0]
         
         return (total_shape, )
 

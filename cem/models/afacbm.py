@@ -3300,13 +3300,20 @@ class AFAModel(pl.LightningModule):
     
     def training_step(self, batch, batch_idx):
         cbm_results = self.cbm._run_step(batch)
+        import pdb
+        pdb.set_trace()
+        return 0
 
     
     def validation_step(self, batch, batch_idx):
-        pass
+        import pdb
+        pdb.set_trace()
+        return 0
     
     def testing_step(self, batch, batch_idx):
-        pass
+        import pdb
+        pdb.set_trace()
+        return 0
 
     def intervene(
         self,

@@ -116,6 +116,9 @@ def train_model(
         task_class_weights=task_class_weights,
     )
 
+    import pdb
+    pdb.set_trace()
+
     afa_config = config.get("afa_config", None) 
     if afa_config is not None:
         ac_model_config = config.get("ac_model_config", None) 

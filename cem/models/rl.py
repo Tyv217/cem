@@ -5,6 +5,8 @@ import gymnasium as gym
 import torch
 import torch.nn.functional as F
 import pytorch_lightning as pl
+import numpy as np
+
 from torch import Tensor
 from torch.distributions import Categorical
 from torchmetrics import MeanMetric
@@ -75,11 +77,11 @@ class PPOLightningAgent(pl.LightningModule):
     def dict_to_tensor(self, obs, device='cpu'):
         tensors = []
         for key, value in obs.items():
-        if isinstance(value, np.ndarray):
-            tensor = torch.tensor(value, dtype = torch.float32, device = device)
-        elif isinstance(value, (int, float)):  # Scalar values for discrete spaces
-            tensor = torch.tensor([value], dtype = torch.float32, device = device)
-            tensors.append(tensor)
+            if isinstance(value, np.ndarray):
+                tensor = torch.tensor(value, dtype = torch.float32, device = device)
+            elif isinstance(value, (int, float)):  # Scalar values for discrete spaces
+                tensor = torch.tensor([value], dtype = torch.float32, device = device)
+                tensors.append(tensor)
         if len(tensors) > 1:
             final_tensor = torch.cat(tensors, dim=-1)
         else:

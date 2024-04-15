@@ -436,13 +436,6 @@ class ACEnergy(pl.LightningModule):
             "lr_scheduler": lr_scheduler,
             "monitor": "val_loss",
         }
-
-
-
-
-
-        
-        
         
 
         

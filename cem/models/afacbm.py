@@ -2675,6 +2675,8 @@ class AFAModel(pl.LightningModule):
             raise ValueError(f"AC{ac_model_config['architecture']} model checkpoint {checkpoint_location}incorrect / not found")
         self.num_envs = config["afa_config"]["num_envs"]
         self.env = gym.vector.make("cem/AFAEnv-v0", num_envs = self.num_envs, cbm = self.cbm, ac_model = self.ac_model, env_config = config)
+        import pdb
+        pdb.set_trace()
         self.agent = PPOLightningAgent(
             self.env,
             act_fun = afa_model_config["act_fun"],

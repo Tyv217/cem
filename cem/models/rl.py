@@ -37,7 +37,7 @@ class PPOLightningAgent(pl.LightningModule):
         self.normalize_advantages = normalize_advantages
         self.critic = torch.nn.Sequential(
             layer_init(
-                torch.nn.Linear(math.prod(envs.get_shape(envs.single_observation_space)), 64),
+                torch.nn.Linear(math.prod(self.get_shape(envs.single_observation_space)), 64),
                 ortho_init=ortho_init,
             ),
             act_fun,
@@ -47,7 +47,7 @@ class PPOLightningAgent(pl.LightningModule):
         )
         self.actor = torch.nn.Sequential(
             layer_init(
-                torch.nn.Linear(math.prod(envs.get_shape(envs.single_observation_space)), 64),
+                torch.nn.Linear(math.prod(self.get_shape(envs.single_observation_space)), 64),
                 ortho_init=ortho_init,
             ),
             act_fun,
@@ -58,6 +58,28 @@ class PPOLightningAgent(pl.LightningModule):
         self.avg_pg_loss = MeanMetric(**torchmetrics_kwargs)
         self.avg_value_loss = MeanMetric(**torchmetrics_kwargs)
         self.avg_ent_loss = MeanMetric(**torchmetrics_kwargs)
+
+    def get_shape(self, dict):
+        total_shape = 0
+
+        for key, value in dict.items():
+            shape = value.shape
+            if len(shape) > 1:
+                raise ValueError("Get shape unable to flatten 2d shape")
+            total_shape += shape[0]
+        
+        return (total_shape, )
+
+    def dict_to_tensor(self, obs, device='cpu'):
+        tensors = []
+        for key, value in obs.items():
+            tensor = torch.tensor(value, dtype=torch.float32, device=device)
+            tensors.append(tensor)
+        if len(tensors) > 1:
+            final_tensor = torch.cat(tensors, dim=-1)
+        else:
+            final_tensor = tensors[0]
+        return final_tensor
 
     def get_action(self, x: dict, action: Tensor = None) -> Tuple[Tensor, Tensor, Tensor]:
         logits = self.actor(x)

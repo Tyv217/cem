@@ -48,28 +48,6 @@ class AFAEnv(gym.Env):
 
         self.action_space = spaces.Discrete(self.n_concepts)
 
-    def get_shape(self, dict):
-        total_shape = 0
-
-        for key, value in dict.items():
-            shape = value.shape
-            if len(shape) > 1:
-                raise ValueError("Get shape unable to flatten 2d shape")
-            total_shape += shape[0]
-        
-        return (total_shape, )
-
-    def dict_to_tensor(self, obs, device='cpu'):
-        tensors = []
-        for key, value in obs.items():
-            tensor = torch.tensor(value, dtype=torch.float32, device=device)
-            tensors.append(tensor)
-        if len(tensors) > 1:
-            final_tensor = torch.cat(tensors, dim=-1)
-        else:
-            final_tensor = tensors[0]
-        return final_tensor
-
     def _get_obs(self):
         return {
             "budget": self._budget,

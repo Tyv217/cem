@@ -2675,8 +2675,6 @@ class AFAModel(pl.LightningModule):
             raise ValueError(f"AC{ac_model_config['architecture']} model checkpoint {checkpoint_location}incorrect / not found")
         self.num_envs = config["afa_model_config"]["num_envs"]
         self.env = gym.vector.make("cem/AFAEnv-v0", num_envs = self.num_envs, cbm = self.cbm, ac_model = self.ac_model, env_config = config)
-        import pdb
-        pdb.set_trace()
         self.agent = PPOLightningAgent(
             self.env,
             act_fun = afa_model_config["act_fun"],
@@ -2869,7 +2867,7 @@ class AFAModel(pl.LightningModule):
         for _ in range(num_rollouts):
             for i in range(batch_size):
                 options = {"budget": budget, "cbm_data": [data[i] for data in batch], "train": train}
-                next_obs = self.env.dict_to_tensor(self.env.reset(seed=self.seed, options = options)[0])
+                next_obs = self.agent.dict_to_tensor(self.env.reset(seed=self.seed, options = options)[0])
                 next_done = torch.zeros(1)
 
                 for step in budget:
@@ -2893,7 +2891,7 @@ class AFAModel(pl.LightningModule):
                     done = torch.logical_or(torch.tensor(done), torch.tensor(truncated))
 
                     rewards[step] = torch.tensor(reward).view(-1).to(self.device)
-                    next_obs, next_done = torch.tensor(self.env.dict_to_tensor(next_obs)).to(self.device), done.to(self.device)
+                    next_obs, next_done = torch.tensor(self.agent.dict_to_tensor(next_obs)).to(self.device), done.to(self.device)
 
 
 

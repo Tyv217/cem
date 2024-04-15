@@ -445,17 +445,21 @@ def intervene_in_cbm(
             prev_num_groups_intervened = num_groups_intervened
         else:
             prev_num_groups_intervened = 0
-        test_dl = torch.utils.data.DataLoader(
-            dataset=torch.utils.data.TensorDataset(
-                x_test,
-                y_test,
-                c_test,
-                competencies_test,
-                torch.IntTensor(prev_interventions),
-            ),
-            batch_size=test_dl.batch_size,
-            num_workers=test_dl.num_workers,
-        )
+        try:
+            test_dl = torch.utils.data.DataLoader(
+                dataset=torch.utils.data.TensorDataset(
+                    x_test,
+                    y_test,
+                    c_test,
+                    competencies_test,
+                    torch.IntTensor(prev_interventions),
+                ),
+                batch_size=test_dl.batch_size,
+                num_workers=test_dl.num_workers,
+            )
+        except:
+            import pdb
+            pdb.set_trace()
     avg_time = np.mean(avg_times)
     total_time = np.sum(total_times)
     logging.debug(

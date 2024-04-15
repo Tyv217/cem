@@ -2674,7 +2674,7 @@ class AFAModel(pl.LightningModule):
             checkpoint_location = "" if "save_path" not in ac_model_config.keys() else f"at {ac_model_config['save_path']} "
             raise ValueError(f"AC{ac_model_config['architecture']} model checkpoint {checkpoint_location}incorrect / not found")
         try:
-            self.env = gym.make("cem/AFAEnv-v0", cbm = self.cbm, ac_model = self.ac_model, env_config = afa_model_config)
+            self.env = gym.make("cem/AFAEnv-v0", cbm = self.cbm, ac_model = self.ac_model, env_config = config)
         except:
             import pdb
             pdb.set_trace()

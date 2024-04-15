@@ -116,7 +116,8 @@ def train_model(
         task_class_weights=task_class_weights,
     )
 
-    if config.get("ac_model_config", None) is not None:
+    if config.get("afa_model_config", None) is not None:
+        config["afa_model_config"]["seed"] = seed
         model = AFAModel(model, config)
     print(
         "[Number of parameters in model",

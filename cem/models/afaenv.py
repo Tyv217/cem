@@ -20,13 +20,14 @@ class AFAEnv(gym.Env):
         self.n_concepts = env_config["n_concepts"]
         self.n_tasks = env_config["n_tasks"]
         self.n_tasks = self.n_tasks if self.n_tasks > 1 else 2
-        self.step_cost = env_config.get("step_cost", 1)
-        self.emb_size = env_config["emb_size"]
-        self.cbm_dl = env_config["cbm_dl"]
-        self.cbm_forward = env_config["cbm_forward"]
-        self.unpack_batch = env_config["unpack_batch"]
+        afa_config = env_config["afa_config"]
+        self.step_cost = afa_config.get("step_cost", 1)
+        self.emb_size = afa_config["emb_size"]
+        self.cbm_dl = afa_config["cbm_dl"]
+        self.cbm_forward = cbm.forward
+        self.unpack_batch = cbm._unpack_batch
         self.torch_generator = torch.Generator()
-        self.torch_generator.manual_seed(env_config["seed"])
+        self.torch_generator.manual_seed(afa_config["seed"])
         self._budget = self.n_concept_groups
         self.softmax = torch.nn.Softmax(dim = -1)
         self.entropy = scipy.stats.entropy

@@ -2701,9 +2701,9 @@ class AFAModel(pl.LightningModule):
         else:
             intervention_idxs = torch.zeros(c_used.shape).to(c_used.device)
             prev_num_of_interventions = 0
-            if self.use_concept_groups:
+            if self.cbm.use_concept_groups:
                 free_groups = torch.ones(
-                    (c_used.shape[0], len(self.concept_map))
+                    (c_used.shape[0], len(self.cbm.concept_map))
                 ).to(c_used.device)
             else:
                 free_groups = torch.ones(c_used.shape).to(c_used.device)
@@ -2715,10 +2715,10 @@ class AFAModel(pl.LightningModule):
                 c_used.shape
             ).uniform_(0.5, 1).to(c_used.device)
         int_basis_lim = (
-            len(self.concept_map) if self.use_concept_groups
-            else self.n_concepts
+            len(self.cbm.concept_map) if self.cbm.use_concept_groups
+            else self.cbm.n_concepts
         )
-        horizon_lim = int(self.horizon_limit.detach().cpu().numpy()[0])
+        horizon_lim = int(self.cbm.horizon_limit.detach().cpu().numpy()[0])
         if prev_num_of_interventions != int_basis_lim:
             bottom = min(
                 horizon_lim,
@@ -2730,10 +2730,10 @@ class AFAModel(pl.LightningModule):
                 initially_selected = 0
             end_horizon = min(
                 int(horizon_lim),
-                self.max_horizon,
+                self.cbm.max_horizon,
                 int_basis_lim - prev_num_of_interventions - initially_selected,
             )
-            current_horizon = self._horizon_distr(
+            current_horizon = self.cbm._horizon_distr(
                 init=1 if end_horizon > 1 else 0,
                 end=end_horizon,
             )
@@ -3158,12 +3158,12 @@ class AFAModel(pl.LightningModule):
         pos_embeddings = outputs[-2]
         neg_embeddings = outputs[-1]
 
-        if self.task_loss_weight != 0:
-            task_loss = self.loss_task(
+        if self.cbm.task_loss_weight != 0:
+            task_loss = self.cbm.loss_task(
                 y_logits if y_logits.shape[-1] > 1 else y_logits.reshape(-1),
                 y,
             )
-            task_loss_scalar = self.task_loss_weight * task_loss.detach()
+            task_loss_scalar = self.cbm.task_loss_weight * task_loss.detach()
         else:
             task_loss = 0.0
             task_loss_scalar = 0.0
@@ -3173,7 +3173,7 @@ class AFAModel(pl.LightningModule):
         # Now we will do some rolls for interventions
         int_mask_accuracy = -1.0
         current_horizon = -1
-        if not self.include_certainty:
+        if not self.cbm.include_certainty:
             c_used = torch.where(
                 torch.logical_or(c == 0, c == 1),
                 c,
@@ -3191,57 +3191,57 @@ class AFAModel(pl.LightningModule):
             intervention_loss = 0.0
             intervention_loss_scalar = 0.0
 
-        if not self.legacy_mode:
-            self.current_steps += 1
-            if self.rollout_aneal_rate != 1 and (
-                self.current_aneal_rate.detach().cpu().numpy()[0] < 100
+        if not self.cbm.legacy_mode:
+            self.cbm.current_steps += 1
+            if self.cbm.rollout_aneal_rate != 1 and (
+                self.cbm.current_aneal_rate.detach().cpu().numpy()[0] < 100
             ):
-                self.current_aneal_rate *= self.rollout_aneal_rate
+                self.cbm.current_aneal_rate *= self.cbm.rollout_aneal_rate
 
-        if self.include_task_trajectory_loss and (
-            self.intervention_task_loss_weight != 0
+        if self.cbm.include_task_trajectory_loss and (
+            self.cbm.intervention_task_loss_weight != 0
         ):
             if isinstance(intervention_task_loss, float):
                 intervention_task_loss_scalar = (
-                    self.intervention_task_loss_weight * intervention_task_loss
+                    self.cbm.intervention_task_loss_weight * intervention_task_loss
                 )
             else:
                 intervention_task_loss_scalar = (
-                    self.intervention_task_loss_weight *
+                    self.cbm.intervention_task_loss_weight *
                     intervention_task_loss.detach()
                 )
         else:
             intervention_task_loss_scalar = 0.0
 
 
-        if self.concept_loss_weight != 0:
+        if self.cbm.concept_loss_weight != 0:
             # We separate this so that we are allowed to
             # use arbitrary activations (i.e., not necessarily in [0, 1])
             # whenever no concept supervision is provided
-            if self.include_certainty:
-                concept_loss = self.loss_concept(c_sem, c)
+            if self.cbm.include_certainty:
+                concept_loss = self.cbm.loss_concept(c_sem, c)
                 concept_loss_scalar = \
-                    self.concept_loss_weight * concept_loss.detach()
+                    self.cbm.concept_loss_weight * concept_loss.detach()
             else:
                 c_sem_used = torch.where(
                     torch.logical_or(c == 0, c == 1),
                     c_sem,
                     c,
                 ) # This forces zero loss when c is uncertain
-                concept_loss = self.loss_concept(c_sem_used, c)
+                concept_loss = self.cbm.loss_concept(c_sem_used, c)
                 concept_loss_scalar = concept_loss.detach()
         else:
             concept_loss = 0.0
             concept_loss_scalar = 0.0
 
         loss = (
-            self.concept_loss_weight * concept_loss +
-            self.intervention_weight * intervention_loss +
-            self.task_loss_weight * task_loss +
-            self.intervention_task_loss_weight * intervention_task_loss
+            self.cbm.concept_loss_weight * concept_loss +
+            self.cbm.intervention_weight * intervention_loss +
+            self.cbm.task_loss_weight * task_loss +
+            self.cbm.intervention_task_loss_weight * intervention_task_loss
         )
 
-        loss += self._extra_losses(
+        loss += self.cbm._extra_losses(
             x=x,
             y=y,
             c=c,
@@ -3274,24 +3274,24 @@ class AFAModel(pl.LightningModule):
             "avg_c_y_acc": (c_accuracy + y_accuracy) / 2,
             "horizon_limit": self.horizon_limit.detach().cpu().numpy()[0],
         }
-        if not self.legacy_mode:
+        if not self.cbm.legacy_mode:
             result["current_steps"] = \
-                self.current_steps.detach().cpu().numpy()[0]
-            if self.rollout_aneal_rate != 1:
+                self.cbm.current_steps.detach().cpu().numpy()[0]
+            if self.cbm.rollout_aneal_rate != 1:
                 num_rollouts = int(round(
-                    self.num_rollouts * (
-                        self.current_aneal_rate.detach().cpu().numpy()[0]
+                    self.cbm.num_rollouts * (
+                        self.cbm.current_aneal_rate.detach().cpu().numpy()[0]
                     )
                 ))
-                if self.max_num_rollouts is not None:
-                    num_rollouts = min(num_rollouts, self.max_num_rollouts)
+                if self.cbm.max_num_rollouts is not None:
+                    num_rollouts = min(num_rollouts, self.cbm.max_num_rollouts)
                 result["num_rollouts"] = num_rollouts
 
-        if self.top_k_accuracy is not None:
+        if self.cbm.top_k_accuracy is not None:
             y_true = y.reshape(-1).cpu().detach()
             y_pred = y_logits.cpu().detach()
             labels = list(range(self.n_tasks))
-            for top_k_val in self.top_k_accuracy:
+            for top_k_val in self.cbm.top_k_accuracy:
                 y_top_k_accuracy = sklearn.metrics.top_k_accuracy_score(
                     y_true,
                     y_pred,

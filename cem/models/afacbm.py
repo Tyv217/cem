@@ -434,7 +434,6 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
     def _run_step(
         self,
         batch,
-        batch_idx,
         train=False,
         intervention_idxs=None,
     ):

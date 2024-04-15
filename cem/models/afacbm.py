@@ -3323,7 +3323,7 @@ class AFAModel(pl.LightningModule):
             optimizer = torch.optim.SGD(
                 filter(lambda p: p.requires_grad, 
                 self.cbm.parameters()
-                + self.agent.parameters(),
+                + self.agent.parameters()),
                 lr=self.cbm.learning_rate,
                 momentum=self.cbm.momentum,
                 weight_decay=self.cbm.weight_decay,

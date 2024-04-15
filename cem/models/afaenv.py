@@ -38,10 +38,10 @@ class AFAEnv(gym.Env):
             {
                 "intervened_concepts_map": spaces.MultiBinary(self.n_concepts),
                 "intervened_concepts": spaces.MultiBinary(self.n_concepts),
-                "ac_model_output": spaces.Box(shape = [self.n_concepts * self.n_tasks * 2], dtype = np.float32),
-                "ac_model_output": spaces.Box(shape = [self.n_concepts * self.n_tasks * 3], dtype = np.float32),
-                "cbm_bottleneck": spaces.Box(shape = [self.n_concepts * self.emb_size], dtype = np.float32),
-                "cbm_pred_concepts": spaces.Box(shape = [self.n_concepts], dtype = np.float32),
+                "ac_model_output": spaces.Box(shape = [self.n_concepts * self.n_tasks * 2], dtype = np.float32, low = -np.inf, high = np.inf),
+                "ac_model_info": spaces.Box(shape = [self.n_concepts * self.n_tasks * 3], dtype = np.float32, low = -np.inf, high = np.inf),
+                "cbm_bottleneck": spaces.Box(shape = [self.n_concepts * self.emb_size], dtype = np.float32, low = -np.inf, high = np.inf),
+                "cbm_pred_concepts": spaces.Box(shape = [self.n_concepts], dtype = np.float32, low = -np.inf, high = np.inf),
                 "cbm_pred_output": spaces.Discrete(self.n_tasks)
             }
         )

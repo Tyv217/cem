@@ -116,13 +116,10 @@ def train_model(
         task_class_weights=task_class_weights,
     )
 
-    import pdb
-    pdb.set_trace()
-
-    afa_config = config.get("afa_config", None) 
-    if afa_config is not None:
+    afa_model_config = config.get("afa_model_config", None) 
+    if afa_model_config is not None:
         ac_model_config = config.get("ac_model_config", None) 
-        model = AFAModel(model, ac_model_config, afa_config)
+        model = AFAModel(model, ac_model_config, afa_model_config)
     print(
         "[Number of parameters in model",
         sum(p.numel() for p in model.parameters() if p.requires_grad),

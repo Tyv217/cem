@@ -20,10 +20,10 @@ class AFAEnv(gym.Env):
         self.n_concepts = env_config["n_concepts"]
         self.n_tasks = env_config["n_tasks"]
         self.n_tasks = self.n_tasks if self.n_tasks > 1 else 2
+        self.emb_size = env_config["emb_size"]
         afa_config = env_config["afa_config"]
         self.step_cost = afa_config.get("step_cost", 1)
-        self.emb_size = afa_config["emb_size"]
-        self.cbm_dl = afa_config["cbm_dl"]
+        self.cbm_dl = afa_config.get("cbm_dl", None)
         self.cbm_forward = cbm.forward
         self.unpack_batch = cbm._unpack_batch
         self.torch_generator = torch.Generator()

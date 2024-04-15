@@ -1,6 +1,7 @@
 CUB200/
 *.out
 *.err
+wandb/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

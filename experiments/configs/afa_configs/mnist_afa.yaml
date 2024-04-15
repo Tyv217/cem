@@ -100,7 +100,7 @@ shared_params:
       
 runs:
   - architecture: "ConceptEmbeddingModel"
-    extra_name: "Retry_intervention_weight_{intervention_weight}_horizon_rate_{horizon_rate}_intervention_discount_{intervention_discount}_task_discount_{intervention_task_discount}"
+    extra_name: "Retry_intervention_weight_{intervention_weight}_horizon_rate_{horizon_rate}_intervention_discount_{intervention_discount}_task_discount_{intervention_task_discount}_afa"
     training_intervention_prob: 0.25
     horizon_binary_representation:  True
     include_task_trajectory_loss: True

@@ -434,6 +434,7 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
     def _run_step(
         self,
         batch,
+        batch_idx,
         train=False,
         intervention_idxs=None,
     ):
@@ -3298,7 +3299,7 @@ class AFAModel(pl.LightningModule):
         return loss, result
     
     def training_step(self, batch, batch_idx):
-        cbm_results = self.cbm._run_step(batch, train = True)
+        cbm_results = self.cbm._run_step(batch, batch_idx, train = True)
         import pdb
         pdb.set_trace()
         return 0

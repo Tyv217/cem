@@ -75,7 +75,10 @@ class PPOLightningAgent(pl.LightningModule):
     def dict_to_tensor(self, obs, device='cpu'):
         tensors = []
         for key, value in obs.items():
-            tensor = torch.tensor(value, dtype=torch.float32, device=device)
+        if isinstance(value, np.ndarray):
+            tensor = torch.tensor(value, dtype = torch.float32, device = device)
+        elif isinstance(value, (int, float)):  # Scalar values for discrete spaces
+            tensor = torch.tensor([value], dtype = torch.float32, device = device)
             tensors.append(tensor)
         if len(tensors) > 1:
             final_tensor = torch.cat(tensors, dim=-1)

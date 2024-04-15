@@ -1309,7 +1309,7 @@ def train_ac_model(
                     EarlyStopping(
                         monitor=ac_model_config.get("early_stopping_monitor", "val_loss"),
                         min_delta=ac_model_config.get("early_stopping_delta", 0.00),
-                        patience=ac_model_config.get('patience', 3),
+                        patience=ac_model_config.get('patience', 5),
                         verbose=ac_model_config.get("verbose", False),
                         mode=ac_model_config.get("early_stopping_mode", "min"),
                     ),

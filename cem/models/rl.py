@@ -37,7 +37,7 @@ class PPOLightningAgent(pl.LightningModule):
         self.normalize_advantages = normalize_advantages
         self.critic = torch.nn.Sequential(
             layer_init(
-                torch.nn.Linear(math.prod(envs.single_observation_space.shape), 64),
+                torch.nn.Linear(math.prod(envs.get_shape(envs.single_observation_space)), 64),
                 ortho_init=ortho_init,
             ),
             act_fun,
@@ -47,7 +47,7 @@ class PPOLightningAgent(pl.LightningModule):
         )
         self.actor = torch.nn.Sequential(
             layer_init(
-                torch.nn.Linear(math.prod(envs.single_observation_space.shape), 64),
+                torch.nn.Linear(math.prod(envs.get_shape(envs.single_observation_space)), 64),
                 ortho_init=ortho_init,
             ),
             act_fun,

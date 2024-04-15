@@ -2680,7 +2680,7 @@ class AFAModel(pl.LightningModule):
             pdb.set_trace()
         self.agent = PPOLightningAgent(
             self.env,
-            act_fun = afa_model_config["activation_function"],
+            act_fun = afa_model_config["act_fun"],
             vf_coef = afa_model_config["vf_coef"],
             ent_coef = afa_model_config["ent_coef"],
             clip_coef = afa_model_config["clip_coef"],

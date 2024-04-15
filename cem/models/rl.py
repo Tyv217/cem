@@ -4,13 +4,13 @@ from typing import Dict, Tuple
 import gymnasium as gym
 import torch
 import torch.nn.functional as F
-from lightning.pytorch import LightningModule
+import pytorch_lightning as pl
 from torch import Tensor
 from torch.distributions import Categorical
 from torchmetrics import MeanMetric
 
 
-class PPOLightningAgent(LightningModule):
+class PPOLightningAgent(pl.LightningModule):
     def __init__(
         self,
         envs: gym.vector.SyncVectorEnv,

@@ -2637,6 +2637,7 @@ class AFAConceptEmbeddingModel(
     
 class AFAModel(pl.LightningModule):
     def __init__(self, cbm, config):
+        super().__init__()
         self.cbm = cbm
         ac_model_config = config["ac_model_config"]
         afa_model_config = config["afa_model_config"]

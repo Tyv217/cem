@@ -3314,16 +3314,16 @@ class AFAModel(pl.LightningModule):
     def configure_optimizers(self):
         if self.cbm.optimizer_name.lower() == "adam":
             optimizer = torch.optim.Adam(
-                self.cbm.parameters()
-                + self.agent.parameters(),
+                list(self.cbm.parameters())
+                + list(self.agent.parameters()),
                 lr=self.cbm.learning_rate,
                 weight_decay=self.cbm.weight_decay,
             )
         else:
             optimizer = torch.optim.SGD(
                 filter(lambda p: p.requires_grad, 
-                self.cbm.parameters()
-                + self.agent.parameters()),
+                list(self.cbm.parameters())
+                + list(self.agent.parameters())),
                 lr=self.cbm.learning_rate,
                 momentum=self.cbm.momentum,
                 weight_decay=self.cbm.weight_decay,

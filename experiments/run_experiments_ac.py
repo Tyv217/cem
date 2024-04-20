@@ -273,9 +273,9 @@ def main(
                     if experiment_config['shared_params'].get("only_train_ac_model", False):
                         continue
 
-                logging.debug(
-                        f"Setting ac model save path to be {ac_model_saved_path}"
-                    )
+                    logging.debug(
+                            f"Setting ac model save path to be {ac_model_saved_path}"
+                        )
 
                 if run_config["architecture"] in [
                     "IndependentConceptBottleneckModel",

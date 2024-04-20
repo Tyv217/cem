@@ -114,11 +114,8 @@ def train_model(
         config,
         imbalance=imbalance,
         task_class_weights=task_class_weights,
+        seed=seed,
     )
-
-    if config.get("afa_model_config", None) is not None:
-        config["afa_model_config"]["seed"] = seed
-        model = AFAModel(model, config)
     print(
         "[Number of parameters in model",
         sum(p.numel() for p in model.parameters() if p.requires_grad),
@@ -687,6 +684,7 @@ def train_independent_and_sequential_model(
         config=model_config,
         imbalance=imbalance,
         task_class_weights=task_class_weights,
+        seed=seed,
     )
     print(
         "[Number of parameters in model",

@@ -361,111 +361,193 @@ def intervene_in_cbm(
         budget = len(groups)
     if acquisition_costs is None:
         acquisition_costs = 1
-    for j, num_groups_intervened in enumerate(groups):
-        if budget < acquisition_costs:
-            break
-        budget -= acquisition_costs
-        if num_groups_intervened is None:
-            # Then this is the case where it is ignored
-            intervention_accs.append(0)
-            continue
-        logging.debug(
-            f"Intervening with {num_groups_intervened} out of "
-            f"{len(concept_group_map)} concept groups"
-        )
-        logging.debug(
-            f"\tFor split {split} with "
-            f"{num_groups_intervened} groups intervened"
-        )
-
-        ####
-        # Set the model's intervention policy
-        ####
-        model.intervention_policy.num_groups_intervened = (
-            num_groups_intervened - prev_num_groups_intervened
-        )
-        trainer = pl.Trainer(
-            accelerator=accelerator,
-            devices=devices,
-            logger=False,
-        )
-        if int(os.environ.get("VERBOSE_INTERVENTIONS", "0")):
-            start_time = time.time()
-            test_batch_results = trainer.predict(
-                model,
-                test_dl,
-            )
-
-        else:
-            f = io.StringIO()
-            with redirect_stdout(f):
-                start_time = time.time()
-                try:
-                    test_batch_results = trainer.predict(
-                        model,
-                        test_dl,
-                    )
-                except:
-                    raise ValueError(f"Failed to intervene with {num_groups_intervened} groups while restoring checkpoint from {trainer.ckpt_path}")
-        coeff = (num_groups_intervened - prev_num_groups_intervened)
-        time_diff = time.time() - start_time
-        avg_times.append(
-            (time_diff)/(
-                x_test.shape[0] * (coeff if coeff != 0 else 1)
-            )
-        )
-        total_times.append(time_diff)
-        y_pred = np.concatenate(
-            list(map(lambda x: x[2].detach().cpu().numpy(), test_batch_results)),
-            axis=0,
-        )
-        if y_pred.shape[-1] > 1:
-            y_pred = np.argmax(y_pred, axis=-1)
-        else:
-            y_pred = np.squeeze((expit(y_pred) >= 0.5).astype(np.int32), axis=-1)
-        prev_interventions = np.concatenate(
-            list(map(lambda x: x[3].detach().cpu().numpy(), test_batch_results)),
-            axis=0,
-        )
-        if n_tasks > 1:
-            acc = np.mean(y_pred == y_test.detach().cpu().numpy())
+    if isinstance(model, AFAModel):
+        for j, num_groups_intervened in enumerate(groups):
+            if budget < acquisition_costs:
+                break
+            budget -= acquisition_costs
+            if num_groups_intervened is None:
+                # Then this is the case where it is ignored
+                intervention_accs.append(0)
+                continue
             logging.debug(
-                f"\tTest accuracy when intervening "
-                f"with {num_groups_intervened} "
-                f"concept groups is {acc * 100:.2f}%."
+                f"Intervening with {num_groups_intervened} out of "
+                f"{len(concept_group_map)} concept groups"
             )
-        else:
+            logging.debug(
+                f"\tFor split {split} with "
+                f"{num_groups_intervened} groups intervened"
+            )
+
+            ####
+            # Set the model's intervention policy
+            ####
+            model.set_budget(j)
+            trainer = pl.Trainer(
+                accelerator=accelerator,
+                devices=devices,
+                logger=False,
+            )
             if int(os.environ.get("VERBOSE_INTERVENTIONS", "0")):
-                [test_results] = trainer.test(model, test_dl)
+                start_time = time.time()
+                [test_batch_results] = trainer.test(
+                    model,
+                    test_dl,
+                )
+
             else:
                 f = io.StringIO()
                 with redirect_stdout(f):
-                    [test_results] = trainer.test(model, test_dl)
-            acc = test_results['test_y_auc']
+                    start_time = time.time()
+                    try:
+                        [test_batch_results] = trainer.test(
+                            model,
+                            test_dl,
+                        )
+                    except:
+                        raise ValueError(f"Failed to intervene with {num_groups_intervened} groups while restoring checkpoint from {trainer.ckpt_path}")
+            time_diff = time.time() - start_time
+            avg_times.append(
+                (time_diff)/(
+                    x_test.shape[0] * (coeff if coeff != 0 else 1)
+                )
+            )
+            total_times.append(time_diff)
+            if j == 0:
+                acc = test_results['test_y_auc'] if self.n_tasks > 1 else test_results["test_y_accuracy"]
+            else:
+                acc = test_results["intervention_accuracy"]
             logging.debug(
                 f"\tTest AUC when intervening with {num_groups_intervened} "
                 f"concept groups is {acc * 100:.2f}% (accuracy "
                 f"is {np.mean(y_pred == y_test.detach().cpu().numpy()) * 100:.2f}%)."
             )
-        intervention_accs.append(acc)
+            intervention_accs.append(acc)
 
-        # And generate the next dataset so that we can reuse previous
-        # interventions on the same samples in the future to save time
-        if model.intervention_policy.greedy:
-            prev_num_groups_intervened = num_groups_intervened
-        else:
-            prev_num_groups_intervened = 0
-        test_dl = torch.utils.data.DataLoader(
-            dataset=torch.utils.data.TensorDataset(
-                x_test,
-                y_test,
-                c_test,
-                competencies_test,
-                torch.IntTensor(prev_interventions),
-            ),
-            batch_size=test_dl.batch_size,
-            num_workers=test_dl.num_workers,
-        )
+            # And generate the next dataset so that we can reuse previous
+            # interventions on the same samples in the future to save time
+            if model.intervention_policy.greedy:
+                prev_num_groups_intervened = num_groups_intervened
+            else:
+                prev_num_groups_intervened = 0
+            test_dl = torch.utils.data.DataLoader(
+                dataset=torch.utils.data.TensorDataset(
+                    x_test,
+                    y_test,
+                    c_test,
+                    competencies_test,
+                    torch.IntTensor(prev_interventions),
+                ),
+                batch_size=test_dl.batch_size,
+                num_workers=test_dl.num_workers,
+            )    
+    else:
+        for j, num_groups_intervened in enumerate(groups):
+            if budget < acquisition_costs:
+                break
+            budget -= acquisition_costs
+            if num_groups_intervened is None:
+                # Then this is the case where it is ignored
+                intervention_accs.append(0)
+                continue
+            logging.debug(
+                f"Intervening with {num_groups_intervened} out of "
+                f"{len(concept_group_map)} concept groups"
+            )
+            logging.debug(
+                f"\tFor split {split} with "
+                f"{num_groups_intervened} groups intervened"
+            )
+
+            ####
+            # Set the model's intervention policy
+            ####
+            model.intervention_policy.num_groups_intervened = (
+                num_groups_intervened - prev_num_groups_intervened
+            )
+            trainer = pl.Trainer(
+                accelerator=accelerator,
+                devices=devices,
+                logger=False,
+            )
+            if int(os.environ.get("VERBOSE_INTERVENTIONS", "0")):
+                start_time = time.time()
+                test_batch_results = trainer.predict(
+                    model,
+                    test_dl,
+                )
+
+            else:
+                f = io.StringIO()
+                with redirect_stdout(f):
+                    start_time = time.time()
+                    try:
+                        test_batch_results = trainer.predict(
+                            model,
+                            test_dl,
+                        )
+                    except:
+                        raise ValueError(f"Failed to intervene with {num_groups_intervened} groups while restoring checkpoint from {trainer.ckpt_path}")
+            coeff = (num_groups_intervened - prev_num_groups_intervened)
+            time_diff = time.time() - start_time
+            avg_times.append(
+                (time_diff)/(
+                    x_test.shape[0] * (coeff if coeff != 0 else 1)
+                )
+            )
+            total_times.append(time_diff)
+            y_pred = np.concatenate(
+                list(map(lambda x: x[2].detach().cpu().numpy(), test_batch_results)),
+                axis=0,
+            )
+            if y_pred.shape[-1] > 1:
+                y_pred = np.argmax(y_pred, axis=-1)
+            else:
+                y_pred = np.squeeze((expit(y_pred) >= 0.5).astype(np.int32), axis=-1)
+            prev_interventions = np.concatenate(
+                list(map(lambda x: x[3].detach().cpu().numpy(), test_batch_results)),
+                axis=0,
+            )
+            if n_tasks > 1:
+                acc = np.mean(y_pred == y_test.detach().cpu().numpy())
+                logging.debug(
+                    f"\tTest accuracy when intervening "
+                    f"with {num_groups_intervened} "
+                    f"concept groups is {acc * 100:.2f}%."
+                )
+            else:
+                if int(os.environ.get("VERBOSE_INTERVENTIONS", "0")):
+                    [test_results] = trainer.test(model, test_dl)
+                else:
+                    f = io.StringIO()
+                    with redirect_stdout(f):
+                        [test_results] = trainer.test(model, test_dl)
+                acc = test_results['test_y_auc']
+                logging.debug(
+                    f"\tTest AUC when intervening with {num_groups_intervened} "
+                    f"concept groups is {acc * 100:.2f}% (accuracy "
+                    f"is {np.mean(y_pred == y_test.detach().cpu().numpy()) * 100:.2f}%)."
+                )
+            intervention_accs.append(acc)
+
+            # And generate the next dataset so that we can reuse previous
+            # interventions on the same samples in the future to save time
+            if model.intervention_policy.greedy:
+                prev_num_groups_intervened = num_groups_intervened
+            else:
+                prev_num_groups_intervened = 0
+            test_dl = torch.utils.data.DataLoader(
+                dataset=torch.utils.data.TensorDataset(
+                    x_test,
+                    y_test,
+                    c_test,
+                    competencies_test,
+                    torch.IntTensor(prev_interventions),
+                ),
+                batch_size=test_dl.batch_size,
+                num_workers=test_dl.num_workers,
+            )
+        
     avg_time = np.mean(avg_times)
     total_time = np.sum(total_times)
     logging.debug(

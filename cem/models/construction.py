@@ -13,6 +13,7 @@ import cem.models.intcbm as models_intcbm
 import cem.models.afacbm as models_afacbm
 import cem.train.utils as utils
 
+from cem.models.afacbm import AFAModel
 
 ################################################################################
 ## HELPER LAYERS
@@ -44,6 +45,7 @@ def construct_model(
     inactive_intervention_values=None,
     output_latent=False,
     output_interventions=False,
+    seed=42,
 ):
     long_ac_architecture = ""
     short_ac_architecture = ""
@@ -393,7 +395,7 @@ def construct_model(
         c_extractor_arch = config["c_extractor_arch"]
 
     # Create model
-    return model_cls(
+    model =  model_cls(
         n_concepts=n_concepts,
         n_tasks=n_tasks,
         weight_loss=(
@@ -417,6 +419,12 @@ def construct_model(
         output_interventions=output_interventions,
         **extra_params,
     )
+
+    if config.get("afa_model_config", None) is not None:
+        config["afa_model_config"]["seed"] = seed
+        model = AFAModel(model, config)
+
+    return model
 
 def construct_sequential_models(
     n_concepts,
@@ -656,6 +664,7 @@ def load_trained_model(
             intervention_policy=intervention_policy,
             output_latent=output_latent,
             output_interventions=output_interventions,
+            seed=42 + split,
         )
 
     model.load_state_dict(torch.load(model_saved_path))

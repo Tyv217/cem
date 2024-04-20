@@ -55,41 +55,47 @@ class PPOLightningAgent(pl.LightningModule):
             act_fun,
             layer_init(torch.nn.Linear(64, 64), ortho_init=ortho_init),
             act_fun,
-            layer_init(torch.nn.Linear(64, envs.single_action_space.n), std=0.01, ortho_init=ortho_init),
+            layer_init(torch.nn.Linear(64, envs.single_action_space_shape), std=0.01, ortho_init=ortho_init),
         )
         self.avg_pg_loss = MeanMetric(**torchmetrics_kwargs)
         self.avg_value_loss = MeanMetric(**torchmetrics_kwargs)
         self.avg_ent_loss = MeanMetric(**torchmetrics_kwargs)
 
     def get_shape(self, dict):
-        total_shape = 0
-        for key, value in dict.items():
-            shape = value.shape
-            if len(shape) > 1:
-                raise ValueError("Get shape unable to flatten 2d shape")
-            elif len(shape) == 0:
-                total_shape += 1
-            else:
-                total_shape += shape[0]
+        # total_shape = 0
+        # for key, value in dict.items():
+        #     shape = value.shape
+        #     if len(shape) > 1:
+        #         raise ValueError("Get shape unable to flatten 2d shape")
+        #     elif len(shape) == 0:
+        #         total_shape += 1
+        #     else:
+        #         total_shape += shape[0]
         
-        return (total_shape, )
+        # return (total_shape, )
+        return dict.shape
 
     def dict_to_tensor(self, obs, device='cpu'):
         tensors = []
-        for key, value in obs.items():
+        for _, value in obs.items():
             if isinstance(value, np.ndarray):
                 tensor = torch.tensor(value, dtype = torch.float32, device = device)
             elif isinstance(value, (int, float)):  # Scalar values for discrete spaces
                 tensor = torch.tensor([value], dtype = torch.float32, device = device)
-                tensors.append(tensor)
+            tensors.append(tensor)
         if len(tensors) > 1:
             final_tensor = torch.cat(tensors, dim=-1)
         else:
             final_tensor = tensors[0]
         return final_tensor
 
-    def get_action(self, x: dict, action: Tensor = None) -> Tuple[Tensor, Tensor, Tensor]:
+    def get_action(self, x: dict, action: Tensor = None, info = None, train = False) -> Tuple[Tensor, Tensor, Tensor]:
         logits = self.actor(x)
+        if not train:
+            action_mask = info["action_mask"]
+            if not isinstance(action_mask, torch.Tensor):
+                action_mask = torch.tensor(action_mask).to(x.device)
+            logits = torch.where(action_mask.bool(), logits, -1000)
         distribution = Categorical(logits=logits)
         if action is None:
             action = distribution.sample()
@@ -103,13 +109,13 @@ class PPOLightningAgent(pl.LightningModule):
     def get_value(self, x: Tensor) -> Tensor:
         return self.critic(x)
 
-    def get_action_and_value(self, x: Tensor, action: Tensor = None) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
-        action, log_prob, entropy = self.get_action(x, action)
+    def get_action_and_value(self, x: Tensor, action: Tensor = None, info = None, train = False) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
+        action, log_prob, entropy = self.get_action(x, action, info, train)
         value = self.get_value(x)
         return action, log_prob, entropy, value
 
-    def forward(self, x: Tensor, action: Tensor = None) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
-        return self.get_action_and_value(x, action)
+    def forward(self, x: Tensor, action: Tensor = None, train = False) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
+        return self.get_action_and_value(x, action, train = train)
 
     @torch.no_grad()
     def estimate_returns_and_advantages(
@@ -120,27 +126,34 @@ class PPOLightningAgent(pl.LightningModule):
         next_obs: Tensor,
         next_done: Tensor,
         num_steps: int,
-        gamma: float,
-        gae_lambda: float,
+        batch_size: int,
+        gamma: float = 0.99,
+        gae_lambda: float = 0.95,
     ) -> Tuple[Tensor, Tensor]:
         next_value = self.get_value(next_obs).reshape(1, -1)
         advantages = torch.zeros_like(rewards)
         lastgaelam = 0
         for t in reversed(range(num_steps)):
+            t_1 = t * batch_size
+            t_2 = (t + 1) * batch_size
+            t_3 = (t + 2) * batch_size
             if t == num_steps - 1:
                 nextnonterminal = torch.logical_not(next_done)
                 nextvalues = next_value
             else:
-                nextnonterminal = torch.logical_not(dones[t + 1])
-                nextvalues = values[t + 1]
-            delta = rewards[t] + gamma * nextvalues * nextnonterminal - values[t]
-            advantages[t] = lastgaelam = delta + gamma * gae_lambda * nextnonterminal * lastgaelam
+                nextnonterminal = torch.logical_not(dones[t_2:t_3])
+                nextvalues = values[t_2:t_3]
+            delta = rewards[t_1:t_2] + gamma * nextvalues * nextnonterminal - values[t_1:t_2]
+            advantages[t_1:t_2] = lastgaelam = delta + gamma * gae_lambda * nextnonterminal * lastgaelam
         returns = advantages + values
+
+        # [batch_size * num_steps]
+
         return returns, advantages
 
     def training_step(self, batch: Dict[str, Tensor]):
         # Get actions and values given the current observations
-        _, newlogprob, entropy, newvalue = self(batch["obs"], batch["actions"].long())
+        _, newlogprob, entropy, newvalue = self(batch["obs"], batch["actions"].long(), train = True)
         logratio = newlogprob - batch["logprobs"]
         ratio = logratio.exp()
 

@@ -28,7 +28,7 @@ class ACFlow(pl.LightningModule):
         self.weight_decay = weight_decay
         self.momentum = momentum
         self.float_type = float_type
-        class_weights = torch.tensor(np.array(class_weights or [1. for _ in range(self.n_tasks)]).astype(self.float_type)).to("cuda" if torch.cuda.is_available() else "cpu")
+        class_weights = torch.tensor(np.array(class_weights or [1. for _ in range(self.n_tasks)]).astype(self.float_type))
         class_weights /= torch.sum(class_weights)
         self.class_weights = torch.log(class_weights)
 
@@ -99,11 +99,10 @@ class ACFlow(pl.LightningModule):
 
     def compute_concept_probabilities(self, x, b, m, y):
         logpu, logpo, sam, cond_sam, pred_sam = self(x, b, m, y)
-
         class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1]).to(logpu.device)
-        loglikel = torch.logsumexp(logpu + logpo + class_weights, dim = 1) - torch.logsumexp(logpo + self.class_weights, dim = 1)
+        loglikel = torch.logsumexp(logpu + logpo + class_weights, dim = 1) - torch.logsumexp(logpo + class_weights, dim = 1)
 
-        return loglikel, sam, cond_sam, pred_sam
+        return loglikel, logpo, sam, pred_sam
 
     def training_step(self, batch, batch_idx):
         

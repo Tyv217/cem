@@ -359,10 +359,13 @@ def intervene_in_cbm(
     )
     if budget is None:
         budget = len(groups)
-    if acquisition_costs is None:
-        acquisition_costs = 1
+    acquisition_costs = 1
     if isinstance(model, AFAModel):
+        logging.debug("Intervening in AFA Model")
         for j, num_groups_intervened in enumerate(groups):
+            # if j == 1:
+            #     import pdb
+            #     pdb.set_trace()
             if budget < acquisition_costs:
                 break
             budget -= acquisition_costs
@@ -406,7 +409,9 @@ def intervene_in_cbm(
                         )
                     except:
                         raise ValueError(f"Failed to intervene with {num_groups_intervened} groups while restoring checkpoint from {trainer.ckpt_path}")
+
             time_diff = time.time() - start_time
+            coeff = (num_groups_intervened - prev_num_groups_intervened)
             avg_times.append(
                 (time_diff)/(
                     x_test.shape[0] * (coeff if coeff != 0 else 1)
@@ -414,33 +419,15 @@ def intervene_in_cbm(
             )
             total_times.append(time_diff)
             if j == 0:
-                acc = test_results['test_y_auc'] if self.n_tasks > 1 else test_results["test_y_accuracy"]
+                acc = test_batch_results['test_y_auc'] if n_tasks > 1 else test_batch_results["test_y_accuracy"]
             else:
-                acc = test_results["intervention_accuracy"]
+                acc = test_batch_results["test_intervention_accuracy"]
             logging.debug(
                 f"\tTest AUC when intervening with {num_groups_intervened} "
                 f"concept groups is {acc * 100:.2f}% (accuracy "
-                f"is {np.mean(y_pred == y_test.detach().cpu().numpy()) * 100:.2f}%)."
+                f"is {acc * 100:.2f}%)."
             )
             intervention_accs.append(acc)
-
-            # And generate the next dataset so that we can reuse previous
-            # interventions on the same samples in the future to save time
-            if model.intervention_policy.greedy:
-                prev_num_groups_intervened = num_groups_intervened
-            else:
-                prev_num_groups_intervened = 0
-            test_dl = torch.utils.data.DataLoader(
-                dataset=torch.utils.data.TensorDataset(
-                    x_test,
-                    y_test,
-                    c_test,
-                    competencies_test,
-                    torch.IntTensor(prev_interventions),
-                ),
-                batch_size=test_dl.batch_size,
-                num_workers=test_dl.num_workers,
-            )    
     else:
         for j, num_groups_intervened in enumerate(groups):
             if budget < acquisition_costs:

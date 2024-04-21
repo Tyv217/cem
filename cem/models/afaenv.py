@@ -136,17 +136,33 @@ class AFAEnv(gym.Env):
                 y=y,
                 train=self._train,
                 competencies=competencies,
-                prev_interventions=None
+                prev_interventions=None,
+                output_embeddings=True,
+                output_latent=True,
+                output_interventions=True,
             )
             c_sem, c_pred, y_logits = outputs[0], outputs[1], outputs[2]
             pos_embeddings = outputs[-2]
             neg_embeddings = outputs[-1]
+            
+            if len(pos_embeddings.shape) > 2:
+                pos_embeddings = torch.reshape(pos_embeddings, (-1, self.emb_size * self.n_concepts))
+                neg_embeddings = torch.reshape(neg_embeddings, (-1, self.emb_size * self.n_concepts))
             prob = prev_interventions * c + (1 - prev_interventions) * c_sem # [batch_size, n_concepts]
             embed_prob = prob.clone().repeat(1, self.emb_size) # [batch_size, n_concepts * self.embed]
-            embeddings = (
-                embed_prob * pos_embeddings.detach() +
-                (1 - embed_prob) * neg_embeddings.detach()
-            )
+            try:
+                embeddings = (
+                    embed_prob * pos_embeddings.detach() +
+                    (1 - embed_prob) * neg_embeddings.detach()
+                )
+            except:
+                logging.debug(
+                    f"emb_size:{self.emb_size}\n"
+                    f"embed_prob.shape:{embed_prob.shape}\n"
+                    f"pos_embeddings.shape:{pos_embeddings.shape}"
+                    f"len(output):{len(outputs)}"
+                )
+                raise ValueError()
             embeddings = torch.where(prev_interventions.clone().repeat(1, self.emb_size).bool()  , 0, embeddings).cpu().numpy()
             interventions = torch.unsqueeze(torch.zeros(self._intervened_concepts.shape), dim = 0).to(self.ac_model.device)
 
@@ -207,10 +223,16 @@ class AFAEnv(gym.Env):
                 train=self._train,
                 competencies=competencies,
                 prev_interventions=prev_interventions,
+                output_embeddings=True,
+                output_latent=True,
+                output_interventions=True,
             )
             c_sem, c_pred, y_logits = outputs[0], outputs[1], outputs[2]
             pos_embeddings = outputs[-2]
             neg_embeddings = outputs[-1]
+            if len(pos_embeddings.shape) > 2:
+                pos_embeddings = torch.reshape(pos_embeddings, (-1, self.emb_size * self.n_concepts))
+                neg_embeddings = torch.reshape(neg_embeddings, (-1, self.emb_size * self.n_concepts))
             prob = new_interventions * c + (1 - new_interventions) * c_sem
             embed_prob = prob.clone().repeat(1, self.emb_size)
             
@@ -269,7 +291,7 @@ class AFAEnv(gym.Env):
             pre_prob = np.expand_dims(pre_prob, axis = -1)
             post_prob = np.expand_dims(post_prob, axis = -1)
             pre_entropy = np.array([self.entropy(prob.T) if prob != 0 else 0 for prob in pre_prob])
-            post_entropy = np.array([self.entropy(prob.T) if prob != 0 else 1e3 for prob in post_prob])
+            post_entropy = np.array([self.entropy(prob.T) if prob != 0 else 1 for prob in post_prob])
             return self.intermediate_reward_ratio * (pre_entropy - post_entropy)
 
 

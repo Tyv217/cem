@@ -450,9 +450,8 @@ class ConceptBottleneckModel(pl.LightningModule):
             else:
                 c_sem = self.sig(latent)
         if output_embeddings or (
-            (intervention_idxs is None) and (c is not None) and (
-            self.intervention_policy is not None
-        )):
+            (intervention_idxs is None) and (c is not None)
+        ):
             pos_embeddings = torch.ones(c_sem.shape).to(x.device)
             neg_embeddings = torch.zeros(c_sem.shape).to(x.device)
             if not (self.sigmoidal_prob or self.bool):

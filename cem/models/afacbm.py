@@ -2643,6 +2643,7 @@ class AFAModel(pl.LightningModule):
     def __init__(self, cbm, config):
         super().__init__()
         self.cbm = cbm.to(self.device)
+        self.cbm.intervention_policy = None
         self.config = config
         ac_model_config = config["ac_model_config"]
         afa_model_config = config["afa_model_config"]
@@ -2713,6 +2714,11 @@ class AFAModel(pl.LightningModule):
             return data[i]
 
     def _run_interventions(self, batch, c_sem, c_used, y, y_logits, competencies, pos_embeddings, neg_embeddings, budget, train):
+        if budget is None:
+            budget = np.random.randint(1, len(self.cbm.concept_map) + 1)
+        if budget == 0:
+            return 0., 0., 0., 0., 0.
+            
         batch_size = c_sem.shape[0]
 
         if batch_size != self.batch_size:
@@ -2805,8 +2811,7 @@ class AFAModel(pl.LightningModule):
         # if self.cbm.average_trajectory:
             # curr_discount = discount
         curr_task_discount = task_discount
-        if budget is None:
-            budget = np.random.randint(1, len(self.cbm.concept_map) + 1)
+        
         for i in range(budget):
             # trajectory_weight += discount
             # discount *= self.cbm.intervention_discount
@@ -3190,7 +3195,7 @@ class AFAModel(pl.LightningModule):
         intervention_loss = intervention_loss/num_rollouts
         intervention_task_loss = intervention_task_loss#/num_rollouts
         int_mask_accuracy = int_mask_accuracy/num_rollouts
-        accuracy = np.mean(accuracies[-1]) if len(accuracies) > 1 else 0
+        accuracy = np.mean(accuracies[-1]) if len(accuracies) > 0 else 0.
         return intervention_loss_scalar, intervention_loss, intervention_task_loss, int_mask_accuracy, accuracy
 
 
@@ -3358,7 +3363,7 @@ class AFAModel(pl.LightningModule):
         return loss, result
     
     def training_step(self, batch, batch_idx):
-        loss, result = self._run_step(batch, batch_no, budget = None, train=False)
+        loss, result = self._run_step(batch, batch_idx, budget = None, train=False)
         for name, val in result.items():
             if self.cbm.n_tasks <= 2:
                 prog_bar = (
@@ -3393,8 +3398,8 @@ class AFAModel(pl.LightningModule):
             },
         }
 
-    def validation_step(self, batch, batch_no):
-        _, result = self._run_step(batch, batch_no, train=True)
+    def validation_step(self, batch, batch_idx):
+        _, result = self._run_step(batch, batch_idx, train=True)
         for name, val in result.items():
             if self.cbm.n_tasks <= 2:
                 prog_bar = (("auc" in name))
@@ -3407,8 +3412,8 @@ class AFAModel(pl.LightningModule):
         }
         return result
 
-    def test_step(self, batch, batch_no):
-        loss, result = self._run_step(batch, batch_no, budget = self.budget, train=False)
+    def test_step(self, batch, batch_idx):
+        loss, result = self._run_step(batch, batch_idx, budget = self.budget, train=False)
         for name, val in result.items():
             self.log("test_" + name, val, prog_bar=True, sync_dist = True)
         return result
@@ -3438,7 +3443,7 @@ class AFAModel(pl.LightningModule):
         return {
             "optimizer": optimizer,
             "lr_scheduler": lr_scheduler,
-            "monitor": "val_loss",
+            "monitor": "loss",
         }
 
 

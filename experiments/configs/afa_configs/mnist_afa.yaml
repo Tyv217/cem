@@ -2,7 +2,7 @@ trials: 1
 results_dir: results/afa/mnist_afa
 dataset: mnist_add
 num_workers: 8
-batch_size: 256
+batch_size: 512
 num_operands: 12
 selected_digits:
   - [0,1,2]
@@ -19,7 +19,7 @@ selected_digits:
   - [0,1,2,3,4,5,6,7,8,9]
 threshold_labels: 30
 noise_level: 0.0
-max_epochs: 0
+max_epochs: 300
 train_dataset_size: 5000
 test_dataset_size: 1024
 sampling_percent: 0.625
@@ -48,7 +48,7 @@ shared_params:
     emb_size: 16
     extra_dims: 0
     concept_loss_weight: 10
-    learning_rate: 0.001
+    learning_rate: 0.0001
     weight_decay: 0.000004
     c_extractor_arch: resnet18
     optimizer: sgd
@@ -59,12 +59,12 @@ shared_params:
     momentum: 0.9
     sigmoidal_prob: False
     training_intervention_prob: 0.25
-    separate_ac_model_training: False
+    separate_ac_model_training: True
     only_train_ac_model: False
     ac_model_config:
       save_path: /home/xty20/cem/results/afa/mnist_acflow_cem/acflow_model_trial_0.pt
       architecture: flow
-      max_epochs: 0
+      max_epochs: 100
       batch_size: 512
       transformations: [AF, TL, TL, TL, TL, AF]
       layer_cfg: [LR, CP2]
@@ -122,7 +122,7 @@ runs:
     horizon_uniform_distr: True
     beta_a: 1
     beta_b: 3
-    intervention_task_discount: [1.5, 1.1]
+    intervention_task_discount: 1.1 # [1.5, 1.1]
     average_trajectory: True
     use_horizon: False # DIFF True
     initialize_discount: False
@@ -131,41 +131,5 @@ runs:
     intervention_discount: 1
     legacy_mode: False # Diff True
     grid_variables:
-        - intervention_task_discount
-        - intervention_weight
-    grid_search_mode: exhaustive
-  
-  - architecture: "IntAwareConceptEmbeddingModel"
-    extra_name: "Retry_intervention_weight_{intervention_weight}_horizon_rate_{horizon_rate}_intervention_discount_{intervention_discount}_task_discount_{intervention_task_discount}"
-    training_intervention_prob: 0.25
-    horizon_binary_representation:  True
-    include_task_trajectory_loss: True
-    include_only_last_trajectory_loss: True
-    task_loss_weight: 0
-    intervention_weight: [5,1,0.1]
-    intervention_task_loss_weight: 1
-    initial_horizon: 2
-    use_concept_groups: True # DIFF False
-    use_full_mask_distr: False
-    propagate_target_gradients: False
-    int_model_use_bn: True
-    int_model_layers: [128,128,64,64]
-    intcem_task_loss_weight: 0
-    embedding_activation: "leakyrelu"
-    tau: 1
-    max_horizon: 6
-    horizon_uniform_distr: True
-    beta_a: 1
-    beta_b: 3
-    intervention_task_discount: [1.5, 1.1]
-    average_trajectory: True
-    use_horizon: False # DIFF True
-    initialize_discount: False
-    model_pretrain_path: null
-    horizon_rate: 1.005
-    intervention_discount: 1
-    legacy_mode: False # Diff True
-    grid_variables:
-        - intervention_task_discount
         - intervention_weight
     grid_search_mode: exhaustive

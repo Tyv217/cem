@@ -294,7 +294,7 @@ def train_model(
                 val_results['training_time'] = training_time
                 val_results['num_epochs'] = num_epochs
                 print(
-                    f'val_c_acc: {val_results["test_acc_c"]*100:.2f}%, '
+                    f'val_c_acc: {val_results["val_acc_c"]*100:.2f}%, '
                     f'val_y_acc: {val_results["val_acc_y"]*100:.2f}%, '
                     f'val_c_auc: {val_results["val_auc_c"]*100:.2f}%, '
                     f'val_y_auc: {val_results["val_auc_y"]*100:.2f}% with '
@@ -1428,6 +1428,10 @@ def train_ac_model(
             f'{num_epochs} epochs in {training_time:.2f} seconds'
         )
     else:
+        print(
+            'Did not test AC Model after training for'
+            f'{num_epochs} epochs in {training_time:.2f} seconds'
+        )
         test_results = None
     return ac_model, test_results, save_path
 

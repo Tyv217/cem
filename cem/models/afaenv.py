@@ -202,16 +202,18 @@ class AFAEnv(gym.Env):
 
         return obs, info
 
-    def step(self, action):
-        prev_interventions = torch.tensor(self._intervened_concepts, device = self.cbm.device)
-        new_interventions_map = torch.tensor(self._intervened_concepts_map, device = self.cbm.device)
-        new_interventions_map[np.arange(len(new_interventions_map)), action] = 1
-        new_interventions = prev_interventions.clone()
+    def step(self, action, pdb = False):
+        self._intervened_concepts_map[np.arange(len(self._intervened_concepts_map)), action] = 1
         
-        for i in range(new_interventions.shape[0]):
+        prev_interventions = torch.tensor(self._intervened_concepts, device = self.cbm.device)
+        for i in range(self._intervened_concepts.shape[0]):
             concept_group = sorted(list(self.concept_group_map.keys()))[action[i]]
             for concept in self.concept_group_map[concept_group]:
-                new_interventions[i, concept] = 1
+                self._intervened_concepts[i, concept] = 1
+
+        new_interventions_map = torch.tensor(self._intervened_concepts_map, device = self.cbm.device)
+        new_interventions = torch.tensor(self._intervened_concepts, device = self.cbm.device)
+        
         
         x, y, (c, competencies, _) = self.cbm._unpack_batch(self._cbm_data)
         with torch.no_grad():

@@ -1,4 +1,4 @@
-trials: 5
+trials: 1
 results_dir: results/mnist_add_new
 dataset: mnist_add
 num_workers: 8
@@ -30,15 +30,15 @@ skip_repr_evaluation: True
 intervention_freq: 1
 intervention_batch_size: 2048
 intervention_policies:
-    # - "intcem_policy"
-    - "group_random"
-    - "group_random_no_prior"
-    - "group_coop_no_prior"
-    - "behavioural_cloning_no_prior"
-    - "group_uncertainty_no_prior"
+    - "intcem_policy"
+    # - "group_random"
+    #- "group_random_no_prior"
+    #- "group_coop_no_prior"
+    #- "behavioural_cloning_no_prior"
+    #- "group_uncertainty_no_prior"
     - "optimal_greedy_no_prior"
-    - "global_val_error_no_prior"
-    - "global_val_improvement_no_prior"
+    #- "global_val_error_no_prior"
+    #- "global_val_improvement_no_prior"
 
 # DATASET VARIABLES
 root_dir: /home/xty20/data

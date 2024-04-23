@@ -19,7 +19,7 @@ selected_digits:
   - [0,1,2,3,4,5,6,7,8,9]
 threshold_labels: 30
 noise_level: 0.0
-max_epochs: 300
+max_epochs: 50
 train_dataset_size: 5000
 test_dataset_size: 1024
 sampling_percent: 0.625
@@ -31,7 +31,7 @@ skip_repr_evaluation: True
 intervention_freq: 1
 intervention_batch_size: 512
 intervention_policies:
-    - "intcem_policy"
+    - "afacem_policy"
     - "optimal_greedy_no_prior"
 
 # DATASET VARIABLES
@@ -48,7 +48,7 @@ shared_params:
     emb_size: 16
     extra_dims: 0
     concept_loss_weight: 10
-    learning_rate: 0.0001
+    learning_rate: 0.001
     weight_decay: 0.000004
     c_extractor_arch: resnet18
     optimizer: sgd
@@ -81,7 +81,7 @@ shared_params:
       prior_hids: [256,256]
       separate_flow_model_training: True
       optimizer: adam
-      learning_rate: 0.001
+      learning_rate: 0.00001
       decay_steps: 10000
       decay_rate: 0.5
       clip_gradient: 1
@@ -106,9 +106,9 @@ runs:
     horizon_binary_representation:  True
     include_task_trajectory_loss: True
     include_only_last_trajectory_loss: True
-    task_loss_weight: 0
-    intervention_weight: [5,1,0.1]
-    intervention_task_loss_weight: 1
+    task_loss_weight: 1
+    intervention_weight: 0.1
+    intervention_task_loss_weight: 0
     initial_horizon: 2
     use_concept_groups: True # DIFF False
     use_full_mask_distr: False
@@ -122,7 +122,7 @@ runs:
     horizon_uniform_distr: True
     beta_a: 1
     beta_b: 3
-    intervention_task_discount: 1.1 # [1.5, 1.1]
+    intervention_task_discount: 1.5 # [1.5, 1.1]
     average_trajectory: True
     use_horizon: False # DIFF True
     initialize_discount: False
@@ -130,6 +130,6 @@ runs:
     horizon_rate: 1.005
     intervention_discount: 1
     legacy_mode: False # Diff True
-    grid_variables:
-        - intervention_weight
-    grid_search_mode: exhaustive
+    # grid_variables:
+    #     - intervention_weight
+    # grid_search_mode: exhaustive

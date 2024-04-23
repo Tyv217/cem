@@ -23,6 +23,7 @@ from cem.interventions.coop import CooPEntropy, CooP,CompetenceCooPEntropy
 from cem.interventions.optimal import GreedyOptimal, TrueOptimal
 from cem.interventions.behavioural_learning import BehavioralLearningPolicy
 from cem.interventions.intcem_policy import IntCemInterventionPolicy
+from cem.interventions.afacem_policy import AFACemInterventionPolicy
 from cem.interventions.active_feature_acquisition import ReinforcementLearningPolicy
 from cem.interventions.global_policies import (
     GlobalValidationPolicy,
@@ -38,6 +39,7 @@ from cem.interventions.global_policies import (
 MAX_COMB_BOUND = 500000
 POLICY_NAMES = [
     "intcem_policy",
+    "afacem_policy",
     "group_random",
     "group_random_no_prior",
     "group_coop_no_prior",
@@ -267,6 +269,7 @@ def intervene_in_cbm(
                 construct_time = 0
             return result, avg_time, construct_time
 
+
     model = load_trained_model(
         config=config,
         n_tasks=n_tasks,
@@ -360,9 +363,14 @@ def intervene_in_cbm(
     if budget is None:
         budget = len(groups)
     acquisition_costs = 1
-    if isinstance(model, AFAModel):
-        logging.debug("Intervening in AFA Model")
+    if isinstance(concept_selection_policy, AFACemInterventionPolicy):
+        logging.debug(
+            "Intervening using AFACem Policy"
+        )
+        logging.debug("Intervening in AFAModel")
         for j, num_groups_intervened in enumerate(groups):
+            if j < 2:
+                continue
             # if j == 1:
             #     import pdb
             #     pdb.set_trace()
@@ -421,7 +429,7 @@ def intervene_in_cbm(
             if j == 0:
                 acc = test_batch_results['test_y_auc'] if n_tasks > 1 else test_batch_results["test_y_accuracy"]
             else:
-                acc = test_batch_results["test_intervention_accuracy"]
+                acc = test_batch_results["test_intervention_auc"]
             logging.debug(
                 f"\tTest AUC when intervening with {num_groups_intervened} "
                 f"concept groups is {acc * 100:.2f}% (accuracy "
@@ -429,6 +437,14 @@ def intervene_in_cbm(
             )
             intervention_accs.append(acc)
     else:
+        logging.debug(
+            "Intervening using AFACem Policy"
+        )
+        logging.debug("Intervening in AFAModel")
+        if isinstance(model, AFAModel):
+            policy = model.intervention_policy
+            model = model.cbm
+            model.intervention_policy = policy
         for j, num_groups_intervened in enumerate(groups):
             if budget < acquisition_costs:
                 break
@@ -900,6 +916,8 @@ def get_int_policy(
         concept_selection_policy = IndependentRandomMaskIntPolicy
     elif "intcem_policy" in policy_name:
         concept_selection_policy = IntCemInterventionPolicy
+    elif "afacem_policy" in policy_name:
+        concept_selection_policy = AFACemInterventionPolicy
     elif "global_val_improvement" in policy_name:
         concept_selection_policy = GlobalValidationImprovementPolicy
     elif "uncertainty" in policy_name:
@@ -937,6 +955,23 @@ def get_int_policy(
                 "individual" in policy_name
             )
         elif "intcem_policy" in policy_name:
+            policy_params["group_based"] = not (
+                "individual" in policy_name
+            )
+            policy_params["n_tasks"] = n_tasks
+            policy_params["importance_weight"] = config.get(
+                "importance_weight",
+                1,
+            )
+            policy_params["acquisition_weight"] = config.get(
+                "acquisition_weight",
+                1,
+            )
+            policy_params["acquisition_costs"] = acquisition_costs
+            policy_params["n_tasks"] = n_tasks
+            policy_params["n_concepts"] = n_concepts
+            policy_params["eps"] = config.get("eps", 1e-8)
+        elif "afacem_policy" in policy_name:
             policy_params["group_based"] = not (
                 "individual" in policy_name
             )

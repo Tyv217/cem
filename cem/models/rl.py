@@ -117,7 +117,6 @@ class PPOLightningAgent(pl.LightningModule):
     def forward(self, x: Tensor, action: Tensor = None, train = False) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
         return self.get_action_and_value(x, action, train = train)
 
-    @torch.no_grad()
     def estimate_returns_and_advantages(
         self,
         rewards: Tensor,
@@ -130,22 +129,23 @@ class PPOLightningAgent(pl.LightningModule):
         gamma: float = 0.99,
         gae_lambda: float = 0.95,
     ) -> Tuple[Tensor, Tensor]:
-        next_value = self.get_value(next_obs).reshape(1, -1)
-        advantages = torch.zeros_like(rewards)
-        lastgaelam = 0
-        for t in reversed(range(num_steps)):
-            t_1 = t * batch_size
-            t_2 = (t + 1) * batch_size
-            t_3 = (t + 2) * batch_size
-            if t == num_steps - 1:
-                nextnonterminal = torch.logical_not(next_done)
-                nextvalues = next_value
-            else:
-                nextnonterminal = torch.logical_not(dones[t_2:t_3])
-                nextvalues = values[t_2:t_3]
-            delta = rewards[t_1:t_2] + gamma * nextvalues * nextnonterminal - values[t_1:t_2]
-            advantages[t_1:t_2] = lastgaelam = delta + gamma * gae_lambda * nextnonterminal * lastgaelam
-        returns = advantages + values
+        with torch.no_grad():
+            next_value = self.get_value(next_obs).reshape(1, -1)
+            advantages = torch.zeros_like(rewards)
+            lastgaelam = 0
+            for t in reversed(range(num_steps)):
+                t_1 = t * batch_size
+                t_2 = (t + 1) * batch_size
+                t_3 = (t + 2) * batch_size
+                if t == num_steps - 1:
+                    nextnonterminal = torch.logical_not(next_done)
+                    nextvalues = next_value
+                else:
+                    nextnonterminal = torch.logical_not(dones[t_2:t_3])
+                    nextvalues = values[t_2:t_3]
+                delta = rewards[t_1:t_2] + gamma * nextvalues * nextnonterminal - values[t_1:t_2]
+                advantages[t_1:t_2] = lastgaelam = delta + gamma * gae_lambda * nextnonterminal * lastgaelam
+            returns = advantages + values
 
         # [batch_size * num_steps]
 

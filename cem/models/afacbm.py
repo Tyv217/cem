@@ -2679,6 +2679,7 @@ class AFAModel(pl.LightningModule):
         else:
             checkpoint_location = "" if "save_path" not in ac_model_config.keys() else f"at {ac_model_config['save_path']} "
             raise ValueError(f"AC{ac_model_config['architecture']} model checkpoint {checkpoint_location}incorrect / not found")
+        self.ac_model.freeze()
         self.num_envs = config["afa_model_config"]["num_envs"]
         # self.env = gym.vector.make("cem/AFAEnv-v0", num_envs = self.num_envs, cbm = self.cbm, ac_model = self.ac_model, env_config = config)
         self.batch_size = config["batch_size"]
@@ -2695,6 +2696,17 @@ class AFAModel(pl.LightningModule):
         ).to(self.device)
         self.accuracy = Accuracy(task="multiclass", num_classes=self.cbm.n_tasks, top_k=1).to(self.device) if self.cbm.n_tasks > 1 else Accuracy(task = "binary").to(self.device)
         self.budget = None
+        self.train_separately = False
+        self.use_concept_groups = self.cbm.use_concept_groups
+
+    def is_model_frozen(self, model):
+        # Iterate through all parameters in the model
+        for param in model.parameters():
+            # If any parameter requires gradient, model is not completely frozen
+            if param.requires_grad:
+                return False
+        # If all parameters are frozen, return True
+        return True
 
     def set_budget(self, budget):
         self.budget = budget
@@ -2703,15 +2715,32 @@ class AFAModel(pl.LightningModule):
         self.cbm.env = self.env
         self.cbm.agent = self.agent
         return self.cbm
-        
-    def forward(self, x, train):
-        pass
 
     def get_ith(self, data, i):
         if isinstance(data, list) or isinstance(data, tuple):
             return [item[i] for item in data]
         else:
             return data[i]
+
+    def forward(
+        self,
+        x,
+        c=None,
+        y=None,
+        latent=None,
+        intervention_idxs=None,
+        competencies=None,
+        prev_interventions=None,
+    ):
+        return self.cbm.forward(
+            x,
+            c=c,
+            y=y,
+            competencies=competencies,
+            prev_interventions=prev_interventions,
+            intervention_idxs=intervention_idxs,
+            latent=latent,
+        )
 
     def _run_interventions(self, batch, c_sem, c_used, y, y_logits, competencies, pos_embeddings, neg_embeddings, budget, train):
         if budget is None:
@@ -2721,11 +2750,17 @@ class AFAModel(pl.LightningModule):
             
         batch_size = c_sem.shape[0]
 
+        try:
+            train_rl = self.train_rl
+        except:
+            train_rl = False
+
         if batch_size != self.batch_size:
             self.batch_size = batch_size
             self.env = AFAEnv(cbm = self.cbm, ac_model = self.ac_model, env_config = self.config, batch_size = self.batch_size)
         
         intervention_loss = 0.0
+        intervention_task_loss = 0.0
         intervention_idxs = torch.zeros(c_used.shape).to(c_used.device)
         prev_num_of_interventions = 0
         if self.cbm.use_concept_groups:
@@ -2890,6 +2925,7 @@ class AFAModel(pl.LightningModule):
         logprobs = torch.zeros((batch_size * budget, )).to(self.device)
         values = torch.zeros((batch_size * budget, )).to(self.device)
         accuracies = [[] for _ in range(budget)]
+        aucies = [[] for _ in range(budget)]
 
         for _ in range(num_rollouts):
             # for i in range(batch_size):
@@ -2912,8 +2948,8 @@ class AFAModel(pl.LightningModule):
                 actions[key_start:key_end] = action
                 logprobs[key_start:key_end] = logprob
 
-                # Single environment step
-                next_obs, reward, done, truncated, next_info = self.env.step(action.cpu().numpy())
+                # Single environment p
+                next_obs, reward, done, truncated, next_info = self.env.step(action.cpu().numpy(), train_rl and step == budget - 1)
 
                 # Check whether the game has finished or not
                 done = torch.logical_or(torch.tensor(done), torch.tensor(truncated))
@@ -2921,20 +2957,21 @@ class AFAModel(pl.LightningModule):
                 rewards[key_start:key_end] = torch.tensor(reward).view(-1).to(self.device)
                 next_obs, next_done = torch.tensor(next_obs).to(self.device), done.to(self.device)
                 task_discount *= self.cbm.intervention_task_discount
+                
+                emb_start, emb_end = self.env.get_range("cbm_bottleneck")
+
+                c_rollout_pred = next_obs[:,emb_start:emb_end]
+
+                c_rollout_pred = c_rollout_pred.view(
+                    (-1, self.cbm.emb_size * self.cbm.n_concepts)
+                )
+                rollout_y_logits = self.cbm.c2y_model(c_rollout_pred)
                 if self.cbm.include_task_trajectory_loss and (
                     (not self.cbm.include_only_last_trajectory_loss) or
                     (step == (budget - 1))
                 ):
                     # Then we will also update the task loss with the loss
                     # of performing this intervention!
-                    emb_start, emb_end = self.env.get_range("cbm_bottleneck")
-
-                    c_rollout_pred = next_obs[:,emb_start:emb_end]
-
-                    c_rollout_pred = c_rollout_pred.view(
-                        (-1, self.cbm.emb_size * self.cbm.n_concepts)
-                    )
-                    rollout_y_logits = self.cbm.c2y_model(c_rollout_pred)
                     rollout_y_loss = self.cbm.loss_task(
                         (
                             rollout_y_logits
@@ -2952,9 +2989,16 @@ class AFAModel(pl.LightningModule):
                         intervention_task_loss += (
                             task_discount * rollout_y_loss
                         )
-                    if self.cbm.n_tasks == 1 and len(rollout_y_logits.shape) > len(y.shape):
-                        rollout_y_logits = torch.squeeze(rollout_y_logits, dim = -1)
-                    accuracies[step].append(self.accuracy(rollout_y_logits, y).detach().cpu())
+                if self.cbm.n_tasks == 1 and len(rollout_y_logits.shape) > len(y.shape):
+                    rollout_y_logits = torch.squeeze(rollout_y_logits, dim = -1)
+                accuracies[step].append(self.accuracy(rollout_y_logits, y).detach().cpu())
+                (c_accuracy, c_auc, c_f1), (y_accuracy, y_auc, y_f1) = compute_accuracy(
+                    c_sem,
+                    y_logits,
+                    c_used,
+                    y,
+                )
+                aucies[step].append(y_auc)
 
             returns, advantages = self.agent.estimate_returns_and_advantages(
                 rewards, values, dones, next_obs, next_done, budget, batch_size
@@ -3193,10 +3237,13 @@ class AFAModel(pl.LightningModule):
         intervention_loss_scalar = \
             self.cbm.intervention_weight * intervention_loss
         intervention_loss = intervention_loss/num_rollouts
-        intervention_task_loss = intervention_task_loss#/num_rollouts
+        intervention_task_loss_scalar = \
+            self.cbm.intervention_task_loss_weight * intervention_task_loss
+        intervention_task_loss = intervention_task_loss/num_rollouts
         int_mask_accuracy = int_mask_accuracy/num_rollouts
         accuracy = np.mean(accuracies[-1]) if len(accuracies) > 0 else 0.
-        return intervention_loss_scalar, intervention_loss, intervention_task_loss, int_mask_accuracy, accuracy
+        auc = np.mean(aucies[-1]) if len(aucies) > 0 else 0.
+        return intervention_loss_scalar, intervention_loss, intervention_task_loss, intervention_task_loss_scalar, int_mask_accuracy, accuracy, auc
 
 
     def _run_step(self,
@@ -3206,7 +3253,6 @@ class AFAModel(pl.LightningModule):
         train=False,
         intervention_idxs=None
     ):
-        
         x, y, (c, competencies, prev_interventions) = self.cbm._unpack_batch(batch)
         outputs = self.cbm._forward(
             x,
@@ -3239,7 +3285,6 @@ class AFAModel(pl.LightningModule):
 
         # Now we will do some rolls for interventions
         int_mask_accuracy = -1.0
-        current_horizon = -1
         if not self.cbm.include_certainty:
             c_used = torch.where(
                 torch.logical_or(c == 0, c == 1),
@@ -3248,32 +3293,12 @@ class AFAModel(pl.LightningModule):
             )
         else:
             c_used = c
-        
-        intervention_loss_scalar, intervention_loss, intervention_task_loss, int_mask_accuracy, intervention_accuracy = \
-            self._run_interventions(batch, c_sem, c_used, y, y_logits, competencies, pos_embeddings, neg_embeddings, budget, train)
-
         if not self.cbm.legacy_mode:
             self.cbm.current_steps += 1
             if self.cbm.rollout_aneal_rate != 1 and (
                 self.cbm.current_aneal_rate.detach().cpu().numpy()[0] < 100
             ):
                 self.cbm.current_aneal_rate *= self.cbm.rollout_aneal_rate
-
-        if self.cbm.include_task_trajectory_loss and (
-            self.cbm.intervention_task_loss_weight != 0
-        ):
-            if isinstance(intervention_task_loss, float):
-                intervention_task_loss_scalar = (
-                    self.cbm.intervention_task_loss_weight * intervention_task_loss
-                )
-            else:
-                intervention_task_loss_scalar = (
-                    self.cbm.intervention_task_loss_weight *
-                    intervention_task_loss.detach()
-                )
-        else:
-            intervention_task_loss_scalar = 0.0
-
 
         if self.cbm.concept_loss_weight != 0:
             # We separate this so that we are allowed to
@@ -3294,6 +3319,15 @@ class AFAModel(pl.LightningModule):
         else:
             concept_loss = 0.0
             concept_loss_scalar = 0.0
+        
+        if self.cbm.intervention_weight != 0 or self.cbm.intervention_task_loss_weight != 0:
+        
+            intervention_loss_scalar, intervention_loss, intervention_task_loss, intervention_task_loss_scalar, int_mask_accuracy, intervention_accuracy, intervention_auc = \
+                self._run_interventions(batch, c_sem, c_used, y, y_logits, competencies, pos_embeddings, neg_embeddings, budget, train)
+
+        else:
+            intervention_loss_scalar, intervention_loss, intervention_task_loss, intervention_task_loss_scalar, int_mask_accuracy, intervention_accuracy, intervention_auc = \
+                0., 0., 0., 0., 0., 0., 0.
 
         loss = (
             self.cbm.concept_loss_weight * concept_loss +
@@ -3334,6 +3368,7 @@ class AFAModel(pl.LightningModule):
             "avg_c_y_acc": (c_accuracy + y_accuracy) / 2,
             "horizon_limit": self.cbm.horizon_limit.detach().cpu().numpy()[0],
             "intervention_accuracy": intervention_accuracy,
+            "intervention_auc": intervention_auc,
         }
         if not self.cbm.legacy_mode:
             result["current_steps"] = \
@@ -3363,7 +3398,7 @@ class AFAModel(pl.LightningModule):
         return loss, result
     
     def training_step(self, batch, batch_idx):
-        loss, result = self._run_step(batch, batch_idx, budget = None, train=False)
+        loss, result = self._run_step(batch, batch_idx, budget = None, train=True)
         for name, val in result.items():
             if self.cbm.n_tasks <= 2:
                 prog_bar = (
@@ -3399,7 +3434,7 @@ class AFAModel(pl.LightningModule):
         }
 
     def validation_step(self, batch, batch_idx):
-        _, result = self._run_step(batch, batch_idx, train=True)
+        _, result = self._run_step(batch, batch_idx, train=False)
         for name, val in result.items():
             if self.cbm.n_tasks <= 2:
                 prog_bar = (("auc" in name))
@@ -3413,6 +3448,9 @@ class AFAModel(pl.LightningModule):
         return result
 
     def test_step(self, batch, batch_idx):
+        logging.debug(
+            f"Testing with budget {self.budget}"
+        )
         loss, result = self._run_step(batch, batch_idx, budget = self.budget, train=False)
         for name, val in result.items():
             self.log("test_" + name, val, prog_bar=True, sync_dist = True)
@@ -3445,6 +3483,24 @@ class AFAModel(pl.LightningModule):
             "lr_scheduler": lr_scheduler,
             "monitor": "loss",
         }
+
+    def predict_step(
+        self,
+        batch,
+        batch_idx,
+        intervention_idxs=None,
+        dataloader_idx=0,
+    ):
+        x, y, (c, competencies, prev_interventions) = self.cbm._unpack_batch(batch)
+        return self.cbm._forward(
+            x,
+            intervention_idxs=intervention_idxs,
+            c=c,
+            y=y,
+            train=False,
+            competencies=competencies,
+            prev_interventions=prev_interventions,
+        )
 
 
 

@@ -181,6 +181,37 @@ def train_model(
                 ),
                 enable_progress_bar = enable_progress_bar
             )
+            trainer_copy = pl.Trainer(
+                accelerator=accelerator,
+                devices=devices,
+                max_epochs=config['max_epochs'],
+                check_val_every_n_epoch=config.get("check_val_every_n_epoch", 5),
+                callbacks=[
+                    EarlyStopping(
+                        monitor=config["early_stopping_monitor"],
+                        min_delta=config.get("early_stopping_delta", 0.00),
+                        patience=config['patience'],
+                        verbose=config.get("verbose", False),
+                        mode=config["early_stopping_mode"],
+                    ),
+                ],
+                enable_checkpointing=enable_checkpointing,
+                gradient_clip_val=gradient_clip_val,
+#                 track_grad_norm=2,
+                # Only use the wandb logger when it is a fresh run
+                logger=(
+                    logger or
+                    (
+                        WandbLogger(
+                            name=full_run_name,
+                            project=project_name,
+                            save_dir=os.path.join(result_dir, "logs"),
+                        ) if rerun or (not os.path.exists(model_saved_path))
+                        else False
+                    )
+                ),
+                enable_progress_bar = enable_progress_bar
+            )
             if activation_freq:
                 fit_trainer = utils.ActivationMonitorWrapper(
                     model=model,
@@ -196,8 +227,23 @@ def train_model(
                     # usage
                     test_dl=val_dl,
                 )
+                fit_trainer_copy = utils.ActivationMonitorWrapper(
+                    model=model,
+                    trainer=trainer,
+                    activation_freq=activation_freq,
+                    single_frequency_epochs=single_frequency_epochs,
+                    output_dir=os.path.join(
+                        result_dir,
+                        f"test_embedding_acts/{full_run_name}",
+                    ),
+                    # YES, we pass the validation data intentionally to avoid
+                    # explosion of memory
+                    # usage
+                    test_dl=val_dl,
+                )
             else:
                 fit_trainer = trainer
+                fit_trainer_copy = trainer_copy
             if (not rerun) and os.path.exists(model_saved_path):
                 # Then we simply load the model and proceed
                 print("\tFound cached model... loading it")
@@ -213,7 +259,26 @@ def train_model(
             else:
                 # Else it is time to train it
                 start_time = time.time()
-                fit_trainer.fit(model, train_dl, val_dl)
+                if isinstance(model, AFAModel) and model.train_separately:
+                    logging.debug(
+                        f"Training CBM and RL agent separately"
+                    )
+                    model.train_rl = False
+                    intervention_weight = model.cbm.intervention_weight
+                    intervention_task_loss_weight = model.cbm.intervention_task_loss_weight 
+                    model.cbm.intervention_weight = 0
+                    model.cbm.intervention_task_loss_weight = 0
+                    fit_trainer.fit(model, train_dl, val_dl)
+                    logging.debug(
+                        f"Starting training RL Agent"
+                    )
+                    model.train_rl = True
+                    model.cbm.intervention_weight = intervention_weight
+                    model.cbm.intervention_task_loss_weight = intervention_task_loss_weight
+                    model.cbm.freeze()
+                    fit_trainer_copy.fit(model, train_dl, val_dl)
+                else:
+                    fit_trainer.fit(model, train_dl, val_dl)
                 num_epochs = fit_trainer.current_epoch
                 training_time = time.time() - start_time
                 config_copy = copy.deepcopy(config)
@@ -391,6 +456,16 @@ def train_model(
             gradient_clip_val=gradient_clip_val,
             enable_checkpointing=enable_checkpointing,
         )
+        trainer_copy = pl.Trainer(
+            accelerator=accelerator,
+            devices=devices,
+            max_epochs=config['max_epochs'],
+            check_val_every_n_epoch=config.get("check_val_every_n_epoch", 5),
+            callbacks=callbacks,
+            logger=logger or False,
+            gradient_clip_val=gradient_clip_val,
+            enable_checkpointing=enable_checkpointing,
+        )
 
         if result_dir:
             if activation_freq:
@@ -407,10 +482,25 @@ def train_model(
                     # explosion of memory usage
                     test_dl=val_dl,
                 )
+                fit_trainer_copy = utils.ActivationMonitorWrapper(
+                    model=model,
+                    trainer=trainer,
+                    activation_freq=activation_freq,
+                    single_frequency_epochs=single_frequency_epochs,
+                    output_dir=os.path.join(
+                        result_dir,
+                        f"test_embedding_acts/{full_run_name}",
+                    ),
+                    # YES, we pass the validation data intentionally to avoid
+                    # explosion of memory usage
+                    test_dl=val_dl,
+                )
             else:
                 fit_trainer = trainer
+                fit_trainer_copy = trainer_copy
         else:
             fit_trainer = trainer
+            fit_trainer_copy = trainer_copy
 
         # Else it is time to train it
         model_saved_path = os.path.join(
@@ -432,7 +522,26 @@ def train_model(
         else:
             # Else it is time to train it
             start_time = time.time()
-            fit_trainer.fit(model, train_dl, val_dl)
+            if isinstance(model, AFAModel) and model.train_separately:
+                logging.debug(
+                    f"Training CBM and RL agent separately"
+                )
+                model.train_rl = False
+                intervention_weight = model.cbm.intervention_weight
+                intervention_task_loss_weight = model.cbm.intervention_task_loss_weight 
+                model.cbm.intervention_weight = 0
+                model.cbm.intervention_task_loss_weight = 0
+                fit_trainer.fit(model, train_dl, val_dl)
+                logging.debug(
+                    f"Starting training RL Agent"
+                )
+                model.train_rl = True
+                model.cbm.intervention_weight = intervention_weight
+                model.cbm.intervention_task_loss_weight = intervention_task_loss_weight
+                model.cbm.freeze()
+                fit_trainer_copy.fit(model, train_dl, val_dl)
+            else:
+                fit_trainer.fit(model, train_dl, val_dl)
             training_time = time.time() - start_time
             num_epochs = fit_trainer.current_epoch
             if save_model and (result_dir is not None):

@@ -31,8 +31,7 @@ class ACEnergy(pl.LightningModule):
         self.c_embedding = torch.nn.Parameter(torch.randn((self.n_concepts*2, embed_size), requires_grad = True))
         self.classifier_cy = torch.nn.Linear(embed_size, 1)
         self.concept_proj = torch.nn.Linear(self.n_concepts * embed_size, embed_size)
-        self.smx_y = torch.nn.Softmax(dim=-2)
-        self.smx_c = torch.nn.Softmax(dim=-1)
+        self.smx_cy = torch.nn.Softmax(dim=-1)
         self.dropout = torch.nn.Dropout(p=0.2)
 
         class_weights = torch.tensor(np.array(class_weights or [1. for _ in range(self.n_tasks)]).astype("float32")).to(self.device)
@@ -228,6 +227,7 @@ class ACEnergy(pl.LightningModule):
         #     # print('x-y',x,'x-c',x_c,'c-y',c_proj)
         #     return cy_energy,(y_prob)
         # else:
+        cy_energy = self.smx_cy(cy_energy)
         return cy_energy
         
     def _run_step(self, energy, y = None, train = False):
@@ -250,13 +250,11 @@ class ACEnergy(pl.LightningModule):
 
             class_weights = self.class_weights.to(energy.device)
             
-            energy_sum = torch.sum(energy, dim=1, keepdim=True)
-
-            energy = torch.exp(-energy)
+            energy_sum = torch.logsumexp(-energy, dim=1, keepdim=True)
 
             energy = energy * class_weights
 
-            return energy / energy_sum
+            return energy + energy_sum
 
             # p(c | y) * p(y)
 
@@ -266,12 +264,14 @@ class ACEnergy(pl.LightningModule):
             y_tem = torch.tensor([self.class_list.index(tem) for tem in y]).long().to(self.device)
             y_tem = y_tem.view(batch_size, 1)
             energy_pos = energy.gather(dim=1, index=y_tem)
+
+            class_weights = self.class_weights.to(energy.device)
             
-            energy_sum = torch.sum(energy, dim=1, keepdim=True)
+            energy_sum = torch.logsumexp(-energy, dim=1, keepdim=True)
 
-            energy_pos = torch.exp(-energy_pos)
+            energy = energy * class_weights
 
-            return energy_pos / energy_sum
+            return energy_pos + energy_sum
         
 
     def training_step(self, batch, batch_idx):
@@ -360,10 +360,15 @@ class ACEnergy(pl.LightningModule):
 
         concept_probabilities = concept_probabilities / (concept_probabilities + incorrect_concept_probabilities)
 
-        acc = (concept_probabilities > 0.5).float().mean()
+        concept_accuracy = (concept_probabilities > 0.5).cpu().float().mean()
+
+        predicted_labels = torch.argmax(all_concepts_energy, dim = -1)
+
+        label_accuracy = (predicted_labels == y).cpu().float().mean()
 
         result = {
-            "accuracy": acc.detach()
+            "concept_accuracy": concept_accuracy.detach(),
+            "label_accuracy": label_accuracy.detach()
         }
 
         return result

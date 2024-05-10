@@ -15,7 +15,9 @@ from torchmetrics import MeanMetric
 class PPOLightningAgent(pl.LightningModule):
     def __init__(
         self,
-        envs: gym.vector.SyncVectorEnv,
+        single_observation_space_shape,
+        single_action_space_shape,
+        lin_layers = None,
         act_fun: str = "relu",
         ortho_init: bool = False,
         vf_coef: float = 1.0,
@@ -37,26 +39,35 @@ class PPOLightningAgent(pl.LightningModule):
         self.clip_coef = clip_coef
         self.clip_vloss = clip_vloss
         self.normalize_advantages = normalize_advantages
-        self.critic = torch.nn.Sequential(
-            layer_init(
-                torch.nn.Linear(math.prod(self.get_shape(envs.single_observation_space)), 64),
-                ortho_init=ortho_init,
-            ),
-            act_fun,
-            layer_init(torch.nn.Linear(64, 64), ortho_init=ortho_init),
-            act_fun,
-            layer_init(torch.nn.Linear(64, 1), std=1.0, ortho_init=ortho_init),
-        )
-        self.actor = torch.nn.Sequential(
-            layer_init(
-                torch.nn.Linear(math.prod(self.get_shape(envs.single_observation_space)), 64),
-                ortho_init=ortho_init,
-            ),
-            act_fun,
-            layer_init(torch.nn.Linear(64, 64), ortho_init=ortho_init),
-            act_fun,
-            layer_init(torch.nn.Linear(64, envs.single_action_space_shape), std=0.01, ortho_init=ortho_init),
-        )
+        self.lin_layers = lin_layers or [256, 256, 128, 128]
+        critic_units = [
+            math.prod(single_observation_space_shape)
+        ] + self.lin_layers + [
+            1
+        ]
+        critic_layers = []
+        for i in range(1, len(critic_units)):
+            if i != len(critic_units) - 1:
+                critic_layers.append(layer_init(torch.nn.Linear(critic_units[i-1], critic_units[i]), ortho_init=ortho_init))
+                critic_layers.append(act_fun)
+            else:
+                critic_layers.append(layer_init(torch.nn.Linear(critic_units[i-1], critic_units[i]), std = 1.0, ortho_init=ortho_init))
+        self.critic = torch.nn.Sequential(*critic_layers)
+
+        actor_units = [
+            math.prod(single_observation_space_shape)
+        ] + self.lin_layers + [
+            single_action_space_shape
+        ]
+        actor_layers = []
+        for i in range(1, len(actor_units)):
+            if i != len(actor_units) - 1:
+                actor_layers.append(layer_init(torch.nn.Linear(actor_units[i-1], actor_units[i]), ortho_init=ortho_init))
+                actor_layers.append(act_fun)
+            else:
+                actor_layers.append(layer_init(torch.nn.Linear(actor_units[i-1], actor_units[i]), std=0.01, ortho_init=ortho_init))
+        self.actor = torch.nn.Sequential(*actor_layers)
+        
         self.avg_pg_loss = MeanMetric(**torchmetrics_kwargs)
         self.avg_value_loss = MeanMetric(**torchmetrics_kwargs)
         self.avg_ent_loss = MeanMetric(**torchmetrics_kwargs)
@@ -159,6 +170,10 @@ class PPOLightningAgent(pl.LightningModule):
 
         # Policy loss
         advantages = batch["advantages"]
+
+        # with open("advantages.txt", "a") as f:
+        #     f.write(str(advantages))
+
         if self.normalize_advantages:
             advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
 
@@ -183,7 +198,7 @@ class PPOLightningAgent(pl.LightningModule):
         self.avg_ent_loss(ent_loss)
 
         # Overall loss
-        return pg_loss + ent_loss + v_loss
+        return pg_loss, ent_loss, v_loss
 
     def on_train_epoch_end(self, global_step: int) -> None:
         # Log metrics and reset their internal state
@@ -211,6 +226,7 @@ def policy_loss(advantages: torch.Tensor, ratio: torch.Tensor, clip_coef: float)
     pg_loss1 = -advantages * ratio
     pg_loss2 = -advantages * torch.clamp(ratio, 1 - clip_coef, 1 + clip_coef)
     return torch.max(pg_loss1, pg_loss2).mean()
+    # return torch.clamp(torch.max(pg_loss1, pg_loss2).mean(), 1, 1 + clip_coef)
 
 
 def value_loss(
@@ -222,11 +238,9 @@ def value_loss(
     vf_coef: float,
 ) -> Tensor:
     new_values = new_values.view(-1)
-    if not clip_vloss:
-        values_pred = new_values
-    else:
-        values_pred = old_values + torch.clamp(new_values - old_values, -clip_coef, clip_coef)
+    values_pred = old_values + torch.clamp(new_values - old_values, -clip_coef, clip_coef)
     return vf_coef * F.mse_loss(values_pred, returns)
+    # return vf_coef * torch.clamp(F.mse_loss(values_pred, returns), -1, 1)
 
 
 def entropy_loss(entropy: Tensor, ent_coef: float) -> Tensor:

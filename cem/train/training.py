@@ -9,6 +9,7 @@ import torch
 
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger
 from scipy.special import expit
 from sklearn.metrics import accuracy_score
@@ -54,10 +55,11 @@ def train_model(
     single_frequency_epochs=0,
     gradient_clip_val=0,
     old_results=None,
-    enable_checkpointing=False,
     accelerator="auto",
     devices="auto",
-    enable_progress_bar=False
+    enable_progress_bar=False,
+    continue_training=False,
+    enable_checkpointing=False
 ):
     if config['architecture'] in [
         "SequentialConceptBottleneckModel",
@@ -81,7 +83,6 @@ def train_model(
             save_model=save_model,
             activation_freq=activation_freq,
             single_frequency_epochs=single_frequency_epochs,
-            enable_checkpointing=enable_checkpointing,
             independent=("Independent" in config['architecture']),
         )
     if seed is not None:
@@ -135,9 +136,7 @@ def train_model(
                 strict=False,
             )
 
-    if (project_name) and result_dir and (
-        not os.path.exists(os.path.join(result_dir, f'{full_run_name}.pt'))
-    ):
+    if (project_name) and result_dir:
         # Lazy import to avoid importing unless necessary
         import wandb
         with wandb.init(
@@ -149,6 +148,10 @@ def train_model(
             model_saved_path = os.path.join(
                 result_dir,
                 f'{full_run_name}.pt'
+            )
+            model_saved_path_top_k = os.path.join(
+                result_dir,
+                f'{full_run_name}.ckpt'
             )
             trainer = pl.Trainer(
                 accelerator=accelerator,
@@ -163,8 +166,8 @@ def train_model(
                         verbose=config.get("verbose", False),
                         mode=config["early_stopping_mode"],
                     ),
-                ],
-                enable_checkpointing=enable_checkpointing,
+                ] + ([ModelCheckpoint(dirpath = result_dir, filename=f'{full_run_name}', monitor = config["early_stopping_monitor"], save_last = False, save_top_k = 1, mode = "min", every_n_epochs = config.get("check_val_every_n_epoch", 1))] if config.get("enable_checkpointing", False) else []),
+                enable_checkpointing=config.get("enable_checkpointing", False),
                 gradient_clip_val=gradient_clip_val,
                 strategy= "ddp" if torch.cuda.is_available() and torch.cuda.device_count() > 1 else "auto",
 #                 track_grad_norm=2,
@@ -176,11 +179,11 @@ def train_model(
                             name=full_run_name,
                             project=project_name,
                             save_dir=os.path.join(result_dir, "logs"),
-                        ) if rerun or (not os.path.exists(model_saved_path))
+                        ) if rerun or (not os.path.exists(model_saved_path)) or continue_training
                         else False
                     )
                 ),
-                enable_progress_bar = enable_progress_bar
+                enable_progress_bar = enable_progress_bar,
             )
             trainer_copy = pl.Trainer(
                 accelerator=accelerator,
@@ -195,8 +198,8 @@ def train_model(
                         verbose=config.get("verbose", False),
                         mode=config["early_stopping_mode"],
                     ),
-                ],
-                enable_checkpointing=enable_checkpointing,
+                ] + ([ModelCheckpoint(dirpath = result_dir, filename=f'{full_run_name}', monitor = config["early_stopping_monitor"], save_last = False, save_top_k = 1, mode = "min", every_n_epochs = config.get("check_val_every_n_epoch", 1))] if config.get("enable_checkpointing", False) else []),
+                enable_checkpointing=config.get("enable_checkpointing", False),
                 gradient_clip_val=gradient_clip_val,
 #                 track_grad_norm=2,
                 # Only use the wandb logger when it is a fresh run
@@ -207,11 +210,11 @@ def train_model(
                             name=full_run_name,
                             project=project_name,
                             save_dir=os.path.join(result_dir, "logs"),
-                        ) if rerun or (not os.path.exists(model_saved_path))
+                        ) if rerun or (not os.path.exists(model_saved_path)) or continue_training
                         else False
                     )
                 ),
-                enable_progress_bar = enable_progress_bar
+                enable_progress_bar = enable_progress_bar,
             )
             if activation_freq:
                 fit_trainer = utils.ActivationMonitorWrapper(
@@ -245,10 +248,23 @@ def train_model(
             else:
                 fit_trainer = trainer
                 fit_trainer_copy = trainer_copy
-            if (not rerun) and os.path.exists(model_saved_path):
+            if ((not rerun) and (os.path.exists(model_saved_path) or (os.path.exists(model_saved_path_top_k) and enable_checkpointing))):
                 # Then we simply load the model and proceed
                 print("\tFound cached model... loading it")
-                model.load_state_dict(torch.load(model_saved_path))
+                
+                if os.path.exists(model_saved_path_top_k) and enable_checkpointing:
+                    logging.debug(
+                        f"Loading trained model from {model_saved_path_top_k}"
+                    )
+                    model.load_state_dict(torch.load(model_saved_path_top_k)["state_dict"])
+                elif os.path.exists(model_saved_path):
+                    logging.debug(
+                        f"Loading trained model from {model_saved_path}"
+                    )
+                    model.load_state_dict(torch.load(model_saved_path))
+                logging.debug(
+                    f"Loaded model"
+                )
                 if os.path.exists(
                     model_saved_path.replace(".pt", "_training_times.npy")
                 ):
@@ -257,29 +273,36 @@ def train_model(
                     )
                 else:
                     training_time, num_epochs = 0, 0
-            else:
+            if continue_training or (rerun or not os.path.exists(model_saved_path)):
+                if (continue_training and os.path.exists(model_saved_path)) and not rerun:
+                    logging.debug(
+                        f"Continue training model"
+                    )
                 # Else it is time to train it
                 start_time = time.time()
                 if isinstance(model, AFAModel) and model.train_separately:
                     logging.debug(
                         f"Training CBM and RL agent separately"
                     )
-                    model.train_rl = False
-                    intervention_weight = model.cbm.intervention_weight
-                    intervention_task_loss_weight = model.cbm.intervention_task_loss_weight 
-                    model.cbm.intervention_weight = 0
-                    model.cbm.intervention_task_loss_weight = 0
-                    fit_trainer.fit(model, train_dl, val_dl)
-                    logging.debug(
-                        f"Starting training RL Agent"
-                    )
-                    model.train_rl = True
-                    model.cbm.intervention_weight = intervention_weight
-                    model.cbm.intervention_task_loss_weight = intervention_task_loss_weight
-                    model.cbm.freeze()
-                    fit_trainer_copy.fit(model, train_dl, val_dl)
+                    if model.train_cbm:
+                        model.train_rl = False
+                        cbm_model = model.cbm
+                        fit_trainer.fit(cbm_model, train_dl, val_dl)
+                        model.cbm = cbm_model
+                    if model.train_rl:
+                        logging.debug( 
+                            f"Starting training RLAgent"
+                        )
+                        model.train_rl = True
+                        model.cbm.task_loss_weight = 0
+                        model.cbm.concept_loss_weight = 0
+                        model.cbm.freeze()
+                        fit_trainer_copy.fit(model, train_dl, val_dl)
                 else:
-                    fit_trainer.fit(model, train_dl, val_dl)
+                    if (continue_training and enable_checkpointing and os.path.exists(model_saved_path_top_k)):
+                        fit_trainer.fit(model, train_dl, val_dl, ckpt_path = model_saved_path_top_k)
+                    else:
+                        fit_trainer.fit(model, train_dl, val_dl)
                 num_epochs = fit_trainer.current_epoch
                 training_time = time.time() - start_time
                 config_copy = copy.deepcopy(config)
@@ -307,6 +330,9 @@ def train_model(
             if val_dl is not None:
                 model.freeze()
                 def _inner_call():
+                    logging.debug(
+                        "Getting validation results."
+                    )
                     [val_results] = trainer.test(model, val_dl)
                     output = [
                         val_results["test_c_accuracy"],
@@ -371,6 +397,9 @@ def train_model(
             if test_dl is not None:
                 model.freeze()
                 def _inner_call():
+                    logging.debug(
+                        "Getting test results without interventions"
+                    )
                     [test_results] = trainer.test(model, test_dl)
                     output = [
                         test_results["test_c_accuracy"],
@@ -445,7 +474,7 @@ def train_model(
                 verbose=config.get("verbose", False),
                 mode=config["early_stopping_mode"],
             ),
-        ]
+        ] + ([ModelCheckpoint(dirpath = result_dir, filename=f'{full_run_name}', monitor = config["early_stopping_monitor"], save_last = False, save_top_k = 1, mode = "min", every_n_epochs = config.get("check_val_every_n_epoch", 1))] if config.get("enable_checkpointing", False) else [])
 
         trainer = pl.Trainer(
             accelerator=accelerator,
@@ -455,7 +484,7 @@ def train_model(
             callbacks=callbacks,
             logger=logger or False,
             gradient_clip_val=gradient_clip_val,
-            enable_checkpointing=enable_checkpointing,
+            enable_checkpointing=config.get("enable_checkpointing", False),
         )
         trainer_copy = pl.Trainer(
             accelerator=accelerator,
@@ -465,7 +494,7 @@ def train_model(
             callbacks=callbacks,
             logger=logger or False,
             gradient_clip_val=gradient_clip_val,
-            enable_checkpointing=enable_checkpointing,
+            enable_checkpointing=config.get("enable_checkpointing", False),
         )
 
         if result_dir:
@@ -508,10 +537,26 @@ def train_model(
             result_dir or ".",
             f'{full_run_name}.pt'
         )
-        if (not rerun) and os.path.exists(model_saved_path):
+        model_saved_path_top_k = os.path.join(
+            result_dir or ".",
+            f'{full_run_name}.ckpt'
+        )
+        if ((not rerun) and (os.path.exists(model_saved_path) or (os.path.exists(model_saved_path_top_k) and enable_checkpointing))):
             # Then we simply load the model and proceed
             print("\tFound cached model... loading it")
-            model.load_state_dict(torch.load(model_saved_path))
+            if enable_checkpointing and os.path.exists(model_saved_path_top_k):
+                logging.debug(
+                    f"Loading trained model from {model_saved_path_top_k}"
+                )
+                model.load_state_dict(torch.load(model_saved_path_top_k)["state_dict"])
+            else:
+                logging.debug(
+                    f"Loading trained model from {model_saved_path}"
+                )
+                model.load_state_dict(torch.load(model_saved_path))
+            logging.debug(
+                f"Loaded model"
+            )
             if os.path.exists(
                 model_saved_path.replace(".pt", "_training_times.npy")
             ):
@@ -520,29 +565,36 @@ def train_model(
                 )
             else:
                 training_time, num_epochs = 0, 0
-        else:
+        if continue_training or (rerun or not os.path.exists(model_saved_path)):
+            if (continue_training and os.path.exists(model_saved_path)) and not rerun:
+                logging.debug(
+                    f"Continue training model"
+                )
             # Else it is time to train it
             start_time = time.time()
             if isinstance(model, AFAModel) and model.train_separately:
                 logging.debug(
                     f"Training CBM and RL agent separately"
                 )
-                model.train_rl = False
-                intervention_weight = model.cbm.intervention_weight
-                intervention_task_loss_weight = model.cbm.intervention_task_loss_weight 
-                model.cbm.intervention_weight = 0
-                model.cbm.intervention_task_loss_weight = 0
-                fit_trainer.fit(model, train_dl, val_dl)
-                logging.debug(
-                    f"Starting training RL Agent"
-                )
-                model.train_rl = True
-                model.cbm.intervention_weight = intervention_weight
-                model.cbm.intervention_task_loss_weight = intervention_task_loss_weight
-                model.cbm.freeze()
-                fit_trainer_copy.fit(model, train_dl, val_dl)
+                if model.train_cbm:
+                    model.train_rl = False
+                    cbm_model = model.cbm
+                    fit_trainer.fit(cbm_model, train_dl, val_dl)
+                    model.cbm = cbm_model
+                if model.train_rl:
+                    logging.debug(
+                        f"Starting training RL Agent"
+                    )
+                    model.train_rl = True
+                    model.cbm.task_loss_weight = 0
+                    model.cbm.concept_loss_weight = 0
+                    model.cbm.freeze()
+                    fit_trainer_copy.fit(model, train_dl, val_dl)
             else:
-                fit_trainer.fit(model, train_dl, val_dl)
+                if (continue_training and enable_checkpointing and os.path.exists(model_saved_path_top_k)):
+                    fit_trainer.fit(model, train_dl, val_dl, ckpt_path = model_saved_path_top_k)
+                else:
+                    fit_trainer.fit(model, train_dl, val_dl)
             training_time = time.time() - start_time
             num_epochs = fit_trainer.current_epoch
             if save_model and (result_dir is not None):
@@ -574,6 +626,9 @@ def train_model(
         if val_dl is not None:
             model.freeze()
             def _inner_call():
+                logging.debug(
+                    "Getting validation results."
+                )
                 [val_results] = trainer.test(model, val_dl)
                 output = [
                     val_results["test_c_accuracy"],
@@ -639,6 +694,9 @@ def train_model(
             model.freeze()
             def _inner_call():
                 try:
+                    logging.debug(
+                        "Getting test results without interventions."
+                    )
                     [test_results] = trainer.test(model, test_dl)
                 except:
                     import pdb
@@ -729,7 +787,6 @@ def train_independent_and_sequential_model(
     devices="auto",
     ind_old_results=None,
     seq_old_results=None,
-    enable_checkpointing=False,
 ):
     if seed is not None:
         seed_everything(seed)
@@ -1065,7 +1122,7 @@ def train_independent_and_sequential_model(
                 # We will distribute half epochs in one model and half on the
                 # other
                 max_epochs=config.get('c2y_max_epochs', 50),
-                enable_checkpointing=enable_checkpointing,
+                enable_checkpointing=config.get("enable_checkpointing", False),
                 check_val_every_n_epoch=config.get(
                     "check_val_every_n_epoch",
                     5,
@@ -1114,7 +1171,7 @@ def train_independent_and_sequential_model(
                 # We will distribute half epochs in one model and half on the
                 # other
                 max_epochs=config.get('c2y_max_epochs', 50),
-                enable_checkpointing=enable_checkpointing,
+                enable_checkpointing=config.get("enable_checkpointing", False),
                 check_val_every_n_epoch=config.get(
                     "check_val_every_n_epoch",
                     5,
@@ -1230,6 +1287,9 @@ def train_independent_and_sequential_model(
         )
 
         def _inner_call(trainer, model):
+            logging.debug(
+                "Getting test results without interventions."
+            )
             [test_results] = trainer.test(model, test_dl)
             output = [
                 test_results["test_c_accuracy"],
@@ -1342,6 +1402,7 @@ def train_ac_model(
     n_concepts,
     n_tasks,
     ac_model_config,
+    concept_map,
     train_dl,
     val_dl,
     test_dl,
@@ -1355,7 +1416,8 @@ def train_ac_model(
     logger=False,
     ac_old_results=None,
     save_model=True,
-    full_run_name = None
+    full_run_name = None,
+    save_path = None,
 ):  
     if seed is not None:
         seed_everything(seed)
@@ -1392,10 +1454,14 @@ def train_ac_model(
         )
     else:
         raise ValueError(f"AC {architecture} model current not supported.") 
-    save_path = result_dir + ("" if result_dir[-1] == "/" else "/")  + f"ac{architecture}_model_trial_{split}.pt"
-    if (project_name) and result_dir and (
-        (not os.path.exists(os.path.join(result_dir, f'{full_run_name}.pt'))) or rerun
-    ):
+    if save_path is None:
+        save_path = result_dir + ("" if result_dir[-1] == "/" else "/")  + f"ac{architecture}_model_trial_{split}.pt"
+    num_epochs = 0
+    training_time = 0
+    chpt_exists = (
+        os.path.exists(save_path)
+    )
+    if (project_name) and result_dir:
         # Lazy import to avoid importing unless necessary
         import wandb
         with wandb.init(
@@ -1416,12 +1482,12 @@ def train_ac_model(
                     project=project_name,
                     save_dir=os.path.join(result_dir, "logs"),
                 ) if project_name and (rerun or (not chpt_exists)) else False)),
-                enable_checkpointing=False,
+                enable_checkpointing=ac_model_config.get("enable_checkpointing", False),
                 callbacks=[
                     EarlyStopping(
                         monitor=ac_model_config.get("early_stopping_monitor", "val_loss"),
                         min_delta=ac_model_config.get("early_stopping_delta", 0.00),
-                        patience=ac_model_config.get('patience', 5),
+                        patience=ac_model_config.get('patience', 2),
                         verbose=ac_model_config.get("verbose", False),
                         mode=ac_model_config.get("early_stopping_mode", "min"),
                     ),
@@ -1429,24 +1495,20 @@ def train_ac_model(
             )
 
             if test_dl is not None:
-                test_dl = ac_transform_dataloader(test_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
-                ac_model.freeze()
-                [test_results] = trainer.test(ac_model, test_dl)
-                logging.debug(
-                    f"AC Model test results before training:\n"
-                )
-                for key, val in test_results.items():
-                    logging.debug(
-                        f"\t{key}: {val}"
-                    )
+                test_dl = ac_transform_dataloader(test_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True, concept_map = concept_map)
+            #     ac_model.freeze()
+            #     [test_results] = trainer.test(ac_model, test_dl)
+            #     logging.debug(
+            #         f"AC Model test results before training:\n"
+            #     )
+            #     for key, val in test_results.items():
+            #         logging.debug(
+            #             f"\t{key}: {val}"
+            #         )
             ac_model_config['save_path'] = save_path
 
-            chpt_exists = (
-                os.path.exists(save_path)
-            )
-
-            train_dl = ac_transform_dataloader(train_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
-            val_dl = ac_transform_dataloader(val_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True)
+            train_dl = ac_transform_dataloader(train_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True, concept_map = concept_map)
+            val_dl = ac_transform_dataloader(val_dl, n_tasks, batch_size = ac_model_config['batch_size'], use_concepts = True, concept_map = concept_map)
             
             sample = next(iter(train_dl.dataset))
             logging.debug(
@@ -1520,6 +1582,9 @@ def train_ac_model(
                 test_result_keys = ["test_concept_accuracy", "test_label_accuracy"] if isinstance(ac_model, ACEnergy) else ["test_accuracy", "test_nll"]
 
                 def _inner_call(trainer, model):
+                    logging.debug(
+                        "Getting test results without interventions."
+                    )
                     [test_results] = trainer.test(model, test_dl)
                     output = [test_results[key] for key in test_result_keys]
                     top_k_vals = []
@@ -1572,11 +1637,11 @@ def train_ac_model(
                 test_results = None
     else:
         print(
-            'Did not test AC Model after training for'
+            'Did not test AC Model after training for '
             f'{num_epochs} epochs in {training_time:.2f} seconds'
         )
         test_results = None
-    return ac_model, test_results, save_path
+    return ac_model, test_results
 
 
 def update_statistics(results, config, model, test_results, save_model=True):

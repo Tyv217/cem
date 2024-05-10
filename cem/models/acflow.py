@@ -98,17 +98,30 @@ class ACFlow(pl.LightningModule):
         return logpu, logpo, sam, cond_sam, pred_sam
 
     def compute_concept_probabilities(self, x, b, m, y):
-        logpu, logpo, sam, cond_sam, pred_sam = self(x, b, m, y)
+
+        logpu = self.flow_forward(x, b, m, None, task = "classify")
+        # log p(x_o | y)
+        logpo = self.flow_forward(x, b * (1-b), b, None, task = "classify")
+
+        new_m = torch.ones_like(m).to(m.device)
+        
+        sam = self.flow_forward(x, m, new_m, None, task = "sample")
+
+        # sample p(x_u | x_o, y)
+        cond_sam = self.flow_forward(x, m, new_m, y, forward = False)
+
         class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1]).to(logpu.device)
         loglikel = torch.logsumexp(logpu + logpo + class_weights, dim = 1) - torch.logsumexp(logpo + class_weights, dim = 1)
 
-        return loglikel, logpo, sam, pred_sam
+        return loglikel, logpo, sam, cond_sam
 
     def training_step(self, batch, batch_idx):
         
         x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
         
-        logpu, logpo, _, _, _ = self(x,b,m,y)
+        logpu = self.flow_forward(x, b, m, None, task = "classify")
+        # log p(x_o | y)
+        logpo = self.flow_forward(x, b * (1-b), b, None, task = "classify")
 
         logits = logpu + logpo
         xent = self.xent_loss(logits, y)
@@ -116,6 +129,7 @@ class ACFlow(pl.LightningModule):
         class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1]).to(logpu.device)
 
         loglikel = torch.logsumexp(logpu + logpo + class_weights, dim = 1) - torch.logsumexp(logpo + class_weights, dim = 1)
+        loglikel = torch.clamp(loglikel, max = 0)
         nll = torch.mean(-loglikel)
         
         loss = xent * self.lambda_xent + self.lambda_nll * nll
@@ -126,7 +140,7 @@ class ACFlow(pl.LightningModule):
         result = {"loss": loss.detach(), "accuracy": acc.detach(), "nll": nll.detach()}
 
         for name, val in result.items():
-            self.log(name, val, prog_bar=("accuracy" in name), sync_dist = True)
+            self.log(name, val, on_epoch = True, prog_bar=("accuracy" in name), sync_dist = True)
 
         return {"loss": loss, "accuracy": acc, "nll": nll}
 
@@ -134,7 +148,9 @@ class ACFlow(pl.LightningModule):
 
         x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
     
-        logpu, logpo, _, _, _ = self(x,b,m,y)
+        logpu = self.flow_forward(x, b, m, None, task = "classify")
+        # log p(x_o | y)
+        logpo = self.flow_forward(x, b * (1-b), b, None, task = "classify")
 
         logits = logpu + logpo
         xent = self.xent_loss(logits, y)
@@ -142,6 +158,7 @@ class ACFlow(pl.LightningModule):
         class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1]).to(logpu.device)
 
         loglikel = torch.logsumexp(logpu + logpo + class_weights, dim = 1) - torch.logsumexp(logpo + class_weights, dim = 1)
+        loglikel = torch.clamp(loglikel, max = 0)
         nll = torch.mean(-loglikel)
         
         loss = xent * self.lambda_xent + self.lambda_nll * nll
@@ -152,7 +169,7 @@ class ACFlow(pl.LightningModule):
         result = {"loss": loss.detach(), "accuracy": acc.detach(), "nll": nll.detach()}
 
         for name, val in result.items():
-            self.log("val_" +name, val, prog_bar=("accuracy" in name), sync_dist = True)
+            self.log("val_" +name, val, on_epoch = True, prog_bar=("accuracy" in name), sync_dist = True)
 
         return {"loss": loss, "accuracy": acc, "nll": nll}
 
@@ -190,7 +207,7 @@ class ACFlow(pl.LightningModule):
 
     def configure_optimizers(self):
         if self.optimizer_name.lower() == "adam":
-            optimizer = torch.optim.Adam(
+            optimizer = torch.optim.AdamW(
                 self.flow.parameters(),
                 lr=self.learning_rate,
                 weight_decay=self.weight_decay,
@@ -567,6 +584,36 @@ class TransLayer(BaseTransform):
             assert logdet.shape == ldet.shape
 
         return z, logdet
+
+import torch
+import time
+
+class TimeMeasure(torch.nn.Module):
+    def __init__(self, module):
+        super().__init__()
+        self.module = module
+        self.start_time = 0
+        self.duration = 0
+
+    def forward(self, *args, **kwargs):
+        self.start_time = time.time()
+        x = self.module(*args, **kwargs)
+        self.duration = time.time() - self.start_time
+        c = type(self.module)
+        logging.debug(
+            f"{c}: {self.duration}"
+        )
+        return x
+
+    def logp(self, *args, **kwargs):
+        self.start_time = time.time()
+        x = self.module.logp(*args, **kwargs)
+        self.duration = time.time() - self.start_time
+        c = type(self.module)
+        logging.debug(
+            f"{c}: {self.duration}"
+        )
+        return x
     
 class Transform(BaseTransform):
     def __init__(self, n_concepts, n_tasks, affine_hids, layer_cfg, linear_rank, linear_hids, transformations, float_type = "float64"):
@@ -615,7 +662,6 @@ class Transform(BaseTransform):
             return LULinear(self.n_concepts, self.n_tasks, self.linear_rank, self.linear_hids, self.float_type)
         elif name == "TL":
             return TransLayer(self.n_concepts, self.n_tasks, self.affine_hids, self.layer_cfg, self.linear_rank, self.linear_hids, self.float_type)
-            
 
 class AutoReg(Module):
     def __init__(self, n_concepts, n_tasks, prior_units, prior_layers, prior_hids, n_components, float_type):
@@ -625,6 +671,7 @@ class AutoReg(Module):
         self.prior_units = prior_units
         self.prior_layers = prior_layers
         self.prior_hids = prior_hids
+        self.prior_hid = prior_hids[0] * 4
         self.n_components = n_components
         self.rnn_cell = torch.nn.GRU(
             input_size = self.n_concepts * 3 + self.n_tasks + 1, 
@@ -639,7 +686,7 @@ class AutoReg(Module):
             rnn_out.append(torch.nn.Tanh())
         rnn_out.append(torch.nn.Linear(self.prior_hids[-1], self.n_components * 3))
         self.rnn_out = torch.nn.Sequential(*rnn_out)
-
+        # self.transformer = Transformer(n_concepts, n_tasks, prior_units, prior_layers, self.prior_hid)
         self.float_type = float_type
         
     def logp(self, z, c, b, m):
@@ -647,17 +694,21 @@ class AutoReg(Module):
         d = self.n_concepts
         state = torch.zeros(self.prior_layers, B, self.prior_units).to(c.device)
         z_t = -torch.ones((B,1), dtype = torch.float64 if self.float_type == "float64" else torch.float32).to(c.device)
-        p_list = []
+        h_list = []
         for t in range(d):
             inp = torch.cat([z_t, c, b, m], dim = 1)
             inp = inp.unsqueeze(1)
             h_t, state = self.rnn_cell(inp, state)
             h_t = torch.squeeze(h_t, 1)
             h_t = torch.cat([h_t, c, b, m], dim = 1)
-            p_t = self.rnn_out(h_t)
-            p_list.append(p_t)
+            
+            h_list.append(h_t)
             z_t = torch.unsqueeze(z[:,t], dim = 1)
-        params = torch.stack(p_list, dim = 1)
+
+        hs = torch.stack(h_list, dim = 1)
+        params = self.rnn_out(hs)
+        # params = torch.stack(p_list, dim = 1)
+
         log_like1_prev = mixture_likelihoods(params, z, self.n_components).to(c.device)
         query = m * (1 - b)
         mask, _ = torch.sort(query, dim = 1, descending = True, stable=True)
@@ -770,11 +821,12 @@ def mixture_mean_dim(params_dim, n_components, base_distribution='gaussian'):
     return torch.sum(weights * means, dim=1, keepdims=True)
 
 class ACTransformDataset(Dataset):
-    def __init__(self, dataset, n_tasks, use_concepts = False, train = True):
+    def __init__(self, dataset, n_tasks, use_concepts = False, train = True, concept_map = None):
         self.dataset = dataset
         self.n_tasks = n_tasks
         self.use_concepts = use_concepts
         self.train = train
+        self.concept_map = concept_map
 
     def _unpack_batch(self, batch):
         x = batch[0]
@@ -800,20 +852,38 @@ class ACTransformDataset(Dataset):
         x, y = self._unpack_batch(batch)
         d = x.shape[-1]
         b = np.zeros([d], dtype=np.float32)
-        no = np.random.choice(d+1)
-        o = np.random.choice(d, [no], replace=False)
-        b[o] = 1.
-        if self.train:
-            m = b.copy()
-            w = list(np.where(b == 0)[0])
-            w.append(-1)
-            w = np.random.choice(w)
-            if w >= 0:
-                m[w] = 1.
+        if self.concept_map is None:
+            no = np.random.choice(d+1)
+            o = np.random.choice(d, [no], replace=False)
+            b[o] = 1.
+            if self.train:
+                m = b.copy()
+                w = list(np.where(b == 0)[0])
+                w.append(-1)
+                w = np.random.choice(w)
+                if w >= 0:
+                    m[w] = 1.
+            else:
+                m = np.ones([d], dtype=np.float32)
         else:
-            m = np.ones([d], dtype=np.float32)
+            d_map = len(self.concept_map)
+            no = np.random.choice(d_map+1)
+            o = np.random.choice(list(self.concept_map.keys()), no, replace=False)
+            concepts = [entry for key in o for entry in self.concept_map[key]]
+            b[concepts] = 1.
+            if self.train:
+                m = b.copy()
+                w = list(set(self.concept_map.keys()) - set(o))
+                w.append(np.nan)
+                w = np.random.choice(w)
+                if str(w) != "nan":
+                    m[self.concept_map[w]] = 1.
+            else:
+                m = np.ones([d], dtype=np.float32)
         b = torch.tensor(b)
         m = torch.tensor(m)
+        if isinstance(y, int) or isinstance(y, float):
+            y = torch.tensor(y)
         y = y.to(torch.int64)
         return {'x': x, 'b': b, 'm': m, 'y': y}
 
@@ -833,6 +903,8 @@ class ACTransformDataset(Dataset):
                 m[i][w] = 1.
         b = torch.tensor(b).to(x.device)
         m = torch.tensor(m).to(x.device)
+        if isinstance(y, int) or isinstance(y, float):
+            y = torch.tensor(y)
         y = y.to(torch.int64)
         return x, b, m, y
 
@@ -844,8 +916,8 @@ class ACTransformDataset(Dataset):
 
 
 # Helper class to apply transformations to a dataset
-def ac_transform_dataloader(dataloader, n_tasks, batch_size, use_concepts = False):
-    dataset = ACTransformDataset(dataloader.dataset, n_tasks, use_concepts = use_concepts)
+def ac_transform_dataloader(dataloader, n_tasks, batch_size, use_concepts = False, concept_map = None):
+    dataset = ACTransformDataset(dataloader.dataset, n_tasks, use_concepts = use_concepts, concept_map = concept_map)
     return torch.utils.data.DataLoader(dataset, batch_size = batch_size, shuffle = isinstance(dataloader.sampler, RandomSampler), num_workers = dataloader.num_workers)
 
 class ACInpaintTransformDataset(Dataset):
@@ -893,6 +965,8 @@ class ACInpaintTransformDataset(Dataset):
             m = np.ones([d], dtype=np.float32)
         b = torch.tensor(b)
         m = torch.tensor(m)
+        if isinstance(y, int) or isinstance(y, float):
+            y = torch.tensor(y)
         y = y.to(torch.int64)
         return {'x': x, 'b': b, 'm': m, 'y': y}
 

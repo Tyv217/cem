@@ -6,15 +6,17 @@ import torch
 import logging
 import time
 import gymnasium as gym
+import scipy
 
 from torchvision.models import resnet50
 from torchmetrics import Accuracy
+from gymnasium import spaces
 
 from cem.models.cbm import ConceptBottleneckModel, compute_accuracy
 from cem.models.cem import ConceptEmbeddingModel
 from cem.models.acflow import ACFlow, ACTransformDataset
 from cem.models.acenergy import ACEnergy
-from cem.models.afaenv import AFAEnv
+# from cem.models.afaenv import AFAEnv
 from cem.interventions.intervention_policy import InterventionPolicy
 from cem.models.rl import PPOLightningAgent
 import cem.train.utils as utils
@@ -515,6 +517,26 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
             )
         else:
             c_used = c
+
+        if self.cbm.include_task_trajectory_loss and (
+                self.cbm.task_loss_weight == 0
+            ):
+            # Then we initialize the intervention trajectory task loss to
+            # that of the unintervened model as this loss is not going to
+            # be taken into account if we don't do this
+            intervention_task_loss = first_task_discount * self.cbm.loss_task(
+                (
+                    y_logits if y_logits.shape[-1] > 1
+                    else y_logits.reshape(-1)
+                ),
+                y,
+            )
+            if self.cbm.average_trajectory:
+                intervention_task_loss = (
+                    intervention_task_loss / task_trajectory_weight
+                )
+        
+        
         if (
             train and
             (intervention_idxs is None)
@@ -2677,15 +2699,77 @@ class AFAModel(pl.LightningModule):
                 f"AC CBM loaded AC model checkpoint from {ac_model_config['save_path']}"
             )
         else:
-            checkpoint_location = "" if "save_path" not in ac_model_config.keys() else f"at {ac_model_config['save_path']} "
-            raise ValueError(f"AC{ac_model_config['architecture']} model checkpoint {checkpoint_location}incorrect / not found")
+            checkpoint_location = "" if "save_path" not in ac_model_config.keys() else f"at {ac_model_config['save_path']}"
+            message = f"AC{ac_model_config['architecture']} model checkpoint {checkpoint_location}incorrect / not found"
+            raise ValueError(message)
         self.ac_model.freeze()
         self.num_envs = config["afa_model_config"]["num_envs"]
         # self.env = gym.vector.make("cem/AFAEnv-v0", num_envs = self.num_envs, cbm = self.cbm, ac_model = self.ac_model, env_config = config)
         self.batch_size = config["batch_size"]
-        self.env = AFAEnv(cbm = self.cbm, ac_model = self.ac_model, env_config = config, batch_size = self.batch_size)
+        # self.env = AFAEnv(cbm = self.cbm, ac_model = self.ac_model, env_config = config, batch_size = self.batch_size)
+        
+        self.train_separately = config.get("train_separately", False)
+        self.train_cbm = config.get("train_cbm", True)
+        self.train_rl = config.get("train_rl", True)
+        self.env_budget = None
+        self.use_concept_groups = self.cbm.use_concept_groups
+        self.use_separate_optimizers = False
+        self.cbm.cbm_aneal_rate = config.get("cbm_aneal_rate", 1.)
+        self.cbm.cbm_current_aneal_rate = config.get("cbm_starting_aneal_rate", 1.)
+        
+        self.use_concept_groups = config["use_concept_groups"]
+        self.concept_group_map = config["concept_map"]
+        self.n_concept_groups = len(self.concept_group_map) if self.use_concept_groups else config["n_concepts"]
+        self.n_concepts = config["n_concepts"]
+        self.n_tasks = config["n_tasks"]
+        self.n_tasks = self.n_tasks if self.n_tasks > 1 else 2
+        self.emb_size = config["emb_size"]
+        self.num_rollouts = config.get("num_rollouts", 1)
+        self.afa_config = config["afa_model_config"]
+        self._budget = self.n_concept_groups
+        self.num_interventions = 0
+        self.softmax = torch.nn.Softmax(dim = -1)
+        self.entropy = scipy.stats.entropy
+        self.final_reward_ratio = config.get("final_reward_ratio", 10)
+        self.intermediate_reward_ratio = config.get("intermediate_reward_ratio", 1)
+        self.allow_no_action = config.get("allow_no_action", True)
+        self.mask_no_action = config.get("mask_no_action", False)
+        self.total_acquisition_cost = 0.01
+        self.xent_loss = torch.nn.CrossEntropyLoss()
+
+        self.observation_space_dict = {
+            "remaining_budget": spaces.Box(shape = [1], dtype = np.int32, low = 0, high = self.n_concept_groups),
+            "intervened_concepts_map": spaces.MultiBinary(self.n_concept_groups),
+            "intervened_concepts": spaces.MultiBinary(self.n_concepts),
+            "ac_model_output": spaces.Box(shape = [1], dtype = np.float32, low = -np.inf, high = np.inf),
+            "ac_model_info": spaces.Box(shape = [self.n_tasks + self.n_concepts * 4], dtype = np.float32, low = -np.inf, high = np.inf),
+            "cbm_bottleneck": spaces.Box(shape = [self.n_concepts * self.emb_size], dtype = np.float32, low = -np.inf, high = np.inf),
+            "cbm_pred_concepts": spaces.Box(shape = [self.n_concepts], dtype = np.float32, low = -np.inf, high = np.inf),
+            "cbm_pred_output": spaces.Box(shape = [self.n_tasks], dtype = np.float32, low = 0, high = 1),
+        }
+
+        total_shape = 0
+        for key, value in self.observation_space_dict.items():
+            shape = value.shape
+            if len(shape) > 1:
+                raise ValueError("Get shape unable to flatten 2d shape")
+            elif len(shape) == 0:
+                total_shape += 1
+            else:
+                total_shape += shape[0]
+        
+        self.observation_space = spaces.Box(shape = [self.batch_size * total_shape], dtype = np.float32, low = -np.inf, high = np.inf)
+        self.single_observation_space = spaces.Box(shape = [total_shape], dtype = np.float32, low = -np.inf, high = np.inf)
+
+        self.action_space = spaces.Box(shape = [self.batch_size], dtype = np.int32, low = 0, high = self.n_concept_groups + 1)
+        self.single_action_space_shape = self.n_concept_groups + (1 if self.allow_no_action else 0)
+
+        self.group_costs = np.array(([0] if self.allow_no_action else []) + [ self.total_acquisition_cost / self.n_concept_groups for _ in range(self.n_concept_groups)])
+
         self.agent = PPOLightningAgent(
-            self.env,
+            self.single_observation_space.shape,
+            self.single_action_space_shape,
+            lin_layers = afa_model_config.get("lin_layers", None),
             act_fun = afa_model_config["act_fun"],
             vf_coef = afa_model_config["vf_coef"],
             ent_coef = afa_model_config["ent_coef"],
@@ -2694,10 +2778,274 @@ class AFAModel(pl.LightningModule):
             ortho_init = afa_model_config["ortho_init"],
             normalize_advantages = afa_model_config["normalize_advantages"],
         ).to(self.device)
-        self.accuracy = Accuracy(task="multiclass", num_classes=self.cbm.n_tasks, top_k=1).to(self.device) if self.cbm.n_tasks > 1 else Accuracy(task = "binary").to(self.device)
-        self.budget = None
-        self.train_separately = False
-        self.use_concept_groups = self.cbm.use_concept_groups
+
+    def get_range(self, query):
+        start = 0
+        end = 0
+        for key, value in self.observation_space_dict.items():
+            shape = value.shape
+            if len(shape) > 1:
+                raise ValueError("Get shape unable to flatten 2d shape")
+            elif len(shape) == 0:
+                if key == query:
+                    return start, start + 1
+                start += 1
+            else:
+                if key == query:
+                    return start, start + shape[0]
+                start += shape[0]
+        
+        return None, None
+        
+
+    def _get_obs(self):
+        # return {
+        #     "budget": np.array([self._budget]),
+        #     "intervened_concepts_map": self._intervened_concepts_map,
+        #     "intervened_concepts": self._intervened_concepts,
+        #     "ac_model_output": self._ac_model_output,
+        #     "ac_model_info": self._ac_model_info,
+        #     "cbm_bottleneck": self._cbm_bottleneck,
+        #     "cbm_pred_concepts": self._cbm_pred_concepts,
+        #     "cbm_pred_output": self._cbm_pred_output,
+        # }
+        
+        arrs = [self._remaining_budget_arr, self._intervened_concepts_map, self._intervened_concepts, self._ac_model_output, self._ac_model_info, self._cbm_bottleneck, self._cbm_pred_concepts, self._cbm_pred_output,]
+        
+        self._observations = np.concatenate(arrs, axis = 1)
+
+        return self._observations
+
+    def _get_info(self):    
+        action_mask = 1 - self._intervened_concepts_map
+
+        if self.allow_no_action:
+            if self.mask_no_action:
+                action_mask = np.concatenate((np.ones((self._intervened_concepts_map.shape[0], 1)), action_mask), axis = 1)
+            else:
+                action_mask = np.concatenate((np.zeros((self._intervened_concepts_map.shape[0], 1)), action_mask), axis = 1)
+
+        return {
+            "action_mask": action_mask,
+        }
+
+
+    def reset(self, budget, train, c, y, c_sem, pos_embeddings, neg_embeddings):
+        
+        self._budget = budget
+
+        self._remaining_budget_arr = np.tile(np.array([self._budget], dtype = np.float32), (self.batch_size, 1))
+
+        self._train = train
+        
+        self._intervened_concepts_map = np.zeros((self.batch_size, self.n_concept_groups), dtype = np.float32)
+        self._intervened_concepts = np.zeros((self.batch_size, self.n_concepts), dtype = np.float32)
+        
+        prev_interventions = torch.tensor(self._intervened_concepts, device = self.cbm.device)
+        
+        # x, y, (c, competencies, _) = self.cbm._unpack_batch(self._cbm_data)
+        # x = x.to(self.cbm.device)
+        # y = y.to(self.cbm.device)
+        # c = c.to(self.cbm.device)
+        # competencies = competencies.to(self.cbm.device)
+        with torch.no_grad():
+            # outputs = self.cbm._forward(
+            #     x,
+            #     intervention_idxs=prev_interventions,
+            #     c=c,
+            #     y=y,
+            #     train=self._train,
+            #     competencies=competencies,
+            #     prev_interventions=None,
+            #     output_embeddings=True,
+            #     output_latent=True,
+            #     output_interventions=True,
+            # )
+            # c_sem, c_pred, y_logits = outputs[0], outputs[1], outputs[2]
+            # pos_embeddings = outputs[-2]
+            # neg_embeddings = outputs[-1]
+            prob = c_sem # [batch_size, n_concepts]
+            
+            embeddings = (
+                pos_embeddings.detach() * torch.unsqueeze(prob, dim=-1) + (
+                    neg_embeddings.detach() * (
+                        1 - torch.unsqueeze(prob, dim=-1)
+                    )
+                )
+            ).detach().view((-1, self.cbm.emb_size * self.cbm.n_concepts))
+            rollout_y_logits = self.cbm.c2y_model(embeddings)
+            embeddings = embeddings.cpu().numpy()
+            interventions = torch.zeros(self._intervened_concepts.shape).to(self.ac_model.device)
+
+            # ac_model_output, logpo, _, _ = self.ac_model.compute_concept_probabilities(
+            #             x = prob,
+            #             b = interventions,
+            #             m = interventions,
+            #             y = None
+            #         )
+
+            # prob = torch.exp(ac_model_output)
+
+            _, _, sam, pred_sam = self.ac_model.compute_concept_probabilities(
+                        x = prob,
+                        b = interventions,
+                        m = torch.ones_like(interventions).to(interventions.device),
+                        y = torch.argmax(rollout_y_logits, dim = -1)
+                    )
+            # print(logpo[0,:].shape)
+            ac_model_output = np.zeros((self.batch_size,), dtype = np.float32)
+            ac_model_output = np.expand_dims(ac_model_output, axis = 1)
+            logpo = np.zeros((self.batch_size,self.n_tasks), dtype = np.float32)
+            sam = sam.detach().cpu().numpy()
+            pred_sam = pred_sam.detach().cpu().numpy()
+            sam_mean = np.mean(sam, axis = 1)
+            sam_std = np.std(sam, axis = 1)
+            pred_sam_mean = np.mean(pred_sam, axis = 1)
+            pred_sam_std = np.std(pred_sam, axis = 1)
+            ac_model_info = np.concatenate((logpo, sam_mean, sam_std, pred_sam_mean, pred_sam_std), axis = -1)
+            
+        self._ac_model_output = ac_model_output
+        self._ac_model_info = ac_model_info
+        self._cbm_bottleneck = embeddings
+        self._cbm_pred_concepts = c_sem.detach().cpu().numpy()
+        if rollout_y_logits.shape[-1] == 1:
+            rollout_y_logits = torch.cat((rollout_y_logits, 1 - rollout_y_logits), dim = -1)
+        self._cbm_pred_output = rollout_y_logits.detach().cpu().numpy()
+
+        obs = self._get_obs()
+        info = self._get_info()
+
+        self.num_interventions = 0
+
+        return obs, info
+
+    def step(self, action, train, c, y, c_sem, pos_embeddings, neg_embeddings):
+
+        indices = np.column_stack((np.arange(len(self._intervened_concepts_map)), action))
+        if self.allow_no_action:
+            intervene_indices_mask = indices[:, 1] != 0
+            intervene_indices = indices[intervene_indices_mask]
+            intervene_indices[:,1] -= 1
+        else:
+            intervene_indices_mask = indices[:, 1]
+            intervene_indices = indices
+        self._remaining_budget_arr -= 1
+        already_intervened_indices = self._intervened_concepts_map[indices[:, 0], np.max(indices[:, 1] - 1, 0)] == 0
+        intervene_indices_mask = np.logical_and(intervene_indices_mask, already_intervened_indices)
+        
+        if not train:
+            assert not np.any(self._intervened_concepts_map[intervene_indices[:, 0], intervene_indices[:, 1]])
+
+        self._intervened_concepts_map[intervene_indices[:, 0], intervene_indices[:, 1]] = 1
+        
+        prev_interventions = torch.tensor(self._intervened_concepts, device = self.cbm.device)
+        for i in range(self._intervened_concepts.shape[0]): 
+            if self.allow_no_action:
+                if action[i] == 0:
+                    continue
+                concept_group = sorted(list(self.concept_group_map.keys()))[action[i] - 1]
+            else:
+                concept_group = sorted(list(self.concept_group_map.keys()))[action[i]]
+            for concept in self.concept_group_map[concept_group]:
+                self._intervened_concepts[i, concept] = 1
+
+        new_interventions_map = torch.tensor(self._intervened_concepts_map, device = self.cbm.device)
+        new_interventions = torch.tensor(self._intervened_concepts, device = self.cbm.device)
+        
+        # x, y, (c, competencies, _) = self.cbm._unpack_batch(self._cbm_data)
+        with torch.no_grad():
+            # outputs = self.cbm._forward(
+            #     x,
+            #     intervention_idxs=new_interventions,
+            #     c=c,
+            #     y=y,
+            #     train=self._train,
+            #     competencies=competencies,
+            #     prev_interventions=prev_interventions,
+            #     output_embeddings=True,
+            #     output_latent=True,
+            #     output_interventions=True,
+            # )
+            # c_sem, c_pred, y_logits = outputs[0], outputs[1], outputs[2]
+            # pos_embeddings = outputs[-2]
+            # neg_embeddings = outputs[-1]
+            
+            # self.pos_embeddings = pos_embeddings
+            # self.neg_embeddings = neg_embeddings
+            prob = new_interventions * c + (1 - new_interventions) * c_sem
+            # self.new_interventions = new_interventions
+            # self.prob = prob
+            # self.c = c
+            # self.c_sem = c_sem
+            
+            embeddings = (
+                pos_embeddings.detach() * torch.unsqueeze(prob, dim=-1) + (
+                    neg_embeddings.detach() * (
+                        1 - torch.unsqueeze(prob, dim=-1)
+                    )
+                )
+            ).detach().view((-1, self.cbm.emb_size * self.cbm.n_concepts))
+            rollout_y_logits = self.cbm.c2y_model(embeddings)
+            embeddings = embeddings.cpu().numpy()
+            # embeddings = np.zeros((self.batch_size, self.cbm.emb_size * self.cbm.n_concepts), dtype = np.float32)
+            # embeddings = torch.where(prev_interventions.clone().repeat(1, self.emb_size).bool(), 0, embeddings).cpu().numpy()
+            ac_model_output, logpo, sam, pred_sam = self.ac_model.compute_concept_probabilities(
+                        x = prob,
+                        b = new_interventions,
+                        m = torch.ones_like(new_interventions).to(new_interventions.device),
+                        y = torch.argmax(rollout_y_logits, dim = -1)
+                    )
+        
+            ac_model_output = torch.clamp(torch.exp(ac_model_output), max = 1).detach().cpu().numpy()
+            ac_model_output = np.where(intervene_indices_mask, ac_model_output, 0)
+
+            self.num_interventions += 1
+            terminated = self.num_interventions == self._budget
+            
+            if rollout_y_logits.shape[-1] == 1:
+                rollout_y_logits = torch.cat((rollout_y_logits, 1 - rollout_y_logits), dim = -1)
+            reward = self.calculate_reward(action, terminated, rollout_y_logits, y, ac_model_output)
+            
+            ac_model_output = ac_model_output
+            ac_model_output = np.expand_dims(ac_model_output, axis = 1)
+            logpo = logpo.detach().cpu().numpy()
+            sam = sam.detach().cpu().numpy()
+            pred_sam = pred_sam.detach().cpu().numpy()
+            sam_mean = np.mean(sam, axis = 1)
+            sam_std = np.std(sam, axis = 1)
+            pred_sam_mean = np.mean(pred_sam, axis = 1)
+            pred_sam_std = np.std(pred_sam, axis = 1)
+            ac_model_info = np.concatenate((logpo, sam_mean, sam_std, pred_sam_mean, pred_sam_std), axis = -1)
+            
+        self._ac_model_output = ac_model_output
+        self._ac_model_info = ac_model_info
+        self._cbm_bottleneck = embeddings
+        self._cbm_pred_concepts = c_sem.detach().cpu().numpy()
+        self._cbm_pred_output = rollout_y_logits.detach().cpu().numpy()
+
+        obs = self._get_obs()
+        info = self._get_info()
+
+        terminated = self.num_interventions == self._remaining_budget_arr
+        terminated = np.squeeze(terminated, axis = -1)
+
+        return obs, reward, terminated, False, info
+    
+    def calculate_reward(self, action, terminated, predictions, y, ac_model_output):
+        if self.allow_no_action:
+            costs = self.group_costs[action]
+        else:
+            costs = 0
+
+        if terminated:
+            one_hot = torch.nn.functional.one_hot(y.long(), num_classes = self.n_tasks if self.n_tasks > 1 else 2)
+            softmax = self.softmax(predictions)
+            loss = one_hot * softmax
+            loss = torch.sum(loss, dim = -1).detach().cpu().numpy()
+
+            return self.final_reward_ratio * loss - costs
+        else:
+            return self.intermediate_reward_ratio * ac_model_output - costs
 
     def is_model_frozen(self, model):
         # Iterate through all parameters in the model
@@ -2709,12 +3057,7 @@ class AFAModel(pl.LightningModule):
         return True
 
     def set_budget(self, budget):
-        self.budget = budget
-
-    def get_cbm(self):
-        self.cbm.env = self.env
-        self.cbm.agent = self.agent
-        return self.cbm
+        self.env_budget = budget
 
     def get_ith(self, data, i):
         if isinstance(data, list) or isinstance(data, tuple):
@@ -2742,11 +3085,9 @@ class AFAModel(pl.LightningModule):
             latent=latent,
         )
 
-    def _run_interventions(self, batch, c_sem, c_used, y, y_logits, competencies, pos_embeddings, neg_embeddings, budget, train):
-        if budget is None:
-            budget = np.random.randint(1, len(self.cbm.concept_map) + 1)
+    def _run_interventions(self, c_sem, c_used, c, y, y_logits, competencies, pos_embeddings, neg_embeddings, budget, train):
         if budget == 0:
-            return 0., 0., 0., 0., 0.
+            return 0., 0., 0., 0., 0., 0., 0.
             
         batch_size = c_sem.shape[0]
 
@@ -2757,19 +3098,14 @@ class AFAModel(pl.LightningModule):
 
         if batch_size != self.batch_size:
             self.batch_size = batch_size
-            self.env = AFAEnv(cbm = self.cbm, ac_model = self.ac_model, env_config = self.config, batch_size = self.batch_size)
+            # self.env = AFAEnv(cbm = self.cbm, ac_model = self.ac_model, env_config = self.config, batch_size = self.batch_size)
         
         intervention_loss = 0.0
+        pg_losses = 0.0
+        ent_losses = 0.0
+        v_losses = 0.0
         intervention_task_loss = 0.0
-        intervention_idxs = torch.zeros(c_used.shape).to(c_used.device)
         prev_num_of_interventions = 0
-        if self.cbm.use_concept_groups:
-            free_groups = torch.ones(
-                (c_used.shape[0], len(self.cbm.concept_map))
-            ).to(c_used.device)
-        else:
-            free_groups = torch.ones(c_used.shape).to(c_used.device)
-
         # Then time to perform a forced training time intervention
         # We will set some of the concepts as definitely intervened on
         if competencies is None:
@@ -2842,23 +3178,6 @@ class AFAModel(pl.LightningModule):
             first_task_discount = 1
 
         # trajectory_weight = 0
-        task_trajectory_weight = 1
-        # if self.cbm.average_trajectory:
-            # curr_discount = discount
-        curr_task_discount = task_discount
-        
-        for i in range(budget):
-            # trajectory_weight += discount
-            # discount *= self.cbm.intervention_discount
-
-            task_discount *= self.cbm.intervention_task_discount
-            if (
-                (not self.cbm.include_only_last_trajectory_loss) or
-                (i == budget - 1)
-            ):
-                task_trajectory_weight += task_discount
-        # discount = curr_discount
-        task_discount = curr_task_discount
         # else:
         #     trajectory_weight = 1
 
@@ -2880,25 +3199,9 @@ class AFAModel(pl.LightningModule):
         #     task_trajectory_weight = 1
         #     trajectory_weight = 1
 
-
-        if self.cbm.include_task_trajectory_loss and (
-            self.cbm.task_loss_weight == 0
-        ):
-            # Then we initialize the intervention trajectory task loss to
-            # that of the unintervened model as this loss is not going to
-            # be taken into account if we don't do this
-            intervention_task_loss = first_task_discount * self.cbm.loss_task(
-                (
-                    y_logits if y_logits.shape[-1] > 1
-                    else y_logits.reshape(-1)
-                ),
-                y,
-            )
-            if self.cbm.average_trajectory:
-                intervention_task_loss = (
-                    intervention_task_loss / task_trajectory_weight
-                )
         int_mask_accuracy = 0.0
+        accuracy = 0.0
+        auc = 0.0
         # if (not self.legacy_mode) and (
         #     (
         #         self.current_steps.detach().cpu().numpy()[0] <
@@ -2908,7 +3211,7 @@ class AFAModel(pl.LightningModule):
         #     current_horizon = 0
         if self.cbm.rollout_aneal_rate != 1:
             num_rollouts = int(round(
-                self.cbm.num_rollouts * (
+                self.num_rollouts * (
                     self.cbm.current_aneal_rate.detach().cpu().numpy()[0]
                 )
             ))
@@ -2916,25 +3219,66 @@ class AFAModel(pl.LightningModule):
             num_rollouts = self.cbm.num_rollouts
         if self.cbm.max_num_rollouts is not None:
             num_rollouts = min(num_rollouts, self.cbm.max_num_rollouts)
-        batch_size = intervention_idxs.shape[0]
+        batch_size = c_sem.shape[0]
 
-        obs = torch.zeros((batch_size * budget, ) + self.env.single_observation_space.shape).to(self.device)
-        actions = torch.zeros((batch_size * budget, )).to(self.device)
-        rewards = torch.zeros((batch_size * budget, )).to(self.device)
-        dones = torch.zeros((batch_size * budget, )).to(self.device)
-        logprobs = torch.zeros((batch_size * budget, )).to(self.device)
-        values = torch.zeros((batch_size * budget, )).to(self.device)
-        accuracies = [[] for _ in range(budget)]
-        aucies = [[] for _ in range(budget)]
+        if budget is not None:
+            num_rollouts = 1
 
         for _ in range(num_rollouts):
             # for i in range(batch_size):
-            options = {"budget": budget, "cbm_data": batch, "train": train}
-            next_obs, next_info = self.env.reset(seed=42, options = options)
+            task_trajectory_weight = 1
+            # if self.cbm.average_trajectory:
+                # curr_discount = discount
+            curr_task_discount = task_discount
+
+            if budget is None:
+                curr_budget = np.random.randint(1, len(self.cbm.concept_map))
+            else:
+                curr_budget = budget
+
+            for i in range(curr_budget):
+                # trajectory_weight += discount
+                # discount *= self.cbm.intervention_discount
+
+                task_discount *= self.cbm.intervention_task_discount
+                if (
+                    (not self.cbm.include_only_last_trajectory_loss) or
+                    (i == curr_budget - 1)
+                ):
+                    task_trajectory_weight += task_discount
+
+                
+            if self.cbm.include_task_trajectory_loss and (
+                self.cbm.task_loss_weight == 0
+            ):
+                # Then we initialize the intervention trajectory task loss to
+                # that of the unintervened model as this loss is not going to
+                # be taken into account if we don't do this
+                intervention_task_loss += first_task_discount * self.cbm.loss_task(
+                    (
+                        y_logits if y_logits.shape[-1] > 1
+                        else y_logits.reshape(-1)
+                    ),
+                    y,
+                )
+                if self.cbm.average_trajectory:
+                    intervention_task_loss += (
+                        intervention_task_loss / task_trajectory_weight
+                    )
+            # discount = curr_discount
+            task_discount = curr_task_discount
+            obs = torch.zeros((batch_size * curr_budget, ) + self.single_observation_space.shape).to(self.device)
+            actions = torch.zeros((batch_size * curr_budget, )).to(self.device)
+            rewards = torch.zeros((batch_size * curr_budget, )).to(self.device)
+            dones = torch.zeros((batch_size * curr_budget, )).to(self.device)
+            logprobs = torch.zeros((batch_size * curr_budget, )).to(self.device)
+            values = torch.zeros((batch_size * curr_budget, )).to(self.device)
+
+            next_obs, next_info = self.reset(curr_budget, train, c, y, c_sem, pos_embeddings, neg_embeddings)
             next_obs = torch.tensor(next_obs, device = self.agent.device)            
             next_done = torch.zeros(1)
 
-            for step in range(budget):
+            for step in range(curr_budget):
                 
                 key_start = batch_size * step
                 key_end = batch_size * (step + 1)
@@ -2945,30 +3289,24 @@ class AFAModel(pl.LightningModule):
                 with torch.no_grad():
                     action, logprob, _, value = self.agent.get_action_and_value(next_obs, info = next_info, train = train)
                     values[key_start:key_end] = value.flatten()
+
                 actions[key_start:key_end] = action
                 logprobs[key_start:key_end] = logprob
 
-                # Single environment p
-                next_obs, reward, done, truncated, next_info = self.env.step(action.cpu().numpy(), train_rl and step == budget - 1)
-
-                # Check whether the game has finished or not
+                next_obs, reward, done, truncated, next_info = self.step(action.cpu().numpy(), train, c, y, c_sem, pos_embeddings, neg_embeddings)
                 done = torch.logical_or(torch.tensor(done), torch.tensor(truncated))
                 
                 rewards[key_start:key_end] = torch.tensor(reward).view(-1).to(self.device)
                 next_obs, next_done = torch.tensor(next_obs).to(self.device), done.to(self.device)
                 task_discount *= self.cbm.intervention_task_discount
-                
-                emb_start, emb_end = self.env.get_range("cbm_bottleneck")
 
-                c_rollout_pred = next_obs[:,emb_start:emb_end]
+                c_rollout_pred = torch.tensor(self._cbm_bottleneck).to(c_sem.device)
 
-                c_rollout_pred = c_rollout_pred.view(
-                    (-1, self.cbm.emb_size * self.cbm.n_concepts)
-                )
                 rollout_y_logits = self.cbm.c2y_model(c_rollout_pred)
+                
                 if self.cbm.include_task_trajectory_loss and (
                     (not self.cbm.include_only_last_trajectory_loss) or
-                    (step == (budget - 1))
+                    (step == (curr_budget - 1))
                 ):
                     # Then we will also update the task loss with the loss
                     # of performing this intervention!
@@ -2989,22 +3327,38 @@ class AFAModel(pl.LightningModule):
                         intervention_task_loss += (
                             task_discount * rollout_y_loss
                         )
-                if self.cbm.n_tasks == 1 and len(rollout_y_logits.shape) > len(y.shape):
-                    rollout_y_logits = torch.squeeze(rollout_y_logits, dim = -1)
-                accuracies[step].append(self.accuracy(rollout_y_logits, y).detach().cpu())
-                (c_accuracy, c_auc, c_f1), (y_accuracy, y_auc, y_f1) = compute_accuracy(
-                    c_sem,
-                    y_logits,
-                    c_used,
-                    y,
-                )
-                aucies[step].append(y_auc)
 
+                    # outputs = self.cbm._forward(
+                    #     x,
+                    #     intervention_idxs=prev_interventions,
+                    #     c=c,
+                    #     y=y,
+                    #     train=self._train,
+                    #     competencies=competencies,
+                    #     prev_interventions=None,
+                    #     output_embeddings=True,
+                    #     output_latent=True,
+                    #     output_interventions=True,
+                    # )
+                    # c_sem, c_pred, y_logits = outputs[0], outputs[1], outputs[2]
+                if step == (curr_budget - 1):
+                    (c_accuracy, c_auc, c_f1), (y_accuracy, y_auc, y_f1) = compute_accuracy(
+                        c_sem,
+                        rollout_y_logits,
+                        c_used,
+                        y,
+                    )
+                    accuracy += y_accuracy
+                    auc += y_auc
+            
             returns, advantages = self.agent.estimate_returns_and_advantages(
-                rewards, values, dones, next_obs, next_done, budget, batch_size
+                rewards, values, dones, next_obs, next_done, curr_budget, batch_size
             )
+            # if torch.any(torch.abs(advantages) > 100):
+            #     import pdb
+            #     pdb.set_trace()
             local_data = {
-                "obs": obs.reshape((-1,) + self.env.single_observation_space.shape),
+                "obs": obs.reshape((-1,) + self.single_observation_space.shape),
                 "logprobs": logprobs.reshape(-1),
                 "actions": actions.reshape((-1,)),
                 "advantages": advantages.reshape(-1),
@@ -3012,9 +3366,10 @@ class AFAModel(pl.LightningModule):
                 "values": values.reshape(-1),
             }
 
-            agent_training_loss = self.agent.training_step(local_data)
-
-            intervention_loss += agent_training_loss
+            pg_loss, ent_loss, v_loss = self.agent.training_step(local_data)
+            pg_losses += pg_loss / curr_budget
+            ent_losses += ent_loss / curr_budget
+            v_losses += v_loss / curr_budget
             
         # for _ in range(num_rollouts):
         #     for i in range(budget):
@@ -3233,6 +3588,19 @@ class AFAModel(pl.LightningModule):
         #             int_basis_lim + 1
         #     ):
         #        self.horizon_limit *= self.horizon_rate
+        self.log("pg_loss", pg_losses.detach() if not isinstance(pg_losses, float) else pg_losses, prog_bar=False, sync_dist = True)
+        self.log("ent_loss", ent_losses.detach() if not isinstance(ent_losses, float) else ent_losses, prog_bar=False, sync_dist = True)
+        self.log("v_loss", v_losses.detach() if not isinstance(v_losses, float) else v_losses, prog_bar=False, sync_dist = True)
+
+        # with open("v_loss.txt", "a") as f:
+        #     msg = f"Budget: {budget}\n"
+        #     f.write(msg)
+        #     f.write(str(v_losses.detach() / budget if not isinstance(v_losses, float) else v_losses  / budget))
+        #     f.write("\n")
+
+        intervention_loss += pg_losses
+        intervention_loss += ent_losses
+        intervention_loss += v_losses
 
         intervention_loss_scalar = \
             self.cbm.intervention_weight * intervention_loss
@@ -3241,10 +3609,15 @@ class AFAModel(pl.LightningModule):
             self.cbm.intervention_task_loss_weight * intervention_task_loss
         intervention_task_loss = intervention_task_loss/num_rollouts
         int_mask_accuracy = int_mask_accuracy/num_rollouts
-        accuracy = np.mean(accuracies[-1]) if len(accuracies) > 0 else 0.
-        auc = np.mean(aucies[-1]) if len(aucies) > 0 else 0.
+        accuracy = accuracy / num_rollouts
+        auc = auc / num_rollouts
         return intervention_loss_scalar, intervention_loss, intervention_task_loss, intervention_task_loss_scalar, int_mask_accuracy, accuracy, auc
 
+    def on_train_batch_end(self, *args, **kwargs):
+        lr = self.trainer.optimizers[0].param_groups[0]['lr']
+        # Log learning rate
+        self.log('learning_rate', lr, on_step=False, on_epoch=True, prog_bar=True, logger=True)
+        self.log('cbm_current_aneal_rate', self.cbm.cbm_current_aneal_rate, on_step=False, on_epoch=True, prog_bar=True, logger=True)
 
     def _run_step(self,
         batch,
@@ -3319,20 +3692,30 @@ class AFAModel(pl.LightningModule):
         else:
             concept_loss = 0.0
             concept_loss_scalar = 0.0
+
+        (c_accuracy, c_auc, c_f1), (y_accuracy, y_auc, y_f1) = compute_accuracy(
+            c_sem,
+            y_logits,
+            c,
+            y,
+        )
         
         if self.cbm.intervention_weight != 0 or self.cbm.intervention_task_loss_weight != 0:
         
             intervention_loss_scalar, intervention_loss, intervention_task_loss, intervention_task_loss_scalar, int_mask_accuracy, intervention_accuracy, intervention_auc = \
-                self._run_interventions(batch, c_sem, c_used, y, y_logits, competencies, pos_embeddings, neg_embeddings, budget, train)
+                self._run_interventions(c_sem, c_used, c, y, y_logits, competencies, pos_embeddings, neg_embeddings, budget, train)
 
         else:
             intervention_loss_scalar, intervention_loss, intervention_task_loss, intervention_task_loss_scalar, int_mask_accuracy, intervention_accuracy, intervention_auc = \
                 0., 0., 0., 0., 0., 0., 0.
 
+        if self.cbm.cbm_aneal_rate != 1:
+            self.cbm.cbm_current_aneal_rate *= self.cbm.cbm_aneal_rate
+
         loss = (
-            self.cbm.concept_loss_weight * concept_loss +
+            self.cbm.cbm_current_aneal_rate * self.cbm.concept_loss_weight * concept_loss +
             self.cbm.intervention_weight * intervention_loss +
-            self.cbm.task_loss_weight * task_loss +
+            self.cbm.cbm_current_aneal_rate * self.cbm.task_loss_weight * task_loss +
             self.cbm.intervention_task_loss_weight * intervention_task_loss
         )
 
@@ -3346,12 +3729,6 @@ class AFAModel(pl.LightningModule):
             competencies=competencies,
         )
         # compute accuracy
-        (c_accuracy, c_auc, c_f1), (y_accuracy, y_auc, y_f1) = compute_accuracy(
-            c_sem,
-            y_logits,
-            c,
-            y,
-        )
         result = {
             "c_accuracy": c_accuracy,
             "c_auc": c_auc,
@@ -3364,6 +3741,8 @@ class AFAModel(pl.LightningModule):
             "task_loss": task_loss_scalar,
             "intervention_task_loss": intervention_task_loss_scalar,
             "intervention_loss": intervention_loss_scalar,
+            "cbm_loss": task_loss_scalar + concept_loss_scalar + intervention_task_loss_scalar,
+            "agent_loss": intervention_loss_scalar,
             "loss": loss.detach() if not isinstance(loss, float) else loss,
             "avg_c_y_acc": (c_accuracy + y_accuracy) / 2,
             "horizon_limit": self.cbm.horizon_limit.detach().cpu().numpy()[0],
@@ -3416,7 +3795,7 @@ class AFAModel(pl.LightningModule):
                     ("num_rollouts" in name)
 
                 )
-            self.log(name, val, prog_bar=prog_bar, sync_dist = True)
+            self.log(name, val, prog_bar=prog_bar, on_epoch = True, sync_dist = True)
         return {
             "loss": loss,
             "log": {
@@ -3430,6 +3809,10 @@ class AFAModel(pl.LightningModule):
                 "task_loss": result['task_loss'],
                 "loss": result['loss'],
                 "avg_c_y_acc": result['avg_c_y_acc'],
+                "intervention_task_loss": result["intervention_task_loss"],
+                "intervention_loss": result["intervention_loss"],
+                "cbm_loss": result["cbm_loss"],
+                "agent_loss": result["agent_loss"],
             },
         }
 
@@ -3447,42 +3830,103 @@ class AFAModel(pl.LightningModule):
         }
         return result
 
-    def test_step(self, batch, batch_idx):
+    def on_test_epoch_start(self):
         logging.debug(
-            f"Testing with budget {self.budget}"
+            f"Testing with budget {self.env_budget}"
         )
-        loss, result = self._run_step(batch, batch_idx, budget = self.budget, train=False)
+
+    def test_step(self, batch, batch_idx):
+        loss, result = self._run_step(batch, batch_idx, budget = self.env_budget, train=False)
         for name, val in result.items():
             self.log("test_" + name, val, prog_bar=True, sync_dist = True)
         return result
     
     def configure_optimizers(self):
-        if self.cbm.optimizer_name.lower() == "adam":
-            optimizer = torch.optim.Adam(
-                list(self.cbm.parameters())
-                + list(self.agent.parameters()),
-                lr=self.cbm.learning_rate,
-                weight_decay=self.cbm.weight_decay,
+        if self.use_separate_optimizers:
+            if self.cbm.optimizer_name.lower() == "adam":
+                optimizer1 = torch.optim.Adam(
+                    list(self.cbm.parameters()),
+                    lr=self.cbm.learning_rate,
+                    weight_decay=self.cbm.weight_decay,
+                )
+                optimizer2 = torch.optim.Adam(
+                    list(self.agent.parameters()),
+                    lr=self.cbm.learning_rate,
+                    weight_decay=self.cbm.weight_decay,
+                )
+            else:
+                optimizer1 = torch.optim.SGD(
+                    filter(lambda p: p.requires_grad, 
+                    list(self.cbm.parameters())),
+                    lr=self.cbm.learning_rate,
+                    momentum=self.cbm.momentum,
+                    weight_decay=self.cbm.weight_decay,
+                )
+                optimizer2 = torch.optim.SGD(
+                    filter(lambda p: p.requires_grad, 
+                    list(self.agent.parameters())),
+                    lr=self.cbm.learning_rate,
+                    momentum=self.cbm.momentum,
+                    weight_decay=self.cbm.weight_decay,
+                )
+            lr_scheduler1 = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                optimizer1,
+                verbose=True,
             )
+
+            scheduler1 = {
+                'scheduler': lr_scheduler1,
+                'monitor': 'cbm_loss',
+                'interval': 'epoch',
+                'frequency': 1,
+                'reduce_on_plateau': True
+            }
+
+            lr_scheduler2 = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                optimizer2,
+                verbose=True,
+            )
+
+            scheduler2 = {
+                'scheduler': lr_scheduler2,
+                'monitor': 'agent_loss',
+                'interval': 'epoch',
+                'frequency': 1,
+                'reduce_on_plateau': True
+            }
+            
+            return [optimizer1, optimizer2], [scheduler1, scheduler2]
         else:
-            optimizer = torch.optim.SGD(
-                filter(lambda p: p.requires_grad, 
-                list(self.cbm.parameters())
-                + list(self.agent.parameters())),
-                lr=self.cbm.learning_rate,
-                momentum=self.cbm.momentum,
-                weight_decay=self.cbm.weight_decay,
+            if self.cbm.optimizer_name.lower() == "adam":
+                optimizer1 = torch.optim.AdamW(
+                    list(self.cbm.parameters())
+                    + list(self.agent.parameters()),
+                    lr=self.cbm.learning_rate,
+                    weight_decay=self.cbm.weight_decay,
+                )
+            else:
+                optimizer1 = torch.optim.SGD(
+                    filter(lambda p: p.requires_grad, 
+                    list(self.cbm.parameters())
+                    + list(self.agent.parameters())),
+                    lr=self.cbm.learning_rate,
+                    momentum=self.cbm.momentum,
+                    weight_decay=self.cbm.weight_decay,
+                )
+            lr_scheduler1 = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                optimizer1,
+                verbose=True,
             )
-        lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer,
-            verbose=True,
-        )
-        
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": lr_scheduler,
-            "monitor": "loss",
-        }
+
+            scheduler1 = {
+                'scheduler': lr_scheduler1,
+                'monitor': 'loss',
+                'interval': 'epoch',
+                'frequency': 1,
+                'reduce_on_plateau': True
+            }
+            
+            return [optimizer1], [scheduler1]
 
     def predict_step(
         self,

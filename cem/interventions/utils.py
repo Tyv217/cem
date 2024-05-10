@@ -363,14 +363,11 @@ def intervene_in_cbm(
     if budget is None:
         budget = len(groups)
     acquisition_costs = 1
-    if isinstance(concept_selection_policy, AFACemInterventionPolicy):
-        logging.debug(
-            "Intervening using AFACem Policy"
-        )
-        logging.debug("Intervening in AFAModel")
+    logging.debug( 
+        f"Intervening in {type(model)} using {concept_selection_policy}"
+    )
+    if concept_selection_policy == AFACemInterventionPolicy:
         for j, num_groups_intervened in enumerate(groups):
-            if j < 2:
-                continue
             # if j == 1:
             #     import pdb
             #     pdb.set_trace()
@@ -426,22 +423,32 @@ def intervene_in_cbm(
                 )
             )
             total_times.append(time_diff)
-            if j == 0:
-                acc = test_batch_results['test_y_auc'] if n_tasks > 1 else test_batch_results["test_y_accuracy"]
+            if n_tasks > 1:
+                if j == 0:
+                    acc = test_batch_results["test_y_accuracy"]
+                else:
+                    acc = test_batch_results["test_intervention_accuracy"]
+                logging.debug(
+                    f"\tTest Accuracy when intervening with {num_groups_intervened} "
+                    f"concept groups is {acc * 100:.2f}."
+                )       
+                intervention_accs.append(acc)
             else:
-                acc = test_batch_results["test_intervention_auc"]
-            logging.debug(
-                f"\tTest AUC when intervening with {num_groups_intervened} "
-                f"concept groups is {acc * 100:.2f}% (accuracy "
-                f"is {acc * 100:.2f}%)."
-            )
-            intervention_accs.append(acc)
+                if j == 0:
+                    auc = test_batch_results['test_y_auc'] 
+                    acc = test_batch_results["test_y_accuracy"]
+                else:
+                    auc = test_batch_results["test_intervention_auc"] 
+                    acc = test_batch_results["test_intervention_accuracy"]
+                logging.debug(
+                    f"\tTest AUC when intervening with {num_groups_intervened} "
+                    f"concept groups is {auc * 100:.2f}% (accuracy "
+                    f"is {acc * 100:.2f}%)."
+                )
+                intervention_accs.append(auc)
+                
     else:
-        logging.debug(
-            "Intervening using AFACem Policy"
-        )
-        logging.debug("Intervening in AFAModel")
-        if isinstance(model, AFAModel):
+        if isinstance(model, AFAModel):   
             policy = model.intervention_policy
             model = model.cbm
             model.intervention_policy = policy
@@ -537,15 +544,17 @@ def intervene_in_cbm(
             # interventions on the same samples in the future to save time
             if model.intervention_policy.greedy:
                 prev_num_groups_intervened = num_groups_intervened
+                prev_interventions = torch.IntTensor(prev_interventions)
             else:
                 prev_num_groups_intervened = 0
+                prev_interventions = None
             test_dl = torch.utils.data.DataLoader(
                 dataset=torch.utils.data.TensorDataset(
                     x_test,
                     y_test,
                     c_test,
                     competencies_test,
-                    torch.IntTensor(prev_interventions),
+                    prev_interventions,
                 ),
                 batch_size=test_dl.batch_size,
                 num_workers=test_dl.num_workers,
@@ -1422,6 +1431,7 @@ def test_interventions(
                     split=split,
                     rerun=_rerun_policy(rerun, policy, config, split),
                     batch_size=intervention_batch_size,
+                    
                     key_name=key,
                     competence_generator=competence_generator,
                     x_test=x_test,

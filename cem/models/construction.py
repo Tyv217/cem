@@ -420,7 +420,7 @@ def construct_model(
         **extra_params,
     )
 
-    if config.get("afa_model_config", None) is not None:
+    if config.get("train_afa_model", False):
         config["afa_model_config"]["seed"] = seed
         model = AFAModel(model, config)
 
@@ -528,8 +528,8 @@ def load_trained_model(
     intervene=False,
     output_latent=False,
     output_interventions=False,
-    enable_checkpointing=False,
 ):
+    enable_checkpointing = config.get("enable_checkpointing", False)
     arch_name = config.get('c_extractor_arch', "")
     if not isinstance(arch_name, str):
         arch_name = "lambda"
@@ -555,6 +555,10 @@ def load_trained_model(
         result_dir or ".",
         f'{extra}{full_run_name}.pt'
     )
+    model_saved_path_top_k = os.path.join(
+        result_dir or ".",
+        f'{extra}{full_run_name}.ckpt'
+    )
 
     if (
         ((intervention_policy is not None) or intervene) and
@@ -573,16 +577,21 @@ def load_trained_model(
             output_latent=output_latent,
             output_interventions=output_interventions,
         )
-        model.load_state_dict(torch.load(model_saved_path))
-        
-        logging.debug(
-            f"Loading trained model from {model_saved_path}"
-        )
+        if enable_checkpointing and os.path.exists(model_saved_path_top_k):
+            model.load_state_dict(torch.load(model_saved_path_top_k)["state_dict"])
+            logging.debug(
+                f"Loading trained model from {model_saved_path_top_k} for distribution viewing"
+            )
+        else:
+            model.load_state_dict(torch.load(model_saved_path))
+            logging.debug(
+                f"Loading trained model from {model_saved_path} for distribution viewing"
+            )
         trainer = pl.Trainer(
             accelerator=accelerator,
             devices=devices,
             logger=logger,
-            enable_checkpointing=enable_checkpointing,
+            enable_checkpointing=config.get("enable_checkpointing", False),
         )
         batch_results = trainer.predict(model, train_dl)
         out_embs = np.concatenate(
@@ -667,8 +676,14 @@ def load_trained_model(
             seed=42 + split,
         )
 
-    model.load_state_dict(torch.load(model_saved_path))
-    logging.debug(
-        f"Loading trained model from {model_saved_path}"
-    )
+    if enable_checkpointing and os.path.exists(model_saved_path_top_k):
+        model.load_state_dict(torch.load(model_saved_path_top_k)["state_dict"])
+        logging.debug(
+            f"Loading trained model from {model_saved_path_top_k}"
+        )
+    else:
+        model.load_state_dict(torch.load(model_saved_path))
+        logging.debug(
+            f"Loading trained model from {model_saved_path}"
+        )
     return model

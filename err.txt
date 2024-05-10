@@ -1,0 +1,801 @@
+INFO:root:Results will be dumped in results/afa/mnist_afa
+DEBUG:root:And the dataset's root directory is /home/xty20/data
+[rank: 0] Global seed set to 42
+DEBUG:root:		Updated concept group map (with 8 groups):
+DEBUG:root:			0 -> [0, 1, 2]
+DEBUG:root:			1 -> [3, 4, 5]
+DEBUG:root:			2 -> [6, 7, 8]
+DEBUG:root:			5 -> [9, 10, 11, 12, 13]
+DEBUG:root:			8 -> [14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+DEBUG:root:			9 -> [24, 25, 26, 27, 28, 29, 30, 31, 32, 33]
+DEBUG:root:			10 -> [34, 35, 36, 37, 38, 39, 40, 41, 42, 43]
+DEBUG:root:			11 -> [44, 45, 46, 47, 48, 49, 50, 51, 52, 53]
+/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/utilities/seed.py:47: LightningDeprecationWarning: `pytorch_lightning.utilities.seed.seed_everything` has been deprecated in v1.8.0 and will be removed in v2.0.0. Please use `lightning_fabric.utilities.seed.seed_everything` instead.
+  rank_zero_deprecation(
+[rank: 0] Global seed set to 42
+{
+    "batch_size": 64,
+    "c2y_layers": [
+        128,
+        128
+    ],
+    "c_extractor_arch": "Function: c_extractor_arch",
+    "check_val_every_n_epoch": 1,
+    "dataset": "mnist_add",
+    "intervention_batch_size": 1024,
+    "intervention_freq": 1,
+    "intervention_policies": [
+        "afacem_policy",
+        "optimal_greedy_no_prior",
+        "group_random_no_prior"
+    ],
+    "max_epochs": 50,
+    "noise_level": 0.0,
+    "num_operands": 12,
+    "num_workers": 8,
+    "results_dir": "results/afa/mnist_afa",
+    "root_dir": "/home/xty20/data",
+    "runs": [
+        {
+            "architecture": "IntAwareConceptEmbeddingModel",
+            "average_trajectory": true,
+            "beta_a": 1,
+            "beta_b": 3,
+            "embedding_activation": "leakyrelu",
+            "extra_name": "Retry_concept_loss_weight_{concept_loss_weight}_intervention_weight_{intervention_weight}_horizon_rate_{horizon_rate}_intervention_discount_{intervention_discount}_task_discount_{intervention_task_discount}_aneal_rate_{cbm_aneal_rate}",
+            "horizon_binary_representation": true,
+            "horizon_rate": 1.005,
+            "horizon_uniform_distr": true,
+            "include_only_last_trajectory_loss": true,
+            "include_task_trajectory_loss": true,
+            "initial_horizon": 2,
+            "initialize_discount": false,
+            "int_model_layers": [
+                128,
+                128,
+                64,
+                64
+            ],
+            "int_model_use_bn": true,
+            "intcem_task_loss_weight": 0,
+            "intervention_discount": 1,
+            "intervention_task_discount": 1.1,
+            "intervention_task_loss_weight": 1,
+            "intervention_weight": 25,
+            "legacy_mode": false,
+            "max_horizon": 6,
+            "model_pretrain_path": null,
+            "propagate_target_gradients": false,
+            "task_loss_weight": 0,
+            "tau": 1,
+            "training_intervention_prob": 0.25,
+            "use_concept_groups": true,
+            "use_full_mask_distr": false,
+            "use_horizon": false
+        }
+    ],
+    "sampling_groups": true,
+    "sampling_percent": 0.625,
+    "selected_digits": [
+        [
+            0,
+            1,
+            2
+        ],
+        [
+            0,
+            1,
+            2
+        ],
+        [
+            0,
+            1,
+            2
+        ],
+        [
+            0,
+            1,
+            2
+        ],
+        [
+            0,
+            1,
+            2,
+            3,
+            4
+        ],
+        [
+            0,
+            1,
+            2,
+            3,
+            4
+        ],
+        [
+            0,
+            1,
+            2,
+            3,
+            4
+        ],
+        [
+            0,
+            1,
+            2,
+            3,
+            4
+        ],
+        [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+        ],
+        [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+        ],
+        [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+        ],
+        [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+        ]
+    ],
+    "shared_params": {
+        "ac_model_config": {
+            "affine_hids": [
+                256,
+                256
+            ],
+            "architecture": "flow",
+            "batch_size": 512,
+            "clip_gradient": 1,
+            "coupling_hids": [
+                256,
+                256
+            ],
+            "decay_rate": 0.5,
+            "decay_steps": 10000,
+            "layer_cfg": [
+                "LR",
+                "CP2"
+            ],
+            "learning_rate": 5e-05,
+            "linear_hids": [
+                256,
+                256
+            ],
+            "linear_rank": -1,
+            "max_epochs": 100,
+            "n_components": 40,
+            "num_samples": 10,
+            "optimizer": "adam",
+            "prior": "autoreg",
+            "prior_hids": [
+                256,
+                256
+            ],
+            "prior_layers": 2,
+            "prior_units": 256,
+            "rnncp_layers": 2,
+            "rnncp_units": 256,
+            "transformations": [
+                "AF",
+                "TL",
+                "TL",
+                "TL",
+                "TL",
+                "AF"
+            ]
+        },
+        "ac_model_nll_ratio": 0.5,
+        "ac_model_rollouts": 1,
+        "ac_model_weight": 2,
+        "afa_model_config": {
+            "act_fun": "relu",
+            "clip_coef": 0.2,
+            "clip_vloss": false,
+            "ent_coef": 0.0,
+            "normalize_advantages": false,
+            "num_envs": 1,
+            "ortho_init": false,
+            "vf_coef": 1.0
+        },
+        "bool": false,
+        "c_extractor_arch": "resnet18",
+        "cbm_aneal_rate": 1,
+        "cbm_starting_aneal_rate": 1,
+        "concept_loss_weight": 5,
+        "continue_training": "Truemni",
+        "early_stopping_delta": 0.0,
+        "early_stopping_mode": "min",
+        "early_stopping_monitor": "val_cbm_loss",
+        "emb_size": 16,
+        "extra_dims": 0,
+        "learning_rate": 0.001,
+        "momentum": 0.9,
+        "only_train_ac_model": false,
+        "optimizer": "sgd",
+        "patience": 3,
+        "save_model": true,
+        "sigmoidal_prob": false,
+        "top_k_accuracy": null,
+        "train_ac_model": true,
+        "train_afa_model": true,
+        "training_intervention_prob": 0.25,
+        "weight_decay": 4e-06
+    },
+    "skip_repr_evaluation": true,
+    "test_subsampling": 1,
+    "threshold_labels": 30,
+    "train_dataset_size": 10000,
+    "trials": 1,
+    "use_task_class_weights": true,
+    "weight_loss": true
+}
+INFO:root:Training sample shape is: torch.Size([64, 12, 28, 28]) with type torch.FloatTensor
+INFO:root:Training label shape is: torch.Size([64]) with type torch.FloatTensor
+INFO:root:	Number of output classes: 1
+INFO:root:Training concept shape is: torch.Size([64, 54]) with type torch.FloatTensor
+INFO:root:	Number of training concepts: 54
+INFO:root:Computing task class weights in the training dataset with size 157...
+INFO:root:Setting log level to: "DEBUG"
+DEBUG:root:Setting ac model save path to be results/afa/mnist_afa/acflow_model_trial_0.pt
+DEBUG:git.util:Failed checking if running in CYGWIN due to: FileNotFoundError(2, 'No such file or directory')
+DEBUG:git.cmd:Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/xty20/cem, stdin=None, shell=False, universal_newlines=False)
+DEBUG:git.cmd:Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/xty20/cem, stdin=None, shell=False, universal_newlines=False)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.wandb.ai:443
+DEBUG:urllib3.connectionpool:https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
+wandb: Currently logged in as: thomasyuan1 (thomasyuan). Use `wandb login --relogin` to force relogin
+DEBUG:git.cmd:Popen(['git', 'cat-file', '--batch-check'], cwd=/home/xty20/cem, stdin=<valid stream>, shell=False, universal_newlines=False)
+wandb: Tracking run with wandb version 0.16.6
+wandb: Run data is saved locally in /home/xty20/cem/wandb/run-20240502_205049-hnygm5l4
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run ac_flow_model_split_0
+wandb: ⭐️ View project at https://wandb.ai/thomasyuan/afa_test
+wandb: 🚀 View run at https://wandb.ai/thomasyuan/afa_test/runs/hnygm5l4
+DEBUG:root:AC Model input shape:	x:torch.Size([54])	b:torch.Size([54])	m:torch.Size([54])	y:torch.Size([])AC Data loader batch size: 512
+DEBUG:root:Found AC flow model saved in results/afa/mnist_afa/acflow_model_trial_0.pt
+DEBUG:root:<class 'cem.models.acflow.ACFlow'>
+False
+DEBUG:root:Restarting run because we could not find test_accuracy_ACFlowModel in old results.
+DEBUG:root:Getting test results without interventions.
+Class distribution is: [0.4847 0.5153]
+[TRIAL 1/1 BEGINS AT 02/05/2024 at 20:50:48
+Testing: 0it [00:00, ?it/s]Testing:   0%|          | 0/20 [00:00<?, ?it/s]Testing DataLoader 0:   0%|          | 0/20 [00:00<?, ?it/s]Testing DataLoader 0:   5%|▌         | 1/20 [00:00<00:11,  1.60it/s]Testing DataLoader 0:  10%|█         | 2/20 [00:00<00:07,  2.51it/s]Testing DataLoader 0:  15%|█▌        | 3/20 [00:00<00:05,  3.13it/s]Testing DataLoader 0:  20%|██        | 4/20 [00:01<00:04,  3.57it/s]Testing DataLoader 0:  25%|██▌       | 5/20 [00:01<00:03,  3.89it/s]Testing DataLoader 0:  30%|███       | 6/20 [00:01<00:03,  4.15it/s]Testing DataLoader 0:  35%|███▌      | 7/20 [00:01<00:02,  4.36it/s]Testing DataLoader 0:  40%|████      | 8/20 [00:01<00:02,  4.53it/s]Testing DataLoader 0:  45%|████▌     | 9/20 [00:01<00:02,  4.67it/s]Testing DataLoader 0:  50%|█████     | 10/20 [00:02<00:02,  4.79it/s]Testing DataLoader 0:  55%|█████▌    | 11/20 [00:02<00:01,  4.89it/s]Testing DataLoader 0:  60%|██████    | 12/20 [00:02<00:01,  4.98it/s]Testing DataLoader 0:  65%|██████▌   | 13/20 [00:02<00:01,  5.05it/s]Testing DataLoader 0:  70%|███████   | 14/20 [00:02<00:01,  5.12it/s]Testing DataLoader 0:  75%|███████▌  | 15/20 [00:02<00:00,  5.18it/s]Testing DataLoader 0:  80%|████████  | 16/20 [00:03<00:00,  5.24it/s]Testing DataLoader 0:  85%|████████▌ | 17/20 [00:03<00:00,  5.29it/s]Testing DataLoader 0:  90%|█████████ | 18/20 [00:03<00:00,  5.33it/s]Testing DataLoader 0:  95%|█████████▌| 19/20 [00:03<00:00,  5.37it/s]Testing DataLoader 0: 100%|██████████| 20/20 [00:03<00:00,  5.41it/s]Testing DataLoader 0: 100%|██████████| 20/20 [00:03<00:00,  5.41it/s]wandb: - 0.014 MB of 0.014 MB uploadedwandb: \ 0.014 MB of 0.014 MB uploadedwandb: | 0.014 MB of 0.014 MB uploadedwandb: / 0.024 MB of 0.024 MB uploadedwandb:                                                                                
+wandb: 🚀 View run ac_flow_model_split_0 at: https://wandb.ai/thomasyuan/afa_test/runs/hnygm5l4
+wandb: ⭐️ View project at: https://wandb.ai/thomasyuan/afa_test
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20240502_205049-hnygm5l4/logs
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): o151352.ingest.sentry.io:443
+DEBUG:urllib3.connectionpool:https://o151352.ingest.sentry.io:443 "POST /api/4504800232407040/envelope/ HTTP/1.1" 200 0
+[rank: 0] Global seed set to 42
+DEBUG:root:AC CBM loaded AC model checkpoint from results/afa/mnist_afa/acflow_model_trial_0.pt
+DEBUG:git.cmd:Popen(['git', 'cat-file', '--batch-check'], cwd=/home/xty20/cem, stdin=<valid stream>, shell=False, universal_newlines=False)
+wandb: - Waiting for wandb.init()...wandb: \ Waiting for wandb.init()...wandb: Tracking run with wandb version 0.16.6
+wandb: Run data is saved locally in /home/xty20/cem/wandb/run-20240502_205059-koot90gn
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_25_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_aneal_rate_1_afa_lambda_fold_1
+wandb: ⭐️ View project at https://wandb.ai/thomasyuan/afa_test
+wandb: 🚀 View run at https://wandb.ai/thomasyuan/afa_test/runs/koot90gn
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+       Test metric             DataLoader 0
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+      test_accuracy         0.7452999949455261
+        test_nll             1.315048098564148
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+AC Model test_accuracy: 74.53%, 
+AC Model test_nll: 131.50%, 
+AC Model training_time: 14460.09%, 
+AC Model num_epochs: 1900.00%, 
+with 19.0 epochs in 144.60 seconds
+[Training IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_25_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_aneal_rate_1_afa_lambda_fold_1]
+config:
+<built-in function localtime>
+	top_k_accuracy -> None
+	save_model -> True
+	patience -> 3
+	emb_size -> 16
+	extra_dims -> 0
+	concept_loss_weight -> 5
+	learning_rate -> 0.001
+	weight_decay -> 4e-06
+	c_extractor_arch -> <function get_mnist_extractor_arch.<locals>.c_extractor_arch at 0x7fb223ea1c10>
+	optimizer -> sgd
+	bool -> False
+	early_stopping_monitor -> val_cbm_loss
+	early_stopping_mode -> min
+	early_stopping_delta -> 0.0
+	momentum -> 0.9
+	sigmoidal_prob -> False
+	training_intervention_prob -> 0.25
+	train_ac_model -> True
+	only_train_ac_model -> False
+	train_afa_model -> True
+	continue_training -> Truemni
+	cbm_aneal_rate -> 1
+	cbm_starting_aneal_rate -> 1
+	ac_model_config -> {'architecture': 'flow', 'max_epochs': 100, 'batch_size': 512, 'transformations': ['AF', 'TL', 'TL', 'TL', 'TL', 'AF'], 'layer_cfg': ['LR', 'CP2'], 'rnncp_units': 256, 'rnncp_layers': 2, 'linear_hids': [256, 256], 'linear_rank': -1, 'affine_hids': [256, 256], 'coupling_hids': [256, 256], 'prior': 'autoreg', 'n_components': 40, 'prior_units': 256, 'prior_layers': 2, 'prior_hids': [256, 256], 'optimizer': 'adam', 'learning_rate': 5e-05, 'decay_steps': 10000, 'decay_rate': 0.5, 'clip_gradient': 1, 'num_samples': 10, 'save_path': 'results/afa/mnist_afa/acflow_model_trial_0.pt'}
+	ac_model_nll_ratio -> 0.5
+	ac_model_weight -> 2
+	ac_model_rollouts -> 1
+	afa_model_config -> {'act_fun': 'relu', 'ortho_init': False, 'vf_coef': 1.0, 'ent_coef': 0.0, 'clip_coef': 0.2, 'clip_vloss': False, 'normalize_advantages': False, 'num_envs': 1}
+	trials -> 1
+	results_dir -> results/afa/mnist_afa
+	dataset -> mnist_add
+	num_workers -> 8
+	batch_size -> 64
+	num_operands -> 12
+	selected_digits -> [[0, 1, 2], [0, 1, 2], [0, 1, 2], [0, 1, 2], [0, 1, 2, 3, 4], [0, 1, 2, 3, 4], [0, 1, 2, 3, 4], [0, 1, 2, 3, 4], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]]
+	threshold_labels -> 30
+	noise_level -> 0.0
+	max_epochs -> 50
+	train_dataset_size -> 10000
+	sampling_percent -> 0.625
+	sampling_groups -> True
+	c2y_layers -> [128, 128]
+	skip_repr_evaluation -> True
+	intervention_freq -> 1
+	intervention_batch_size -> 1024
+	intervention_policies -> ['afacem_policy', 'optimal_greedy_no_prior', 'group_random_no_prior']
+	root_dir -> /home/xty20/data
+	test_subsampling -> 1
+	weight_loss -> True
+	use_task_class_weights -> True
+	check_val_every_n_epoch -> 1
+	time_last_called -> 2024/05/02 at 20:50:28
+	n_concepts -> 54
+	n_tasks -> 1
+	concept_map -> {0: [0, 1, 2], 1: [3, 4, 5], 2: [6, 7, 8], 5: [9, 10, 11, 12, 13], 8: [14, 15, 16, 17, 18, 19, 20, 21, 22, 23], 9: [24, 25, 26, 27, 28, 29, 30, 31, 32, 33], 10: [34, 35, 36, 37, 38, 39, 40, 41, 42, 43], 11: [44, 45, 46, 47, 48, 49, 50, 51, 52, 53]}
+	architecture -> IntAwareConceptEmbeddingModel
+	extra_name -> Retry_concept_loss_weight_5_intervention_weight_25_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_aneal_rate_1_afa
+	horizon_binary_representation -> True
+	include_task_trajectory_loss -> True
+	include_only_last_trajectory_loss -> True
+	task_loss_weight -> 0
+	intervention_weight -> 25
+	intervention_task_loss_weight -> 1
+	initial_horizon -> 2
+	use_concept_groups -> True
+	use_full_mask_distr -> False
+	propagate_target_gradients -> False
+	int_model_use_bn -> True
+	int_model_layers -> [128, 128, 64, 64]
+	intcem_task_loss_weight -> 0
+	embedding_activation -> leakyrelu
+	tau -> 1
+	max_horizon -> 6
+	horizon_uniform_distr -> True
+	beta_a -> 1
+	beta_b -> 3
+	intervention_task_discount -> 1.1
+	average_trajectory -> True
+	use_horizon -> False
+	initialize_discount -> False
+	model_pretrain_path -> None
+	horizon_rate -> 1.005
+	intervention_discount -> 1
+	legacy_mode -> False
+[Number of parameters in model 2279285 ]
+[Number of non-trainable parameters in model 1738758 ]
+WARNING:root:next_obs: tensor([[4.0000e+00, 0.0000e+00, 0.0000e+00,  ..., 1.2708e-01, 3.1091e-03,
+         9.9689e-01],
+        [4.0000e+00, 0.0000e+00, 0.0000e+00,  ..., 1.2289e-01, 2.0607e-02,
+         9.7939e-01],
+        [4.0000e+00, 0.0000e+00, 0.0000e+00,  ..., 1.4718e-01, 2.8624e-02,
+         9.7138e-01],
+        ...,
+        [4.0000e+00, 0.0000e+00, 0.0000e+00,  ..., 1.1975e-01, 2.0939e-02,
+         9.7906e-01],
+        [4.0000e+00, 0.0000e+00, 0.0000e+00,  ..., 1.1761e-01, 2.1458e-02,
+         9.7854e-01],
+        [4.0000e+00, 0.0000e+00, 0.0000e+00,  ..., 1.5634e-01, 1.8870e-02,
+         9.8113e-01]], device='cuda:0')
+next_info: {'action_mask': array([[1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.],
+       [1., 1., 1., 1., 1., 1., 1., 1., 1.]])}
+
+Traceback (most recent call last):
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/models/afacbm.py", line 3263, in _run_interventions
+    action, logprob, _, value = self.agent.get_action_and_value(next_obs, info = next_info, train = train)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/models/rl.py", line 114, in get_action_and_value
+    action, log_prob, entropy = self.get_action(x, action, info, train)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/models/rl.py", line 100, in get_action
+    distribution = Categorical(logits=logits)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torch/distributions/categorical.py", line 70, in __init__
+    super().__init__(batch_shape, validate_args=validate_args)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torch/distributions/distribution.py", line 68, in __init__
+    raise ValueError(
+ValueError: Expected parameter logits (Tensor of shape (64, 9)) of distribution Categorical(logits: torch.Size([64, 9])) to satisfy the constraint IndependentConstraint(Real(), 1), but found invalid values:
+tensor([[nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan]], device='cuda:0')
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/train/training.py", line 285, in train_model
+    fit_trainer.fit(model, train_dl, val_dl)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 608, in fit
+    call._call_and_handle_interrupt(
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/call.py", line 38, in _call_and_handle_interrupt
+    return trainer_fn(*args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 650, in _fit_impl
+    self._run(model, ckpt_path=self.ckpt_path)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 1112, in _run
+    results = self._run_stage()
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 1191, in _run_stage
+    self._run_train()
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 1214, in _run_train
+    self.fit_loop.run()
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/loop.py", line 199, in run
+    self.advance(*args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/fit_loop.py", line 267, in advance
+    self._outputs = self.epoch_loop.run(self._data_fetcher)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/loop.py", line 199, in run
+    self.advance(*args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/epoch/training_epoch_loop.py", line 213, in advance
+    batch_output = self.batch_loop.run(kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/loop.py", line 199, in run
+    self.advance(*args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/batch/training_batch_loop.py", line 88, in advance
+    outputs = self.optimizer_loop.run(optimizers, kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/loop.py", line 199, in run
+    self.advance(*args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/optimization/optimizer_loop.py", line 202, in advance
+    result = self._run_optimization(kwargs, self._optimizers[self.optim_progress.optimizer_position])
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/optimization/optimizer_loop.py", line 249, in _run_optimization
+    self._optimizer_step(optimizer, opt_idx, kwargs.get("batch_idx", 0), closure)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/optimization/optimizer_loop.py", line 370, in _optimizer_step
+    self.trainer._call_lightning_module_hook(
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 1356, in _call_lightning_module_hook
+    output = fn(*args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/core/module.py", line 1754, in optimizer_step
+    optimizer.step(closure=optimizer_closure)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/core/optimizer.py", line 169, in step
+    step_output = self._strategy.optimizer_step(self._optimizer, self._optimizer_idx, closure, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/strategies/strategy.py", line 234, in optimizer_step
+    return self.precision_plugin.optimizer_step(
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/plugins/precision/precision_plugin.py", line 119, in optimizer_step
+    return optimizer.step(closure=closure, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torch/optim/optimizer.py", line 373, in wrapper
+    out = func(*args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torch/optim/optimizer.py", line 76, in _use_grad
+    ret = func(self, *args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torch/optim/sgd.py", line 66, in step
+    loss = closure()
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/plugins/precision/precision_plugin.py", line 105, in _wrap_closure
+    closure_result = closure()
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/optimization/optimizer_loop.py", line 149, in __call__
+    self._result = self.closure(*args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/optimization/optimizer_loop.py", line 135, in closure
+    step_output = self._step_fn()
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/optimization/optimizer_loop.py", line 419, in _training_step
+    training_step_output = self.trainer._call_strategy_hook("training_step", *kwargs.values())
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 1494, in _call_strategy_hook
+    output = fn(*args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/strategies/strategy.py", line 378, in training_step
+    return self.model.training_step(*args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/models/afacbm.py", line 3745, in training_step
+    loss, result = self._run_step(batch, batch_idx, budget = None, train=True)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/models/afacbm.py", line 3671, in _run_step
+    self._run_interventions(batch, c_sem, c_used, y, y_logits, competencies, pos_embeddings, neg_embeddings, budget, train)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/models/afacbm.py", line 3269, in _run_interventions
+    raise ValueError("action has nan")
+ValueError: action has nan
+wandb: - 0.014 MB of 0.014 MB uploadedwandb: \ 0.014 MB of 0.014 MB uploadedwandb: | 0.014 MB of 0.041 MB uploadedwandb: / 0.014 MB of 0.041 MB uploadedwandb: - 0.041 MB of 0.041 MB uploadedwandb:                                                                                
+wandb: 🚀 View run IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_25_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_aneal_rate_1_afa_lambda_fold_1 at: https://wandb.ai/thomasyuan/afa_test/runs/koot90gn
+wandb: ⭐️ View project at: https://wandb.ai/thomasyuan/afa_test
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20240502_205059-koot90gn/logs
+DEBUG:urllib3.connectionpool:https://o151352.ingest.sentry.io:443 "POST /api/4504800232407040/envelope/ HTTP/1.1" 200 0
+Traceback (most recent call last):
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/models/afacbm.py", line 3263, in _run_interventions
+    action, logprob, _, value = self.agent.get_action_and_value(next_obs, info = next_info, train = train)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/models/rl.py", line 114, in get_action_and_value
+    action, log_prob, entropy = self.get_action(x, action, info, train)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/models/rl.py", line 100, in get_action
+    distribution = Categorical(logits=logits)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torch/distributions/categorical.py", line 70, in __init__
+    super().__init__(batch_shape, validate_args=validate_args)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torch/distributions/distribution.py", line 68, in __init__
+    raise ValueError(
+ValueError: Expected parameter logits (Tensor of shape (64, 9)) of distribution Categorical(logits: torch.Size([64, 9])) to satisfy the constraint IndependentConstraint(Real(), 1), but found invalid values:
+tensor([[nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+        [nan, nan, nan, nan, nan, nan, nan, nan, nan]], device='cuda:0')
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "experiments/run_experiments_rl.py", line 904, in <module>
+    main(
+  File "experiments/run_experiments_rl.py", line 464, in main
+    training.train_model(
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/train/training.py", line 285, in train_model
+    fit_trainer.fit(model, train_dl, val_dl)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 608, in fit
+    call._call_and_handle_interrupt(
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/call.py", line 38, in _call_and_handle_interrupt
+    return trainer_fn(*args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 650, in _fit_impl
+    self._run(model, ckpt_path=self.ckpt_path)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 1112, in _run
+    results = self._run_stage()
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 1191, in _run_stage
+    self._run_train()
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 1214, in _run_train
+    self.fit_loop.run()
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/loop.py", line 199, in run
+    self.advance(*args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/fit_loop.py", line 267, in advance
+    self._outputs = self.epoch_loop.run(self._data_fetcher)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/loop.py", line 199, in run
+    self.advance(*args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/epoch/training_epoch_loop.py", line 213, in advance
+    batch_output = self.batch_loop.run(kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/loop.py", line 199, in run
+    self.advance(*args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/batch/training_batch_loop.py", line 88, in advance
+    outputs = self.optimizer_loop.run(optimizers, kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/loop.py", line 199, in run
+    self.advance(*args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/optimization/optimizer_loop.py", line 202, in advance
+    result = self._run_optimization(kwargs, self._optimizers[self.optim_progress.optimizer_position])
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/optimization/optimizer_loop.py", line 249, in _run_optimization
+    self._optimizer_step(optimizer, opt_idx, kwargs.get("batch_idx", 0), closure)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/optimization/optimizer_loop.py", line 370, in _optimizer_step
+    self.trainer._call_lightning_module_hook(
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 1356, in _call_lightning_module_hook
+    output = fn(*args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/core/module.py", line 1754, in optimizer_step
+    optimizer.step(closure=optimizer_closure)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/core/optimizer.py", line 169, in step
+    step_output = self._strategy.optimizer_step(self._optimizer, self._optimizer_idx, closure, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/strategies/strategy.py", line 234, in optimizer_step
+    return self.precision_plugin.optimizer_step(
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/plugins/precision/precision_plugin.py", line 119, in optimizer_step
+    return optimizer.step(closure=closure, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torch/optim/optimizer.py", line 373, in wrapper
+    out = func(*args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torch/optim/optimizer.py", line 76, in _use_grad
+    ret = func(self, *args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torch/optim/sgd.py", line 66, in step
+    loss = closure()
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/plugins/precision/precision_plugin.py", line 105, in _wrap_closure
+    closure_result = closure()
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/optimization/optimizer_loop.py", line 149, in __call__
+    self._result = self.closure(*args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/optimization/optimizer_loop.py", line 135, in closure
+    step_output = self._step_fn()
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/loops/optimization/optimizer_loop.py", line 419, in _training_step
+    training_step_output = self.trainer._call_strategy_hook("training_step", *kwargs.values())
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py", line 1494, in _call_strategy_hook
+    output = fn(*args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/pytorch_lightning/strategies/strategy.py", line 378, in training_step
+    return self.model.training_step(*args, **kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/models/afacbm.py", line 3745, in training_step
+    loss, result = self._run_step(batch, batch_idx, budget = None, train=True)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/models/afacbm.py", line 3671, in _run_step
+    self._run_interventions(batch, c_sem, c_used, y, y_logits, competencies, pos_embeddings, neg_embeddings, budget, train)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/models/afacbm.py", line 3269, in _run_interventions
+    raise ValueError("action has nan")
+ValueError: action has nan

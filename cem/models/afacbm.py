@@ -2729,6 +2729,7 @@ class AFAModel(pl.LightningModule):
         self._budget = self.n_concept_groups
         self.num_interventions = 0
         self.softmax = torch.nn.Softmax(dim = -1)
+        self.normalize_values = config.get("normalize_values", False)
         self.entropy = scipy.stats.entropy
         self.final_reward_ratio = config.get("final_reward_ratio", 10)
         self.intermediate_reward_ratio = config.get("intermediate_reward_ratio", 1)
@@ -2736,17 +2737,32 @@ class AFAModel(pl.LightningModule):
         self.mask_no_action = config.get("mask_no_action", False)
         self.total_acquisition_cost = 0.01
         self.xent_loss = torch.nn.CrossEntropyLoss()
+        self.model_classes = self.ac_model.model_classes
 
-        self.observation_space_dict = {
-            "remaining_budget": spaces.Box(shape = [1], dtype = np.int32, low = 0, high = self.n_concept_groups),
-            "intervened_concepts_map": spaces.MultiBinary(self.n_concept_groups),
-            "intervened_concepts": spaces.MultiBinary(self.n_concepts),
-            "ac_model_output": spaces.Box(shape = [1], dtype = np.float32, low = -np.inf, high = np.inf),
-            "ac_model_info": spaces.Box(shape = [self.n_tasks + self.n_concepts * 4], dtype = np.float32, low = -np.inf, high = np.inf),
-            "cbm_bottleneck": spaces.Box(shape = [self.n_concepts * self.emb_size], dtype = np.float32, low = -np.inf, high = np.inf),
-            "cbm_pred_concepts": spaces.Box(shape = [self.n_concepts], dtype = np.float32, low = -np.inf, high = np.inf),
-            "cbm_pred_output": spaces.Box(shape = [self.n_tasks], dtype = np.float32, low = 0, high = 1),
-        }
+        self.use_ac_model = config.get("use_ac_model", True)
+        if self.use_ac_model:
+            self.observation_space_dict = {
+                "remaining_budget": spaces.Box(shape = [1], dtype = np.int32, low = 0, high = self.n_concept_groups),
+                "intervened_concepts_map": spaces.MultiBinary(self.n_concept_groups),
+                "intervened_concepts": spaces.MultiBinary(self.n_concepts),
+                "ac_model_output": spaces.Box(shape = [1], dtype = np.float32, low = -np.inf, high = np.inf),
+                "ac_model_info": spaces.Box(shape = [
+                    # (self.n_tasks if self.model_classes else 1) + 
+                self.n_concepts * 4], dtype = np.float32, low = -np.inf, high = np.inf),
+                "cbm_bottleneck": spaces.Box(shape = [self.n_concepts * self.emb_size], dtype = np.float32, low = -np.inf, high = np.inf),
+                "cbm_pred_concepts": spaces.Box(shape = [self.n_concepts], dtype = np.float32, low = -np.inf, high = np.inf),
+                "cbm_pred_output": spaces.Box(shape = [self.n_tasks], dtype = np.float32, low = 0, high = 1),
+            }
+        else:
+            self.observation_space_dict = {
+                "remaining_budget": spaces.Box(shape = [1], dtype = np.int32, low = 0, high = self.n_concept_groups),
+                "intervened_concepts_map": spaces.MultiBinary(self.n_concept_groups),
+                "intervened_concepts": spaces.MultiBinary(self.n_concepts),
+                "cbm_bottleneck": spaces.Box(shape = [self.n_concepts * self.emb_size], dtype = np.float32, low = -np.inf, high = np.inf),
+                "cbm_pred_concepts": spaces.Box(shape = [self.n_concepts], dtype = np.float32, low = -np.inf, high = np.inf),
+                "cbm_pred_output": spaces.Box(shape = [self.n_tasks], dtype = np.float32, low = 0, high = 1),
+            }
+
 
         total_shape = 0
         for key, value in self.observation_space_dict.items():
@@ -2778,6 +2794,9 @@ class AFAModel(pl.LightningModule):
             ortho_init = afa_model_config["ortho_init"],
             normalize_advantages = afa_model_config["normalize_advantages"],
         ).to(self.device)
+        
+        self.max_nll = 100.
+        self.next_max_nll = 1.
 
     def get_range(self, query):
         start = 0
@@ -2809,8 +2828,11 @@ class AFAModel(pl.LightningModule):
         #     "cbm_pred_concepts": self._cbm_pred_concepts,
         #     "cbm_pred_output": self._cbm_pred_output,
         # }
-        
-        arrs = [self._remaining_budget_arr, self._intervened_concepts_map, self._intervened_concepts, self._ac_model_output, self._ac_model_info, self._cbm_bottleneck, self._cbm_pred_concepts, self._cbm_pred_output,]
+        if self.use_ac_model:
+            arrs = [self._remaining_budget_arr, self._intervened_concepts_map, self._intervened_concepts, self._ac_model_output, self._ac_model_info, self._cbm_bottleneck, self._cbm_pred_concepts, self._cbm_pred_output,]
+        else:
+            arrs = [self._remaining_budget_arr, self._intervened_concepts_map, self._intervened_concepts, self._cbm_bottleneck, self._cbm_pred_concepts, self._cbm_pred_output,]
+            
         
         self._observations = np.concatenate(arrs, axis = 1)
 
@@ -2893,19 +2915,23 @@ class AFAModel(pl.LightningModule):
                         y = torch.argmax(rollout_y_logits, dim = -1)
                     )
             # print(logpo[0,:].shape)
-            ac_model_output = np.zeros((self.batch_size,), dtype = np.float32)
-            ac_model_output = np.expand_dims(ac_model_output, axis = 1)
-            logpo = np.zeros((self.batch_size,self.n_tasks), dtype = np.float32)
-            sam = sam.detach().cpu().numpy()
-            pred_sam = pred_sam.detach().cpu().numpy()
-            sam_mean = np.mean(sam, axis = 1)
-            sam_std = np.std(sam, axis = 1)
-            pred_sam_mean = np.mean(pred_sam, axis = 1)
-            pred_sam_std = np.std(pred_sam, axis = 1)
-            ac_model_info = np.concatenate((logpo, sam_mean, sam_std, pred_sam_mean, pred_sam_std), axis = -1)
+            if self.use_ac_model:
+                ac_model_output = np.zeros((self.batch_size,), dtype = np.float32)
+                ac_model_output = np.expand_dims(ac_model_output, axis = 1)
+                # logpo = torch.zeros((self.batch_size,self.n_tasks), dtype = torch.float32)
+                sam = sam.detach().cpu().numpy()
+                pred_sam = pred_sam.detach().cpu().numpy()
+                sam_mean = np.mean(sam, axis = 1)
+                sam_std = np.std(sam, axis = 1)
+                pred_sam_mean = np.mean(pred_sam, axis = 1)
+                pred_sam_std = np.std(pred_sam, axis = 1)
+                ac_model_info = np.concatenate((
+                    # logpo, 
+                sam_mean, sam_std, pred_sam_mean, pred_sam_std), axis = -1)
             
-        self._ac_model_output = ac_model_output
-        self._ac_model_info = ac_model_info
+        if self.use_ac_model:
+            self._ac_model_output = ac_model_output
+            self._ac_model_info = ac_model_info
         self._cbm_bottleneck = embeddings
         self._cbm_pred_concepts = c_sem.detach().cpu().numpy()
         if rollout_y_logits.shape[-1] == 1:
@@ -2918,6 +2944,10 @@ class AFAModel(pl.LightningModule):
         self.num_interventions = 0
 
         return obs, info
+    
+    def on_train_epoch_end(self):
+        self.max_nll = self.next_max_nll
+        self.next_max_nll = 1.
 
     def step(self, action, train, c, y, c_sem, pos_embeddings, neg_embeddings):
 
@@ -2989,15 +3019,25 @@ class AFAModel(pl.LightningModule):
             embeddings = embeddings.cpu().numpy()
             # embeddings = np.zeros((self.batch_size, self.cbm.emb_size * self.cbm.n_concepts), dtype = np.float32)
             # embeddings = torch.where(prev_interventions.clone().repeat(1, self.emb_size).bool(), 0, embeddings).cpu().numpy()
-            ac_model_output, logpo, sam, pred_sam = self.ac_model.compute_concept_probabilities(
-                        x = prob,
-                        b = new_interventions,
-                        m = torch.ones_like(new_interventions).to(new_interventions.device),
-                        y = torch.argmax(rollout_y_logits, dim = -1)
-                    )
-        
-            ac_model_output = torch.clamp(torch.exp(ac_model_output), max = 1).detach().cpu().numpy()
-            ac_model_output = np.where(intervene_indices_mask, ac_model_output, 0)
+            if self.use_ac_model:
+                ac_model_output, logpo, sam, pred_sam = self.ac_model.compute_concept_probabilities(
+                            x = prob,
+                            b = new_interventions,
+                            m = torch.ones_like(new_interventions).to(new_interventions.device),
+                            y = torch.argmax(rollout_y_logits, dim = -1)
+                        )
+                ac_model_output = ac_model_output.detach().cpu().numpy()
+                self.next_max_nll = max(self.next_max_nll, np.max(np.abs(ac_model_output)))
+                max_nll = self.max_nll if self.max_nll > 1 else 100
+                ac_model_output = np.exp(ac_model_output / max_nll)
+                # ac_model_output = ac_model_output / np.max(ac_model_output)
+                with open("rewards.txt", "a") as f:
+                    f.write(str(ac_model_output))
+                    f.write("\n")
+                ac_model_output = np.where(intervene_indices_mask, ac_model_output, 0)
+                ac_model_output = np.expand_dims(ac_model_output, axis = 1)
+            else:
+                ac_model_output = None
 
             self.num_interventions += 1
             terminated = self.num_interventions == self._budget
@@ -3006,19 +3046,54 @@ class AFAModel(pl.LightningModule):
                 rollout_y_logits = torch.cat((rollout_y_logits, 1 - rollout_y_logits), dim = -1)
             reward = self.calculate_reward(action, terminated, rollout_y_logits, y, ac_model_output)
             
-            ac_model_output = ac_model_output
-            ac_model_output = np.expand_dims(ac_model_output, axis = 1)
-            logpo = logpo.detach().cpu().numpy()
-            sam = sam.detach().cpu().numpy()
-            pred_sam = pred_sam.detach().cpu().numpy()
-            sam_mean = np.mean(sam, axis = 1)
-            sam_std = np.std(sam, axis = 1)
-            pred_sam_mean = np.mean(pred_sam, axis = 1)
-            pred_sam_std = np.std(pred_sam, axis = 1)
-            ac_model_info = np.concatenate((logpo, sam_mean, sam_std, pred_sam_mean, pred_sam_std), axis = -1)
-            
-        self._ac_model_output = ac_model_output
-        self._ac_model_info = ac_model_info
+
+            # with open("ac_output.txt", "a") as f:
+            #     f.write(str(self._remaining_budget_arr[0]) + ", " + str(self._budget) + "\n")
+            #     f.write(str(ac_model_output))
+            #     f.write("\n")
+            if self.use_ac_model:
+                if self.normalize_values:
+                    # logpo = self.softmax(torch.exp(logpo))
+                    sam = self.softmax(sam)
+                    pred_sam = self.softmax(pred_sam)
+                # logpo = logpo.detach().cpu().numpy()
+                # with open("logpo.txt", "a") as f:
+                #     f.write(str(self._remaining_budget_arr[0]) + ", " + str(self._budget) + "\n")
+                #     f.write(str(logpo))
+                #     f.write("\n")
+                # sam = self.softmax(sam)
+                # logging.debug(
+                #     f"ac_model_ouptut.shape: {ac_model_output.shape}"
+                # )
+                # logging.debug(
+                #     f"logpo.shape: {logpo.shape}"
+                # )
+                # logging.debug(
+                #     f"sam.shape: {sam.shape}"
+                # )
+                sam = sam.detach().cpu().numpy()
+                # pred_sam = self.softmax(pred_sam)
+                # logging.debug(
+                #     f"pred_sam.shape: {sam.shape}"
+                # )
+                pred_sam = pred_sam.detach().cpu().numpy()
+                sam_mean = np.mean(sam, axis = 1)
+                # logging.debug(
+                #     f"sam_mean.shape: {sam_mean.shape}"
+                # )
+                sam_std = np.std(sam, axis = 1)
+                pred_sam_mean = np.mean(pred_sam, axis = 1)
+                pred_sam_std = np.std(pred_sam, axis = 1)
+                ac_model_info = np.concatenate((
+                    # logpo, 
+                    sam_mean, sam_std, pred_sam_mean, pred_sam_std), axis = -1)
+                # with open("ac_info.txt", "a") as f:
+                #     f.write(str(self._remaining_budget_arr[0]) + ", " + str(self._budget) + "\n")
+                #     f.write(str(ac_model_info))
+                #     f.write("\n")
+        if self.use_ac_model:    
+            self._ac_model_output = ac_model_output
+            self._ac_model_info = ac_model_info
         self._cbm_bottleneck = embeddings
         self._cbm_pred_concepts = c_sem.detach().cpu().numpy()
         self._cbm_pred_output = rollout_y_logits.detach().cpu().numpy()
@@ -3045,7 +3120,10 @@ class AFAModel(pl.LightningModule):
 
             return self.final_reward_ratio * loss - costs
         else:
-            return self.intermediate_reward_ratio * ac_model_output - costs
+            if ac_model_output is not None:
+                return self.intermediate_reward_ratio * ac_model_output - costs
+            else:
+                return np.zeros(y.shape)
 
     def is_model_frozen(self, model):
         # Iterate through all parameters in the model
@@ -3300,6 +3378,23 @@ class AFAModel(pl.LightningModule):
                 next_obs, next_done = torch.tensor(next_obs).to(self.device), done.to(self.device)
                 task_discount *= self.cbm.intervention_task_discount
 
+                # ints = torch.tensor(self._intervened_concepts).to(c_sem.device)
+                # probs_tmp = (
+                #     c_sem.detach() * (1 - ints) +
+                #     c_used * ints
+                # )
+                # c_rollout_pred_temp = (
+                #     (
+                #         pos_embeddings.detach() *
+                #         torch.unsqueeze(probs_tmp, dim=-1)
+                #     ) +
+                #     (
+                #         neg_embeddings.detach() *
+                #         (1 - torch.unsqueeze(probs_tmp, dim=-1))
+                #     )
+                # )
+
+                
                 c_rollout_pred = torch.tensor(self._cbm_bottleneck).to(c_sem.device)
 
                 rollout_y_logits = self.cbm.c2y_model(c_rollout_pred)
@@ -3345,7 +3440,7 @@ class AFAModel(pl.LightningModule):
                     (c_accuracy, c_auc, c_f1), (y_accuracy, y_auc, y_f1) = compute_accuracy(
                         c_sem,
                         rollout_y_logits,
-                        c_used,
+                        c,
                         y,
                     )
                     accuracy += y_accuracy
@@ -3367,6 +3462,11 @@ class AFAModel(pl.LightningModule):
             }
 
             pg_loss, ent_loss, v_loss = self.agent.training_step(local_data)
+
+            if self.normalize_values:
+                v_loss = torch.clamp(v_loss, -curr_budget, curr_budget)
+                pg_loss = torch.clamp(pg_loss, -curr_budget, curr_budget)
+
             pg_losses += pg_loss / curr_budget
             ent_losses += ent_loss / curr_budget
             v_losses += v_loss / curr_budget

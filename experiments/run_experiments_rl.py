@@ -210,6 +210,8 @@ def main(
                 run_config["extra_name"] = run_config.get("extra_name", "").format(
                     **run_config
                 )
+                if run_config.get("train_afa_model", False):
+                    run_config["extra_name"] += "_afa"
                 old_results = None
                 full_run_name = (
                     f"{run_config['architecture']}{run_config.get('extra_name', '')}"
@@ -233,13 +235,22 @@ def main(
                     with open(current_results_path, 'rb') as f:
                         old_results = joblib.load(f)
 
-                if experiment_config['shared_params'].get("separate_ac_model_training", False):    
-                    full_run_name = f"ac_{experiment_config['shared_params']['ac_model_config']['architecture']}_model_split_{split}"
+                if run_config.get('ac_model_config', None) is not None:
+                    architecture = run_config["ac_model_config"]["architecture"]
+                    sampling_percent = run_config.get("sampling_percent", 1)
+                    ac_save_path = result_dir + ("" if result_dir[-1] == "/" else "/") + f"ac{architecture}" + f"_sampling_{sampling_percent}" + f"_model_trial_{split}.pt"
+                    # ac_save_path = result_dir + ("" if result_dir[-1] == "/" else "/") + f"ac{architecture}" + f"_model_trial_{split}.pt"
+                    run_config['ac_model_config']['save_path'] = ac_save_path
+                    logging.debug(
+                        f"Setting ac model save path to be {ac_save_path}"
+                    )
+                if experiment_config['shared_params'].get("train_ac_model", False):    
+                    ac_full_run_name = f"ac_{experiment_config['shared_params']['ac_model_config']['architecture']}_model_split_{split}"
                     
                     ac_old_results = None
                     ac_current_results_path = os.path.join(
                         result_dir,
-                        f'{full_run_name}_results.joblib'
+                        f'{ac_full_run_name}_results.joblib'
                     )
                     if os.path.exists(ac_current_results_path):
                         with open(ac_current_results_path, 'rb') as f:
@@ -248,12 +259,13 @@ def main(
                         config=run_config,
                         rerun=rerun,
                         split=split,
-                        full_run_name=full_run_name,
+                        full_run_name=ac_full_run_name,
                     )
-                    _, _, ac_model_saved_path = training.train_ac_model(
+                    _, _ = training.train_ac_model(
                         n_concepts=n_concepts,
                         n_tasks=n_tasks,
                         ac_model_config = experiment_config['shared_params']['ac_model_config'],
+                        concept_map = run_config["concept_map"],
                         train_dl=train_dl,
                         val_dl=val_dl,
                         test_dl=test_dl,
@@ -261,19 +273,15 @@ def main(
                         result_dir=result_dir,
                         accelerator=accelerator,
                         devices=devices,
+                        project_name=project_name,
                         rerun=current_rerun,
                         ac_old_results=ac_old_results,
-                        full_run_name=full_run_name
+                        full_run_name=ac_full_run_name,
+                        save_path=ac_save_path
                     )
-
-                    run_config['ac_model_config']['save_path'] = ac_model_saved_path
-
                     if experiment_config['shared_params'].get("only_train_ac_model", False):
                         continue
 
-                    logging.debug(
-                            f"Setting ac model save path to be {ac_model_saved_path}"
-                        )
                 if run_config["architecture"] in [
                     "IndependentConceptBottleneckModel",
                     "SequentialConceptBottleneckModel",
@@ -478,6 +486,17 @@ def main(
                             ),
                             single_frequency_epochs=single_frequency_epochs,
                             activation_freq=activation_freq,
+                            continue_training=run_config.get(
+                                'continue_training',
+                                False,
+                            ) or split in run_config.get(
+                                'continue_training_splits',
+                                [],
+                            ),
+                            enable_checkpointing = run_config.get(
+                                'enable_checkpointing',
+                                False,
+                            )
                         )
                     training.update_statistics(
                         results[f'{split}'],
@@ -574,7 +593,7 @@ def main(
                             os.path.join(result_dir, f'results.joblib') +
                             " to disk"
                         )
-                    evaluate_representation_metric_time = datetime.now()
+                evaluate_representation_metric_time = datetime.now()
                 extr_name = run_config['c_extractor_arch']
                 if not isinstance(extr_name, str):
                     extr_name = "lambda"

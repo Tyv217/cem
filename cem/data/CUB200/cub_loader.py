@@ -1053,7 +1053,7 @@ def generate_data(
     sampling_percent = config.get("sampling_percent", 1)
     sampling_groups = config.get("sampling_groups", False)
 
-    concept_group_map = CONCEPT_GROUP_MAP_GENERAL.copy()
+    concept_group_map = CONCEPT_GROUP_MAP.copy()
     n_concepts = len(SELECTED_CONCEPTS)
     if sampling_percent != 1:
         # Do the subsampling

@@ -13,7 +13,7 @@ from torch.utils.data import Dataset, RandomSampler
 
 class ACFlow(pl.LightningModule):
 
-    def __init__(self, n_concepts, n_tasks, layer_cfg, affine_hids,  linear_rank, linear_hids, transformations, prior_units, prior_layers, prior_hids, n_components, class_weights = None, optimizer = None, learning_rate = None, weight_decay = None, momentum = None, lambda_xent = 1, lambda_nll = 1, float_type = "float32"):
+    def __init__(self, n_concepts, n_tasks, layer_cfg, affine_hids,  linear_rank, linear_hids, transformations, prior_units, prior_layers, prior_hids, n_components, model_classes = True, class_weights = None, optimizer = None, learning_rate = None, weight_decay = None, momentum = None, lambda_xent = 1, lambda_nll = 1, float_type = "float32"):
         super().__init__()
         self.n_concepts = n_concepts
         n_tasks = n_tasks if n_tasks > 1 else 2 
@@ -28,9 +28,13 @@ class ACFlow(pl.LightningModule):
         self.weight_decay = weight_decay
         self.momentum = momentum
         self.float_type = float_type
-        class_weights = torch.tensor(np.array(class_weights or [1. for _ in range(self.n_tasks)]).astype(self.float_type))
+        self.model_classes = True
+        if self.model_classes:
+            class_weights = torch.tensor(np.array(class_weights or [1. for _ in range(self.n_tasks)]).astype(self.float_type))
+            class_weights = torch.tensor(np.array([1.]).astype(self.float_type))
         class_weights /= torch.sum(class_weights)
         self.class_weights = torch.log(class_weights)
+        self.max_nll = 0
 
     def flow_forward(self, x, b, m, y = None, forward = True, task = "classify"):
         if(len(x.shape) == 1):
@@ -39,14 +43,14 @@ class ACFlow(pl.LightningModule):
             m = torch.unsqueeze(m, dim = 0)
         B = x.shape[0]
         d = self.n_concepts
-        N = self.n_tasks
+        N = self.n_tasks if self.model_classes else 1
         x = torch.tile(torch.unsqueeze(x, dim = 1), [1, N, 1])
         x = torch.reshape(x, [B * N, d])
         b = torch.tile(torch.unsqueeze(b, dim = 1), [1, N, 1])
         b = torch.reshape(b, [B * N, d])
         m = torch.tile(torch.unsqueeze(m, dim = 1), [1, N, 1])
         m = torch.reshape(m, [B * N, d])
-        
+    
         if(y is None):
             if(task == "classify"):
                 y = torch.tile(torch.unsqueeze(torch.arange(N), dim = 0), [B, 1])
@@ -66,7 +70,8 @@ class ACFlow(pl.LightningModule):
                 raise ValueError(f"y should have shape ({B}) or ({B},{N}). Instead y is of shape {y.shape}")
         # log p(x_u | x_o, y)
         if forward:
-            logp = self.flow.cond_forward(x, y, b, m)
+            if self.model_classes:
+                logp = self.flow.cond_forward(x, y, b, m)
             # logits
             logits = torch.reshape(logp, [B,N])
             return logits
@@ -87,8 +92,11 @@ class ACFlow(pl.LightningModule):
         sam = self.flow_forward(x, b, m, None, task = "sample")
 
         # sample p(x_u | x_o, y)
-        if y is not None:
-            cond_sam = self.flow_forward(x, b, m, y, forward = False)
+        if self.model_classes:
+            if y is not None:
+                cond_sam = self.flow_forward(x, b, m, y, forward = False)
+            else:
+                cond_sam = None
         else:
             cond_sam = None
         # sample p(x_u | x_o, y) based on predicted y
@@ -108,7 +116,10 @@ class ACFlow(pl.LightningModule):
         sam = self.flow_forward(x, m, new_m, None, task = "sample")
 
         # sample p(x_u | x_o, y)
-        cond_sam = self.flow_forward(x, m, new_m, y, forward = False)
+        if self.model_classes:
+            cond_sam = self.flow_forward(x, m, new_m, y, forward = False)
+        else:
+            cond_sam = sam
 
         class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1]).to(logpu.device)
         loglikel = torch.logsumexp(logpu + logpo + class_weights, dim = 1) - torch.logsumexp(logpo + class_weights, dim = 1)
@@ -123,21 +134,36 @@ class ACFlow(pl.LightningModule):
         # log p(x_o | y)
         logpo = self.flow_forward(x, b * (1-b), b, None, task = "classify")
 
+        # logpu = torch.log(torch.sigmoid(torch.exp(logpu)))
+        # logpo = torch.log(torch.sigmoid(torch.exp(logpo)))
+
         logits = logpu + logpo
-        xent = self.xent_loss(logits, y)
+
+        if self.model_classes:
+            xent = self.xent_loss(logits, y)
         
         class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1]).to(logpu.device)
-
+        
+        # logpu: log p(x_u | x_o, y)
+        # logpo: log p(x_o | y)
+        # class weights: log p(y)
+        # logpu + logpo + classweights: log p(x_u, x_o | y)
+        # logpo + classweights: log p(x_o | y)
+        # torch.logsumexp p(x_o)
         loglikel = torch.logsumexp(logpu + logpo + class_weights, dim = 1) - torch.logsumexp(logpo + class_weights, dim = 1)
-        loglikel = torch.clamp(loglikel, max = 0)
+        # loglikel = torch.clamp(loglikel, max = 0)
         nll = torch.mean(-loglikel)
         
-        loss = xent * self.lambda_xent + self.lambda_nll * nll
+        logging.debug(
+            f"{logits}"
+        )
+        loss = self.lambda_nll * nll + xent * self.lambda_xent + (0.001 * torch.mean(torch.square(logits)))
 
-        pred = torch.argmax(logits, dim=1)
-        acc = self.accuracy(pred, y)
+        if self.model_classes:
+            pred = torch.argmax(logits, dim=1)
+            acc = self.accuracy(pred, y)
 
-        result = {"loss": loss.detach(), "accuracy": acc.detach(), "nll": nll.detach()}
+        result = {"loss": loss.detach(), "nll": nll.detach()}
 
         for name, val in result.items():
             self.log(name, val, on_epoch = True, prog_bar=("accuracy" in name), sync_dist = True)
@@ -152,13 +178,17 @@ class ACFlow(pl.LightningModule):
         # log p(x_o | y)
         logpo = self.flow_forward(x, b * (1-b), b, None, task = "classify")
 
+        # logpu = torch.log(torch.sigmoid(torch.exp(logpu)))
+        # logpo = torch.log(torch.sigmoid(torch.exp(logpo)))
+
         logits = logpu + logpo
         xent = self.xent_loss(logits, y)
 
         class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1]).to(logpu.device)
 
         loglikel = torch.logsumexp(logpu + logpo + class_weights, dim = 1) - torch.logsumexp(logpo + class_weights, dim = 1)
-        loglikel = torch.clamp(loglikel, max = 0)
+        # loglikel = torch.clamp(loglikel, max = 0)
+        self.max_nll = max(self.max_nll, torch.max(loglikel).detach())
         nll = torch.mean(-loglikel)
         
         loss = xent * self.lambda_xent + self.lambda_nll * nll
@@ -173,11 +203,15 @@ class ACFlow(pl.LightningModule):
 
         return {"loss": loss, "accuracy": acc, "nll": nll}
 
+
     def test_step(self, batch, batch_idx):
         
         x, b, m, y = batch['x'], batch['b'], batch['m'], batch['y']
 
         logpu, logpo, _, _, _ = self(x,b,m,y)
+
+        # logpu = torch.log(torch.sigmoid(torch.exp(logpu)))
+        # logpo = torch.log(torch.sigmoid(torch.exp(logpo)))
 
         logits = logpu + logpo
 
@@ -227,7 +261,7 @@ class ACFlow(pl.LightningModule):
         return {
             "optimizer": optimizer,
             "lr_scheduler": lr_scheduler,
-            "monitor": "val_loss",
+            "monitor": "loss",
         }
 
 class Flow(Module):

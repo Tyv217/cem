@@ -1431,7 +1431,8 @@ def train_ac_model(
             affine_hids = ac_model_config['affine_hids'], 
             linear_rank = ac_model_config['linear_rank'],
             linear_hids = ac_model_config['linear_hids'], 
-            transformations = ac_model_config['transformations'], 
+            transformations = ac_model_config['transformations'],
+            model_classes = ac_model_config.get("model_classes", True),
             optimizer = ac_model_config['optimizer'], 
             learning_rate = ac_model_config['learning_rate'], 
             weight_decay = ac_model_config['decay_rate'], 
@@ -1440,8 +1441,8 @@ def train_ac_model(
             prior_layers = ac_model_config['prior_layers'], 
             prior_hids = ac_model_config['prior_hids'], 
             n_components = ac_model_config['n_components'], 
-            lambda_xent = 1, 
-            lambda_nll = 1
+            lambda_xent = ac_model_config.get('lambda_xent', 1),
+            lambda_nll = ac_model_config.get('lambda_nll', 1),
         )
     elif "energy" in architecture:
         ac_model = ACEnergy(
@@ -1485,13 +1486,14 @@ def train_ac_model(
                 enable_checkpointing=ac_model_config.get("enable_checkpointing", False),
                 callbacks=[
                     EarlyStopping(
-                        monitor=ac_model_config.get("early_stopping_monitor", "val_loss"),
+                        monitor=ac_model_config.get("early_stopping_monitor", "val_accuracy"),
                         min_delta=ac_model_config.get("early_stopping_delta", 0.00),
                         patience=ac_model_config.get('patience', 2),
                         verbose=ac_model_config.get("verbose", False),
-                        mode=ac_model_config.get("early_stopping_mode", "min"),
+                        mode=ac_model_config.get("early_stopping_mode", "max"),
                     ),
                 ],
+                gradient_clip_val = ac_model_config.get("gradient_clip_val", 1)
             )
 
             if test_dl is not None:

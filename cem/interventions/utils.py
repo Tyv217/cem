@@ -36,7 +36,7 @@ from cem.interventions.global_policies import (
 ################################################################################
 
 
-MAX_COMB_BOUND = 500000
+MAX_COMB_BOUND = 5000000
 POLICY_NAMES = [
     "intcem_policy",
     "afacem_policy",
@@ -46,6 +46,7 @@ POLICY_NAMES = [
     "behavioural_cloning_no_prior",
     "group_uncertainty_no_prior",
     "optimal_greedy_no_prior",
+    "optimal_global_no_prior",
     "global_val_error_no_prior",
     "global_val_improvement_no_prior",
 ]
@@ -547,7 +548,7 @@ def intervene_in_cbm(
                 prev_interventions = torch.IntTensor(prev_interventions)
             else:
                 prev_num_groups_intervened = 0
-                prev_interventions = None
+                prev_interventions = torch.zeros(prev_interventions.shape)
             test_dl = torch.utils.data.DataLoader(
                 dataset=torch.utils.data.TensorDataset(
                     x_test,
@@ -1351,7 +1352,7 @@ def test_interventions(
                 continue
             if "optimal_global" in policy:
                 eff_n_concepts = len(concept_map) if (
-                    "group" in policy or "optimal_global" == policy
+                    "group" in policy or "optimal_global" in policy
                 ) else n_concepts
                 used_intervened_groups = [
                     x if int(scipy.special.comb(eff_n_concepts, x)) <= MAX_COMB_BOUND else None

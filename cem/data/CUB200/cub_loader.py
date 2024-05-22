@@ -679,24 +679,40 @@ for i, concept_name in enumerate(list(
     group = concept_name[:concept_name.find("::")]
     CONCEPT_GROUP_MAP[group].append(i)
 
+has_head_colour = ['has_nape_color', 'has_crown_color', 'has_throat_color',
+                'has_eye_color']
 
-head_colors = ['has_nape_color', 'has_crown_color', 'has_throat_color', 'has_eye_color', 'has_forehead_color','has_bill_color']
-body_colors = ['has_wing_color',  'has_underparts_color', 'has_primary_color', 'has_back_color', 'has_leg_color']
-body_detail_colors = ['has_upper_tail_color', 'has_under_tail_color', 'has_belly_color', 'has_breast_color', 'has_upperparts_color']
-shapes = ['has_tail_shape', 'has_shape', 'has_wing_shape', 'has_bill_shape', 'has_size', 'has_bill_length']
-patterns = ['has_belly_pattern', 'has_back_pattern', 'has_head_pattern', 'has_breast_pattern', 'has_tail_pattern', 'has_wing_pattern']
+has_facial_features = ['has_forehead_color','has_bill_color', 'has_bill_shape', 'has_bill_length']
+
+has_upper_body_feature = ['has_wing_color', 'has_back_color', 'has_wing_shape','has_upperparts_color']
+
+has_lower_body_feature = ['has_underparts_color', 'has_belly_color', 'has_breast_color',  'has_leg_color']
+
+has_tail_features = ['has_tail_shape','has_tail_pattern', 'has_upper_tail_color', 'has_under_tail_color']
+
+has_general_pattern = ['has_belly_pattern', 'has_back_pattern', 'has_head_pattern', 'has_breast_pattern', 'has_wing_pattern']
+
+has_overall_feature = [ 'has_primary_color','has_shape','has_size']
 
 CONCEPT_SEMANTICS_MAP = {}
-for head_color in head_colors:
-    CONCEPT_SEMANTICS_MAP[head_color] = "has_head_color"
-for body_color in body_colors:
-    CONCEPT_SEMANTICS_MAP[body_color] = "has_body_color"
-for body_detail_color in body_detail_colors:
-    CONCEPT_SEMANTICS_MAP[body_detail_color] = "has_body_detail_color"
-for shape in shapes:
-    CONCEPT_SEMANTICS_MAP[shape] = "has_shape"
-for pattern in patterns:
-    CONCEPT_SEMANTICS_MAP[pattern] = "has_pattern"
+for x in has_head_colour:
+    CONCEPT_SEMANTICS_MAP[x] = "has_head_colour"
+for x in has_facial_features:
+    CONCEPT_SEMANTICS_MAP[x] = "has_facial_features"
+for x in has_upper_body_feature:
+    CONCEPT_SEMANTICS_MAP[x] = "has_upper_body_feature"
+for x in has_upper_body_feature:
+    CONCEPT_SEMANTICS_MAP[x] = "has_upper_body_feature"
+for x in has_lower_body_feature:
+    CONCEPT_SEMANTICS_MAP[x] = "has_lower_body_feature"
+for x in has_tail_features:
+    CONCEPT_SEMANTICS_MAP[x] = "has_tail_features"
+for x in has_general_pattern:
+    CONCEPT_SEMANTICS_MAP[x] = "has_general_pattern"
+for x in has_overall_feature:
+    CONCEPT_SEMANTICS_MAP[x] = "has_overall_feature"
+
+
 
 CONCEPT_GROUP_MAP_GENERAL = defaultdict(list)
 
@@ -705,6 +721,7 @@ for i, concept_name in enumerate(list(
 )):
     group = concept_name[:concept_name.find("::")]
     CONCEPT_GROUP_MAP_GENERAL[CONCEPT_SEMANTICS_MAP[group]].append(i)
+
 
 
 ##########################################################
@@ -1053,7 +1070,7 @@ def generate_data(
     sampling_percent = config.get("sampling_percent", 1)
     sampling_groups = config.get("sampling_groups", False)
 
-    concept_group_map = CONCEPT_GROUP_MAP.copy()
+    concept_group_map = CONCEPT_GROUP_MAP_GENERAL.copy()
     n_concepts = len(SELECTED_CONCEPTS)
     if sampling_percent != 1:
         # Do the subsampling

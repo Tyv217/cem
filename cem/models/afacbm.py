@@ -2721,6 +2721,10 @@ class AFAModel(pl.LightningModule):
         self.concept_group_map = config["concept_map"]
         self.n_concept_groups = len(self.concept_group_map) if self.use_concept_groups else config["n_concepts"]
         self.n_concepts = config["n_concepts"]
+        if self.concept_group_map is None:
+            self.concept_group_map = {}
+            for i in range(self.n_concepts):
+                self.concept_group_map[i] = [i]
         self.n_tasks = config["n_tasks"]
         self.n_tasks = self.n_tasks if self.n_tasks > 1 else 2
         self.emb_size = config["emb_size"]
@@ -2795,7 +2799,7 @@ class AFAModel(pl.LightningModule):
             normalize_advantages = afa_model_config["normalize_advantages"],
         ).to(self.device)
         
-        self.max_nll = 100.
+        self.max_nll = 1.
         self.next_max_nll = 1.
 
     def get_range(self, query):
@@ -2935,7 +2939,8 @@ class AFAModel(pl.LightningModule):
         self._cbm_bottleneck = embeddings
         self._cbm_pred_concepts = c_sem.detach().cpu().numpy()
         if rollout_y_logits.shape[-1] == 1:
-            rollout_y_logits = torch.cat((rollout_y_logits, 1 - rollout_y_logits), dim = -1)
+            rollout_y_logits = torch.sigmoid(rollout_y_logits)
+            rollout_y_logits = torch.cat((1 - rollout_y_logits, rollout_y_logits), dim = -1)
         self._cbm_pred_output = rollout_y_logits.detach().cpu().numpy()
 
         obs = self._get_obs()
@@ -2947,6 +2952,9 @@ class AFAModel(pl.LightningModule):
     
     def on_train_epoch_end(self):
         self.max_nll = self.next_max_nll
+        logging.debug(
+            f"max_nll: {self.max_nll}"
+        )
         self.next_max_nll = 1.
 
     def step(self, action, train, c, y, c_sem, pos_embeddings, neg_embeddings):
@@ -3027,13 +3035,11 @@ class AFAModel(pl.LightningModule):
                             y = torch.argmax(rollout_y_logits, dim = -1)
                         )
                 ac_model_output = ac_model_output.detach().cpu().numpy()
-                self.next_max_nll = max(self.next_max_nll, np.max(np.abs(ac_model_output)))
+                self.next_max_nll = max(self.next_max_nll, np.max(ac_model_output))
                 max_nll = self.max_nll if self.max_nll > 1 else 100
-                ac_model_output = np.exp(ac_model_output / max_nll)
-                # ac_model_output = ac_model_output / np.max(ac_model_output)
-                with open("rewards.txt", "a") as f:
-                    f.write(str(ac_model_output))
-                    f.write("\n")
+                # ac_model_output = np.exp(ac_model_output / max_nll)
+                ac_model_output = np.exp(np.clip(ac_model_output, None, 1))
+                # ac_model_output = ac_model_output / np.max(ac_model_output)d
                 ac_model_output = np.where(intervene_indices_mask, ac_model_output, 0)
                 ac_model_output = np.expand_dims(ac_model_output, axis = 1)
             else:
@@ -3042,11 +3048,12 @@ class AFAModel(pl.LightningModule):
             self.num_interventions += 1
             terminated = self.num_interventions == self._budget
             
+            reward = self.calculate_reward(action, terminated, rollout_y_logits, y, ac_model_output, c_sem, c)
             if rollout_y_logits.shape[-1] == 1:
-                rollout_y_logits = torch.cat((rollout_y_logits, 1 - rollout_y_logits), dim = -1)
-            reward = self.calculate_reward(action, terminated, rollout_y_logits, y, ac_model_output)
-            
-
+                rollout_y_logits = torch.sigmoid(rollout_y_logits)
+                rollout_y_logits = torch.cat((1 - rollout_y_logits, rollout_y_logits), dim = -1)
+            else:
+                rollout_y_logits = self.softmax(rollout_y_logits)
             # with open("ac_output.txt", "a") as f:
             #     f.write(str(self._remaining_budget_arr[0]) + ", " + str(self._budget) + "\n")
             #     f.write(str(ac_model_output))
@@ -3106,7 +3113,7 @@ class AFAModel(pl.LightningModule):
 
         return obs, reward, terminated, False, info
     
-    def calculate_reward(self, action, terminated, predictions, y, ac_model_output):
+    def calculate_reward(self, action, terminated, predictions, y, ac_model_output, c_sem, c):
         if self.allow_no_action:
             costs = self.group_costs[action]
         else:
@@ -3114,11 +3121,18 @@ class AFAModel(pl.LightningModule):
 
         if terminated:
             one_hot = torch.nn.functional.one_hot(y.long(), num_classes = self.n_tasks if self.n_tasks > 1 else 2)
-            softmax = self.softmax(predictions)
+            
+            if predictions.shape[-1] == 1:
+                softmax = torch.sigmoid(predictions)
+                softmax = torch.cat((1 - softmax, softmax), dim = -1)
+            else:
+                softmax = self.softmax(predictions)
             loss = one_hot * softmax
             loss = torch.sum(loss, dim = -1).detach().cpu().numpy()
-
-            return self.final_reward_ratio * loss - costs
+            if self.final_reward_ratio > 0:
+                return self.final_reward_ratio * loss - costs
+            else:
+                return self.final_reward_ratio * (1 - loss) - costs
         else:
             if ac_model_output is not None:
                 return self.intermediate_reward_ratio * ac_model_output - costs
@@ -3301,6 +3315,8 @@ class AFAModel(pl.LightningModule):
 
         if budget is not None:
             num_rollouts = 1
+        
+        mean_rewards = 0
 
         for _ in range(num_rollouts):
             # for i in range(batch_size):
@@ -3313,18 +3329,21 @@ class AFAModel(pl.LightningModule):
                 curr_budget = np.random.randint(1, len(self.cbm.concept_map))
             else:
                 curr_budget = budget
+            if self.cbm.average_trajectory:
+                curr_task_discount = task_discount
+                for i in range(curr_budget):
+                    # trajectory_weight += discount
+                    # discount *= self.cbm.intervention_discount
 
-            for i in range(curr_budget):
-                # trajectory_weight += discount
-                # discount *= self.cbm.intervention_discount
-
-                task_discount *= self.cbm.intervention_task_discount
-                if (
-                    (not self.cbm.include_only_last_trajectory_loss) or
-                    (i == curr_budget - 1)
-                ):
-                    task_trajectory_weight += task_discount
-
+                    task_discount *= self.cbm.intervention_task_discount
+                    if (
+                        (not self.cbm.include_only_last_trajectory_loss) or
+                        (i == curr_budget - 1)
+                    ):
+                        task_trajectory_weight += task_discount
+                task_discount = curr_task_discount
+            else:
+                task_trajectory_weight = 1
                 
             if self.cbm.include_task_trajectory_loss and (
                 self.cbm.task_loss_weight == 0
@@ -3332,7 +3351,7 @@ class AFAModel(pl.LightningModule):
                 # Then we initialize the intervention trajectory task loss to
                 # that of the unintervened model as this loss is not going to
                 # be taken into account if we don't do this
-                intervention_task_loss += first_task_discount * self.cbm.loss_task(
+                curr_task_loss = first_task_discount * self.cbm.loss_task(
                     (
                         y_logits if y_logits.shape[-1] > 1
                         else y_logits.reshape(-1)
@@ -3340,9 +3359,10 @@ class AFAModel(pl.LightningModule):
                     y,
                 )
                 if self.cbm.average_trajectory:
-                    intervention_task_loss += (
-                        intervention_task_loss / task_trajectory_weight
-                    )
+                    curr_task_loss = curr_task_loss / task_trajectory_weight
+                intervention_task_loss += (
+                    curr_task_loss
+                )
             # discount = curr_discount
             task_discount = curr_task_discount
             obs = torch.zeros((batch_size * curr_budget, ) + self.single_observation_space.shape).to(self.device)
@@ -3377,27 +3397,6 @@ class AFAModel(pl.LightningModule):
                 rewards[key_start:key_end] = torch.tensor(reward).view(-1).to(self.device)
                 next_obs, next_done = torch.tensor(next_obs).to(self.device), done.to(self.device)
                 task_discount *= self.cbm.intervention_task_discount
-
-                # ints = torch.tensor(self._intervened_concepts).to(c_sem.device)
-                # probs_tmp = (
-                #     c_sem.detach() * (1 - ints) +
-                #     c_used * ints
-                # )
-                # c_rollout_pred_temp = (
-                #     (
-                #         pos_embeddings.detach() *
-                #         torch.unsqueeze(probs_tmp, dim=-1)
-                #     ) +
-                #     (
-                #         neg_embeddings.detach() *
-                #         (1 - torch.unsqueeze(probs_tmp, dim=-1))
-                #     )
-                # )
-
-                
-                c_rollout_pred = torch.tensor(self._cbm_bottleneck).to(c_sem.device)
-
-                rollout_y_logits = self.cbm.c2y_model(c_rollout_pred)
                 
                 if self.cbm.include_task_trajectory_loss and (
                     (not self.cbm.include_only_last_trajectory_loss) or
@@ -3405,6 +3404,7 @@ class AFAModel(pl.LightningModule):
                 ):
                     # Then we will also update the task loss with the loss
                     # of performing this intervention!
+                    rollout_y_logits = self.cbm.c2y_model(torch.tensor(self._cbm_bottleneck).to(self.cbm.device))
                     rollout_y_loss = self.cbm.loss_task(
                         (
                             rollout_y_logits
@@ -3470,224 +3470,8 @@ class AFAModel(pl.LightningModule):
             pg_losses += pg_loss / curr_budget
             ent_losses += ent_loss / curr_budget
             v_losses += v_loss / curr_budget
-            
-        # for _ in range(num_rollouts):
-        #     for i in range(budget):
-        #         # And generate a probability distribution over previously
-        #         # unseen concepts to indicate which one we should intervene
-        #         # on next!
-        #         concept_group_scores = self._prior_int_distribution(
-        #             prob=c_sem,
-        #             pos_embeddings=pos_embeddings,
-        #             neg_embeddings=neg_embeddings,
-        #             competencies=competencies,
-        #             prev_interventions=intervention_idxs,
-        #             c=c_used,
-        #             horizon=(current_horizon - i),
-        #             train=train,
-        #         )
-        #         # Generate as a label the concept which increases the
-        #         # probability of the correct class the most when
-        #         # intervened on
-        #         target_int_logits = torch.ones(
-        #             concept_group_scores.shape,
-        #         ).to(c_used.device) * (-np.Inf)
-        #         for target_concept in range(target_int_logits.shape[-1]):
-        #             if self.use_concept_groups:
-        #                 new_int = torch.zeros(
-        #                     intervention_idxs.shape
-        #                 ).to(intervention_idxs.device)
-        #                 for group_idx, (_, group_concepts) in enumerate(
-        #                     self.concept_map.items()
-        #                 ):
-        #                     if group_idx == target_concept:
-        #                         new_int[:, group_concepts] = 1
-        #                         break
-        #             else:
-        #                 new_int = torch.zeros(
-        #                     intervention_idxs.shape
-        #                 ).to(intervention_idxs.device)
-        #                 new_int[:, target_concept] = 1
-        #             if not self.propagate_target_gradients:
-        #                 partial_ints = torch.clamp(
-        #                     intervention_idxs.detach() + new_int,
-        #                     0,
-        #                     1,
-        #                 )
-        #                 probs = (
-        #                     c_sem.detach() * (1 - partial_ints) +
-        #                     c_used * partial_ints
-        #                 )
-        #                 c_rollout_pred = (
-        #                     (
-        #                         pos_embeddings.detach() *
-        #                         torch.unsqueeze(probs, dim=-1)
-        #                     ) +
-        #                     (
-        #                         neg_embeddings.detach() *
-        #                         (1 - torch.unsqueeze(probs, dim=-1))
-        #                     )
-        #                 )
-        #             else:
-        #                 partial_ints = torch.clamp(
-        #                     intervention_idxs + new_int,
-        #                     0,
-        #                     1,
-        #                 )
-        #                 probs = (
-        #                     c_sem * (1 - partial_ints) +
-        #                     c_used * partial_ints
-        #                 )
-        #                 c_rollout_pred = (
-        #                     (
-        #                         pos_embeddings *
-        #                         torch.unsqueeze(probs, dim=-1)
-        #                     ) + (
-        #                         neg_embeddings *
-        #                         (1 - torch.unsqueeze(probs, dim=-1))
-        #                     )
-        #                 )
-        #             c_rollout_pred = c_rollout_pred.view(
-        #                 (-1, self.emb_size * self.n_concepts)
-        #             )
-
-        #             rollout_y_logits = self.c2y_model(c_rollout_pred)
-
-        #             if self.n_tasks > 1:
-        #                 target_int_logits[:, target_concept] = \
-        #                     rollout_y_logits[
-        #                         one_hot_y.type(torch.BoolTensor)
-        #                     ]
-        #             else:
-        #                 pred_y_prob = torch.sigmoid(
-        #                     torch.squeeze(rollout_y_logits, dim=-1)
-        #                 )
-        #                 target_int_logits[:, target_concept] = torch.where(
-        #                     y == 1,
-        #                     torch.log(
-        #                         (pred_y_prob + 1e-15) /
-        #                         (1 - pred_y_prob + 1e-15)
-        #                     ),
-        #                     torch.log(
-        #                         (1 - pred_y_prob + 1e-15) /
-        #                         (pred_y_prob+ 1e-15)
-        #                     ),
-        #                 )
-        #         if self.use_full_mask_distr:
-        #             target_int_labels = torch.nn.functional.softmax(
-        #                 target_int_logits,
-        #                 -1,
-        #             )
-        #             pred_int_labels = concept_group_scores.argmax(-1)
-        #             curr_acc = (
-        #                 pred_int_labels == torch.argmax(
-        #                     target_int_labels,
-        #                     -1,
-        #                 )
-        #             ).float().mean()
-        #         else:
-        #             target_int_labels = torch.argmax(target_int_logits, -1)
-        #             pred_int_labels = concept_group_scores.argmax(-1)
-        #             curr_acc = (
-        #                 pred_int_labels == target_int_labels
-        #             ).float().mean()
-
-                
-
-        #         int_mask_accuracy += curr_acc/current_horizon
-        #         new_loss = self.loss_interventions(
-        #             concept_group_scores,
-        #             target_int_labels,
-        #         )
-        #         if not self.backprop_masks:
-        #             # Then block the gradient into the masks
-        #             concept_group_scores = concept_group_scores.detach()
-
-        #         # Update the next-concept predictor loss
-        #         if self.average_trajectory:
-        #             intervention_loss += (
-        #                 discount * new_loss/trajectory_weight
-        #             )
-        #         else:
-        #             intervention_loss += discount * new_loss
-
-        #         # Update the discount (before the task trajectory loss to
-        #         # start discounting from the first intervention so that the
-        #         # loss of the unintervened model is highest
-        #         discount *= self.intervention_discount
-        #         task_discount *= self.intervention_task_discount
-
-        #         # Sample the next concepts we will intervene on using a hard
-        #         # Gumbel softmax
-        #         if self.intervention_weight == 0:
-        #             selected_groups = torch.FloatTensor(
-        #                 np.eye(concept_group_scores.shape[-1])[np.random.choice(
-        #                     concept_group_scores.shape[-1],
-        #                     size=concept_group_scores.shape[0]
-        #                 )]
-        #             ).to(concept_group_scores.device)
-        #         else:
-        #             selected_groups = torch.nn.functional.gumbel_softmax(
-        #                 concept_group_scores,
-        #                 dim=-1,
-        #                 hard=self.hard_intervention,
-        #                 tau=self.tau,
-        #             )
-        #         if self.use_concept_groups:
-        #             for sample_idx in range(intervention_idxs.shape[0]):
-        #                 for group_idx, (_, group_concepts) in enumerate(
-        #                     self.concept_map.items()
-        #                 ):
-        #                     if selected_groups[sample_idx, group_idx] == 1:
-        #                         intervention_idxs[
-        #                             sample_idx,
-        #                             group_concepts,
-        #                         ] = 1
-        #         else:
-        #             intervention_idxs += selected_groups
-
-        #         if self.include_task_trajectory_loss and (
-        #             (not self.include_only_last_trajectory_loss) or
-        #             (i == (current_horizon - 1))
-        #         ):
-        #             # Then we will also update the task loss with the loss
-        #             # of performing this intervention!
-                        
-
-                    
-        #             c_rollout_pred = c_rollout_pred.view(
-        #                 (-1, self.emb_size * self.n_concepts)
-        #             )
-        #             rollout_y_logits = self.c2y_model(c_rollout_pred)
-        #             rollout_y_loss = self.loss_task(
-        #                 (
-        #                     rollout_y_logits
-        #                     if rollout_y_logits.shape[-1] > 1 else
-        #                     rollout_y_logits.reshape(-1)
-        #                 ),
-        #                 y,
-        #             )
-        #             if self.average_trajectory:
-        #                 intervention_task_loss += (
-        #                     task_discount *
-        #                     rollout_y_loss / task_trajectory_weight
-        #                 )
-        #             else:
-        #                 intervention_task_loss += (
-        #                     task_discount * rollout_y_loss
-        #                 )
-
-        #     if (
-        #         self.legacy_mode or
-        #         (
-        #             self.current_steps.detach().cpu().numpy()[0] >=
-        #                 self.rollout_init_steps
-        #         )
-        #     ) and (
-        #         self.horizon_limit.detach().cpu().numpy()[0] <
-        #             int_basis_lim + 1
-        #     ):
-        #        self.horizon_limit *= self.horizon_rate
+        
+            self.log("mean_rewards", np.mean(reward), on_step = True, on_epoch = True, prog_bar=False, sync_dist = True)
         self.log("pg_loss", pg_losses.detach() if not isinstance(pg_losses, float) else pg_losses, prog_bar=False, sync_dist = True)
         self.log("ent_loss", ent_losses.detach() if not isinstance(ent_losses, float) else ent_losses, prog_bar=False, sync_dist = True)
         self.log("v_loss", v_losses.detach() if not isinstance(v_losses, float) else v_losses, prog_bar=False, sync_dist = True)
@@ -3703,10 +3487,10 @@ class AFAModel(pl.LightningModule):
         intervention_loss += v_losses
 
         intervention_loss_scalar = \
-            self.cbm.intervention_weight * intervention_loss
+            self.cbm.intervention_weight * intervention_loss/num_rollouts
         intervention_loss = intervention_loss/num_rollouts
         intervention_task_loss_scalar = \
-            self.cbm.intervention_task_loss_weight * intervention_task_loss
+            self.cbm.intervention_task_loss_weight * intervention_task_loss/num_rollouts
         intervention_task_loss = intervention_task_loss/num_rollouts
         int_mask_accuracy = int_mask_accuracy/num_rollouts
         accuracy = accuracy / num_rollouts

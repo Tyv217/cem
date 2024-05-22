@@ -1443,6 +1443,7 @@ def train_ac_model(
             n_components = ac_model_config['n_components'], 
             lambda_xent = ac_model_config.get('lambda_xent', 1),
             lambda_nll = ac_model_config.get('lambda_nll', 1),
+            lambda_l2 = ac_model_config.get('lambda_l2', 0.4),
         )
     elif "energy" in architecture:
         ac_model = ACEnergy(
@@ -1486,11 +1487,11 @@ def train_ac_model(
                 enable_checkpointing=ac_model_config.get("enable_checkpointing", False),
                 callbacks=[
                     EarlyStopping(
-                        monitor=ac_model_config.get("early_stopping_monitor", "val_accuracy"),
+                        monitor=ac_model_config.get("early_stopping_monitor", "val_loss"),
                         min_delta=ac_model_config.get("early_stopping_delta", 0.00),
-                        patience=ac_model_config.get('patience', 2),
+                        patience=ac_model_config.get('patience', 5),
                         verbose=ac_model_config.get("verbose", False),
-                        mode=ac_model_config.get("early_stopping_mode", "max"),
+                        mode=ac_model_config.get("early_stopping_mode", "min"),
                     ),
                 ],
                 gradient_clip_val = ac_model_config.get("gradient_clip_val", 1)

@@ -1,0 +1,440 @@
+{
+    "batch_size": 512,
+    "c2y_layers": [
+        128,
+        128
+    ],
+    "c_extractor_arch": "Function: c_extractor_arch",
+    "check_val_every_n_epoch": 2,
+    "dataset": "mnist_add",
+    "intervention_batch_size": 512,
+    "intervention_freq": 1,
+    "intervention_policies": [
+        "afacem_policy",
+        "optimal_greedy_no_prior"
+    ],
+    "max_epochs": 100,
+    "noise_level": 0.0,
+    "num_operands": 12,
+    "num_workers": 8,
+    "results_dir": "results/afa/mnist_afa_copy",
+    "root_dir": "/home/xty20/data",
+    "runs": [
+        {
+            "architecture": "IntAwareConceptEmbeddingModel",
+            "average_trajectory": true,
+            "beta_a": 1,
+            "beta_b": 3,
+            "embedding_activation": "leakyrelu",
+            "extra_name": "Retry_concept_loss_weight_{concept_loss_weight}_intervention_weight_{intervention_weight}_horizon_rate_{horizon_rate}_intervention_discount_{intervention_discount}_task_discount_{intervention_task_discount}_sampling_percent_{sampling_percent}_adam",
+            "final_reward_ratio": 1,
+            "horizon_binary_representation": true,
+            "horizon_rate": 1.005,
+            "horizon_uniform_distr": true,
+            "include_only_last_trajectory_loss": true,
+            "include_task_trajectory_loss": true,
+            "initial_horizon": 2,
+            "initialize_discount": false,
+            "int_model_layers": [
+                128,
+                128,
+                64,
+                64
+            ],
+            "int_model_use_bn": true,
+            "intcem_task_loss_weight": 0,
+            "intermediate_reward_ratio": 0.1,
+            "intervention_discount": 1,
+            "intervention_task_discount": 1.1,
+            "intervention_task_loss_weight": 1,
+            "intervention_weight": 1,
+            "legacy_mode": false,
+            "max_horizon": 6,
+            "model_pretrain_path": null,
+            "num_rollouts": 4,
+            "propagate_target_gradients": false,
+            "task_loss_weight": 0,
+            "tau": 1,
+            "training_intervention_prob": 0.25,
+            "use_concept_groups": true,
+            "use_full_mask_distr": false,
+            "use_horizon": false
+        }
+    ],
+    "sampling_groups": true,
+    "sampling_percent": 0.625,
+    "selected_digits": [
+        [
+            0,
+            1,
+            2
+        ],
+        [
+            0,
+            1,
+            2
+        ],
+        [
+            0,
+            1,
+            2
+        ],
+        [
+            0,
+            1,
+            2
+        ],
+        [
+            0,
+            1,
+            2,
+            3,
+            4
+        ],
+        [
+            0,
+            1,
+            2,
+            3,
+            4
+        ],
+        [
+            0,
+            1,
+            2,
+            3,
+            4
+        ],
+        [
+            0,
+            1,
+            2,
+            3,
+            4
+        ],
+        [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+        ],
+        [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+        ],
+        [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+        ],
+        [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+        ]
+    ],
+    "shared_params": {
+        "ac_model_config": {
+            "affine_hids": [
+                256,
+                256
+            ],
+            "architecture": "flow",
+            "batch_size": 256,
+            "clip_gradient": 1,
+            "coupling_hids": [
+                256,
+                256
+            ],
+            "decay_rate": 0.5,
+            "decay_steps": 10000,
+            "layer_cfg": [
+                "ML",
+                "LR",
+                "CP2"
+            ],
+            "learning_rate": 1e-05,
+            "linear_hids": [
+                256,
+                256
+            ],
+            "linear_rank": -1,
+            "max_epochs": 50,
+            "n_components": 40,
+            "num_samples": 10,
+            "optimizer": "adam",
+            "prior": "autoreg",
+            "prior_hids": [
+                256,
+                256
+            ],
+            "prior_layers": 2,
+            "prior_units": 256,
+            "rnncp_layers": 2,
+            "rnncp_units": 256,
+            "transformations": [
+                "AF",
+                "TL",
+                "TL",
+                "TL",
+                "AF"
+            ]
+        },
+        "ac_model_nll_ratio": 0.5,
+        "ac_model_rollouts": 1,
+        "ac_model_weight": 2,
+        "afa_model_config": {
+            "act_fun": "relu",
+            "clip_coef": 0.2,
+            "clip_vloss": true,
+            "ent_coef": 0.0,
+            "lin_layers": [
+                512,
+                512,
+                256,
+                256
+            ],
+            "normalize_advantages": false,
+            "num_envs": 1,
+            "ortho_init": false,
+            "vf_coef": 1.0
+        },
+        "allow_no_action": false,
+        "bool": false,
+        "c_extractor_arch": "resnet18",
+        "cbm_aneal_rate": 1,
+        "cbm_starting_aneal_rate": 1,
+        "concept_loss_weight": 5,
+        "continue_training": true,
+        "continue_training_splits": [],
+        "early_stopping_delta": 0.0,
+        "early_stopping_mode": "min",
+        "early_stopping_monitor": "val_loss",
+        "emb_size": 16,
+        "enable_checkpointing": true,
+        "extra_dims": 0,
+        "learning_rate": 0.0001,
+        "mask_no_action": true,
+        "momentum": 0.9,
+        "only_train_ac_model": false,
+        "optimizer": "adam",
+        "patience": 5,
+        "save_model": true,
+        "sigmoidal_prob": false,
+        "start_split": 1,
+        "top_k_accuracy": null,
+        "train_ac_model": true,
+        "train_afa_model": true,
+        "train_cbm": true,
+        "train_rl": false,
+        "train_separately": false,
+        "training_intervention_prob": 0.25,
+        "weight_decay": 0.001
+    },
+    "skip_repr_evaluation": true,
+    "test_subsampling": 1,
+    "threshold_labels": 30,
+    "train_dataset_size": 10000,
+    "trials": 2,
+    "use_task_class_weights": true,
+    "weight_loss": true
+}
+Class distribution is: [0.4847 0.5153]
+[TRIAL 2/2 BEGINS AT 16/05/2024 at 21:55:46
+Testing: 0it [00:00, ?it/s]Testing:   0%|          | 0/40 [00:00<?, ?it/s]Testing DataLoader 0:   0%|          | 0/40 [00:00<?, ?it/s]Testing DataLoader 0:   2%|▎         | 1/40 [00:01<01:10,  1.82s/it]Testing DataLoader 0:   5%|▌         | 2/40 [00:01<00:37,  1.00it/s]Testing DataLoader 0:   8%|▊         | 3/40 [00:02<00:26,  1.39it/s]Testing DataLoader 0:  10%|█         | 4/40 [00:02<00:20,  1.73it/s]Testing DataLoader 0:  12%|█▎        | 5/40 [00:02<00:17,  2.02it/s]Testing DataLoader 0:  15%|█▌        | 6/40 [00:02<00:14,  2.28it/s]Testing DataLoader 0:  18%|█▊        | 7/40 [00:02<00:13,  2.51it/s]Testing DataLoader 0:  20%|██        | 8/40 [00:02<00:11,  2.71it/s]Testing DataLoader 0:  22%|██▎       | 9/40 [00:03<00:10,  2.90it/s]Testing DataLoader 0:  25%|██▌       | 10/40 [00:03<00:09,  3.06it/s]Testing DataLoader 0:  28%|██▊       | 11/40 [00:03<00:09,  3.20it/s]Testing DataLoader 0:  30%|███       | 12/40 [00:03<00:08,  3.34it/s]Testing DataLoader 0:  32%|███▎      | 13/40 [00:03<00:07,  3.46it/s]Testing DataLoader 0:  35%|███▌      | 14/40 [00:03<00:07,  3.58it/s]Testing DataLoader 0:  38%|███▊      | 15/40 [00:04<00:06,  3.68it/s]Testing DataLoader 0:  40%|████      | 16/40 [00:04<00:06,  3.78it/s]Testing DataLoader 0:  42%|████▎     | 17/40 [00:04<00:05,  3.87it/s]Testing DataLoader 0:  45%|████▌     | 18/40 [00:04<00:05,  3.95it/s]Testing DataLoader 0:  48%|████▊     | 19/40 [00:04<00:05,  4.03it/s]Testing DataLoader 0:  50%|█████     | 20/40 [00:04<00:04,  4.10it/s]Testing DataLoader 0:  52%|█████▎    | 21/40 [00:05<00:04,  4.17it/s]Testing DataLoader 0:  55%|█████▌    | 22/40 [00:05<00:04,  4.24it/s]Testing DataLoader 0:  57%|█████▊    | 23/40 [00:05<00:03,  4.30it/s]Testing DataLoader 0:  60%|██████    | 24/40 [00:05<00:03,  4.35it/s]Testing DataLoader 0:  62%|██████▎   | 25/40 [00:05<00:03,  4.41it/s]Testing DataLoader 0:  65%|██████▌   | 26/40 [00:05<00:03,  4.46it/s]Testing DataLoader 0:  68%|██████▊   | 27/40 [00:05<00:02,  4.50it/s]Testing DataLoader 0:  70%|███████   | 28/40 [00:06<00:02,  4.55it/s]Testing DataLoader 0:  72%|███████▎  | 29/40 [00:06<00:02,  4.59it/s]Testing DataLoader 0:  75%|███████▌  | 30/40 [00:06<00:02,  4.63it/s]Testing DataLoader 0:  78%|███████▊  | 31/40 [00:06<00:01,  4.67it/s]Testing DataLoader 0:  80%|████████  | 32/40 [00:06<00:01,  4.71it/s]Testing DataLoader 0:  82%|████████▎ | 33/40 [00:06<00:01,  4.74it/s]Testing DataLoader 0:  85%|████████▌ | 34/40 [00:07<00:01,  4.78it/s]Testing DataLoader 0:  88%|████████▊ | 35/40 [00:07<00:01,  4.81it/s]Testing DataLoader 0:  90%|█████████ | 36/40 [00:07<00:00,  4.84it/s]Testing DataLoader 0:  92%|█████████▎| 37/40 [00:07<00:00,  4.87it/s]Testing DataLoader 0:  95%|█████████▌| 38/40 [00:07<00:00,  4.90it/s]Testing DataLoader 0:  98%|█████████▊| 39/40 [00:07<00:00,  4.93it/s]Testing DataLoader 0: 100%|██████████| 40/40 [00:08<00:00,  4.94it/s]Testing DataLoader 0: 100%|██████████| 40/40 [00:08<00:00,  4.94it/s]
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+       Test metric             DataLoader 0
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+      test_accuracy         0.7190999984741211
+        test_nll            -0.5204517841339111
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+AC Model test_accuracy: 71.91%, 
+AC Model test_nll: -52.05%, 
+AC Model training_time: 13124.40%, 
+AC Model num_epochs: 2500.00%, 
+with 25.0 epochs in 131.24 seconds
+[Training IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_1_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_0.625_adam_afa_lambda_fold_2]
+config:
+<built-in function localtime>
+	start_split -> 1
+	top_k_accuracy -> None
+	save_model -> True
+	patience -> 5
+	emb_size -> 16
+	extra_dims -> 0
+	concept_loss_weight -> 5
+	learning_rate -> 0.0001
+	weight_decay -> 0.001
+	c_extractor_arch -> <function get_mnist_extractor_arch.<locals>.c_extractor_arch at 0x7f8f970b8dc0>
+	optimizer -> adam
+	bool -> False
+	early_stopping_monitor -> val_loss
+	early_stopping_mode -> min
+	early_stopping_delta -> 0.0
+	momentum -> 0.9
+	sigmoidal_prob -> False
+	training_intervention_prob -> 0.25
+	train_ac_model -> True
+	only_train_ac_model -> False
+	train_afa_model -> True
+	continue_training -> True
+	continue_training_splits -> []
+	cbm_aneal_rate -> 1
+	cbm_starting_aneal_rate -> 1
+	train_separately -> False
+	train_cbm -> True
+	train_rl -> False
+	ac_model_config -> {'architecture': 'flow', 'max_epochs': 50, 'batch_size': 256, 'transformations': ['AF', 'TL', 'TL', 'TL', 'AF'], 'layer_cfg': ['ML', 'LR', 'CP2'], 'rnncp_units': 256, 'rnncp_layers': 2, 'linear_hids': [256, 256], 'linear_rank': -1, 'affine_hids': [256, 256], 'coupling_hids': [256, 256], 'prior': 'autoreg', 'n_components': 40, 'prior_units': 256, 'prior_layers': 2, 'prior_hids': [256, 256], 'optimizer': 'adam', 'learning_rate': 1e-05, 'decay_steps': 10000, 'decay_rate': 0.5, 'clip_gradient': 1, 'num_samples': 10, 'save_path': 'results/afa/mnist_afa_copy/acflow_sampling_0.625_model_trial_1.pt'}
+	ac_model_nll_ratio -> 0.5
+	ac_model_weight -> 2
+	ac_model_rollouts -> 1
+	allow_no_action -> False
+	mask_no_action -> True
+	enable_checkpointing -> True
+	afa_model_config -> {'lin_layers': [512, 512, 256, 256], 'act_fun': 'relu', 'ortho_init': False, 'vf_coef': 1.0, 'ent_coef': 0.0, 'clip_coef': 0.2, 'clip_vloss': True, 'normalize_advantages': False, 'num_envs': 1}
+	trials -> 2
+	results_dir -> results/afa/mnist_afa_copy
+	dataset -> mnist_add
+	num_workers -> 8
+	batch_size -> 512
+	num_operands -> 12
+	selected_digits -> [[0, 1, 2], [0, 1, 2], [0, 1, 2], [0, 1, 2], [0, 1, 2, 3, 4], [0, 1, 2, 3, 4], [0, 1, 2, 3, 4], [0, 1, 2, 3, 4], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]]
+	threshold_labels -> 30
+	noise_level -> 0.0
+	max_epochs -> 100
+	train_dataset_size -> 10000
+	sampling_percent -> 0.625
+	sampling_groups -> True
+	c2y_layers -> [128, 128]
+	skip_repr_evaluation -> True
+	intervention_freq -> 1
+	intervention_batch_size -> 512
+	intervention_policies -> ['afacem_policy', 'optimal_greedy_no_prior']
+	root_dir -> /home/xty20/data
+	test_subsampling -> 1
+	weight_loss -> True
+	use_task_class_weights -> True
+	check_val_every_n_epoch -> 2
+	time_last_called -> 2024/05/16 at 21:55:25
+	n_concepts -> 54
+	n_tasks -> 1
+	concept_map -> {0: [0, 1, 2], 1: [3, 4, 5], 2: [6, 7, 8], 5: [9, 10, 11, 12, 13], 8: [14, 15, 16, 17, 18, 19, 20, 21, 22, 23], 9: [24, 25, 26, 27, 28, 29, 30, 31, 32, 33], 10: [34, 35, 36, 37, 38, 39, 40, 41, 42, 43], 11: [44, 45, 46, 47, 48, 49, 50, 51, 52, 53]}
+	architecture -> IntAwareConceptEmbeddingModel
+	extra_name -> Retry_concept_loss_weight_5_intervention_weight_1_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_0.625_adam_afa
+	horizon_binary_representation -> True
+	include_task_trajectory_loss -> True
+	include_only_last_trajectory_loss -> True
+	task_loss_weight -> 0
+	intervention_weight -> 1
+	intervention_task_loss_weight -> 1
+	final_reward_ratio -> 1
+	intermediate_reward_ratio -> 0.1
+	initial_horizon -> 2
+	use_concept_groups -> True
+	use_full_mask_distr -> False
+	propagate_target_gradients -> False
+	int_model_use_bn -> True
+	int_model_layers -> [128, 128, 64, 64]
+	intcem_task_loss_weight -> 0
+	embedding_activation -> leakyrelu
+	tau -> 1
+	max_horizon -> 6
+	num_rollouts -> 4
+	horizon_uniform_distr -> True
+	beta_a -> 1
+	beta_b -> 3
+	intervention_task_discount -> 1.1
+	average_trajectory -> True
+	use_horizon -> False
+	initialize_discount -> False
+	model_pretrain_path -> None
+	horizon_rate -> 1.005
+	intervention_discount -> 1
+	legacy_mode -> False
+[Number of parameters in model 4268020 ]
+[Number of non-trainable parameters in model 6798177 ]
+	Found cached model... loading it
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+        Test metric               DataLoader 0
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+         ent_loss                      0.0
+    mean_rewards_epoch         0.8155630230903625
+          pg_loss              0.4436233639717102
+      test_agent_loss          10.295132637023926
+     test_avg_c_y_acc          0.8663472222222222
+      test_c_accuracy          0.9361944444444446
+        test_c_auc             0.8465575013676873
+         test_c_f1             0.8687546773774844
+       test_cbm_loss            9.72481632232666
+     test_concept_loss          4.389865875244141
+    test_current_steps          752.4639892578125
+    test_horizon_limit                 2.0
+test_intervention_accuracy          0.839875
+   test_intervention_auc        0.923913944921448
+  test_intervention_loss       10.295132637023926
+test_intervention_task_loss     5.334949970245361
+         test_loss              8.29738712310791
+    test_mask_accuracy                 0.0
+      test_task_loss                   0.0
+      test_y_accuracy                0.7965
+        test_y_auc              0.881293518190679
+         test_y_f1             0.8148501079801046
+          v_loss                9.851509094238281
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+val_c_acc: 93.62%, val_y_acc: 79.65%, val_c_auc: 84.66%, val_y_auc: 88.13% with 34 epochs in 1416.08 seconds
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+        Test metric               DataLoader 0
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+         ent_loss                      0.0
+    mean_rewards_epoch         0.8087345957756042
+          pg_loss              0.17577031254768372
+      test_agent_loss           8.186335563659668
+     test_avg_c_y_acc          0.8603722222222224
+      test_c_accuracy          0.9360444444444441
+        test_c_auc             0.8473168421763365
+         test_c_f1             0.8694227465397713
+       test_cbm_loss            9.677019119262695
+     test_concept_loss          4.36923885345459
+    test_current_steps           764.27197265625
+    test_horizon_limit                 2.0
+test_intervention_accuracy           0.8377
+   test_intervention_auc         0.9231391231739
+  test_intervention_loss        8.186335563659668
+test_intervention_task_loss    5.3077802658081055
+         test_loss              7.742767810821533
+    test_mask_accuracy                 0.0
+      test_task_loss                   0.0
+      test_y_accuracy                0.7847
+        test_y_auc             0.8742390838041111
+         test_y_f1             0.7951439092598336
+          v_loss                8.010565757751465
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+c_acc: 93.60%, y_acc: 78.47%, c_auc: 84.73%, y_auc: 87.42% with 34 epochs in 1416.08 seconds

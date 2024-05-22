@@ -1,0 +1,3737 @@
+INFO:root:Results will be dumped in results/afa/celeba_afa
+DEBUG:root:And the dataset's root directory is /home/xty20/data
+[rank: 0] Global seed set to 42
+[rank: 0] Global seed set to 42
+DEBUG:root:Concept frequency is: [0.11113579 0.26698059 0.512505   0.20457159 0.02244335 0.15157528
+ 0.24079586 0.23453225 0.23925093 0.14799185 0.05089857 0.20519351
+ 0.14216753 0.05756692 0.04668829 0.06511878 0.06276438 0.04194986
+ 0.38692195 0.45503186 0.41675428 0.48342786 0.04154512 0.11514864
+ 0.83493996 0.28414257 0.0429469  0.27744461 0.07977828 0.06572096
+ 0.05651064 0.48208037 0.20840182 0.31956722 0.18892492 0.04846026
+ 0.4724357  0.12296704 0.07271507 0.77361685]
+DEBUG:root:Selecting concepts: [2, 19, 20, 21, 31, 36]
+DEBUG:root:	And hidden concepts: [18, 33]
+DEBUG:root:Subsampling to 16883 elements.
+DEBUG:root:Data split is: 16883 = 11818 (train) + 3376 (test) + 1689 (validation)
+{
+    "batch_size": 256,
+    "check_val_every_n_epoch": 2,
+    "competence_levels": [
+        1,
+        0
+    ],
+    "dataset": "celeba",
+    "image_size": 64,
+    "intervention_batch_size": 512,
+    "intervention_freq": 1,
+    "intervention_policies": [
+        "afacem_policy",
+        "optimal_greedy_no_prior",
+        "group_random_no_prior"
+    ],
+    "label_binary_width": 1,
+    "label_dataset_subsample": 12,
+    "max_epochs": 300,
+    "num_classes": 1000,
+    "num_concepts": 6,
+    "num_hidden_concepts": 2,
+    "num_workers": 8,
+    "results_dir": "results/afa/celeba_afa",
+    "root_dir": "/home/xty20/data",
+    "runs": [
+        {
+            "architecture": "IntAwareConceptEmbeddingModel",
+            "average_trajectory": true,
+            "beta_a": 1,
+            "beta_b": 3,
+            "embedding_activation": "leakyrelu",
+            "extra_name": "Retry_concept_loss_weight_{concept_loss_weight}_intervention_weight_{intervention_weight}_horizon_rate_{horizon_rate}_intervention_discount_{intervention_discount}_task_discount_{intervention_task_discount}_sampling_percent_{sampling_percent}",
+            "final_reward_ratio": 1,
+            "gradient_clip_val": 10,
+            "horizon_binary_representation": true,
+            "horizon_rate": 1.005,
+            "horizon_uniform_distr": true,
+            "include_only_last_trajectory_loss": true,
+            "include_task_trajectory_loss": true,
+            "initial_horizon": 2,
+            "initialize_discount": false,
+            "int_model_layers": [
+                128,
+                128,
+                64,
+                64
+            ],
+            "int_model_use_bn": true,
+            "intcem_task_loss_weight": 0,
+            "intermediate_reward_ratio": 0.1,
+            "intervention_discount": 1,
+            "intervention_task_discount": 1.1,
+            "intervention_task_loss_weight": 1,
+            "intervention_weight": 5,
+            "legacy_mode": false,
+            "max_horizon": 6,
+            "model_pretrain_path": null,
+            "num_rollouts": 6,
+            "propagate_target_gradients": false,
+            "sampling_percent": 1,
+            "task_loss_weight": 0,
+            "tau": 1,
+            "training_intervention_prob": 0.25,
+            "use_concept_groups": false,
+            "use_full_mask_distr": false,
+            "use_horizon": false
+        }
+    ],
+    "selected_concepts": false,
+    "shared_params": {
+        "ac_model_config": {
+            "affine_hids": [
+                256,
+                256
+            ],
+            "architecture": "flow",
+            "batch_size": 32,
+            "clip_gradient": 1,
+            "coupling_hids": [
+                256,
+                256
+            ],
+            "decay_rate": 0.5,
+            "decay_steps": 10000,
+            "lambda_nll": 1,
+            "lambda_xent": 1,
+            "layer_cfg": [
+                "ML",
+                "LR",
+                "CP2"
+            ],
+            "learning_rate": 0.0001,
+            "linear_hids": [
+                256,
+                256
+            ],
+            "linear_rank": -1,
+            "max_epochs": 50,
+            "model_classes": true,
+            "n_components": 256,
+            "num_samples": 10,
+            "optimizer": "adam",
+            "patience": 3,
+            "prior": "autoreg",
+            "prior_hids": [
+                1,
+                1
+            ],
+            "prior_layers": 2,
+            "prior_units": 1,
+            "rnncp_layers": 2,
+            "rnncp_units": 32,
+            "transformations": [
+                "AF",
+                "TL",
+                "TL",
+                "AF"
+            ],
+            "weight_decay": 0.01
+        },
+        "ac_model_nll_ratio": 0.5,
+        "ac_model_rollouts": 1,
+        "ac_model_weight": 2,
+        "afa_model_config": {
+            "act_fun": "relu",
+            "clip_coef": 0.2,
+            "clip_vloss": true,
+            "ent_coef": 0.0,
+            "lin_layers": [
+                512,
+                512,
+                256,
+                256
+            ],
+            "normalize_advantages": true,
+            "num_envs": 1,
+            "ortho_init": false,
+            "vf_coef": 1.0
+        },
+        "allow_no_action": false,
+        "bool": false,
+        "c_extractor_arch": "resnet34",
+        "cbm_aneal_rate": 1,
+        "cbm_starting_aneal_rate": 1,
+        "concept_loss_weight": 1,
+        "continue_training": true,
+        "early_stopping_delta": 0.0,
+        "early_stopping_mode": "min",
+        "early_stopping_monitor": "val_cbm_loss",
+        "emb_size": 16,
+        "enable_checkpointing": true,
+        "extra_dims": 0,
+        "learning_rate": 1e-05,
+        "mask_no_action": true,
+        "momentum": 0.9,
+        "normalize_values": false,
+        "only_train_ac_model": false,
+        "optimizer": "adam",
+        "patience": 5,
+        "save_model": true,
+        "sigmoidal_prob": false,
+        "top_k_accuracy": null,
+        "train_ac_model": false,
+        "train_afa_model": true,
+        "training_intervention_prob": 0.25,
+        "use_ac_model": true,
+        "weight_decay": 0.001,
+        "weight_loss": false
+    },
+    "trials": 1,
+    "use_binary_vector_class": true,
+    "use_imbalance": true
+}
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+INFO:root:Training sample shape is: torch.Size([256, 3, 64, 64]) with type torch.FloatTensor
+INFO:root:Training label shape is: torch.Size([256]) with type torch.LongTensor
+INFO:root:	Number of output classes: 230
+INFO:root:Training concept shape is: torch.Size([256, 6]) with type torch.FloatTensor
+INFO:root:	Number of training concepts: 6
+INFO:root:Setting log level to: "DEBUG"
+DEBUG:root:Setting ac model save path to be results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+[rank: 0] Global seed set to 42
+DEBUG:root:AC CBM loaded AC model checkpoint from results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+DEBUG:git.util:Failed checking if running in CYGWIN due to: FileNotFoundError(2, 'No such file or directory')
+DEBUG:git.cmd:Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/xty20/cem, stdin=None, shell=False, universal_newlines=False)
+DEBUG:git.cmd:Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/xty20/cem, stdin=None, shell=False, universal_newlines=False)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.wandb.ai:443
+DEBUG:urllib3.connectionpool:https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
+wandb: Currently logged in as: thomasyuan1 (thomasyuan). Use `wandb login --relogin` to force relogin
+DEBUG:git.cmd:Popen(['git', 'cat-file', '--batch-check'], cwd=/home/xty20/cem, stdin=<valid stream>, shell=False, universal_newlines=False)
+wandb: wandb version 0.17.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.16.6
+wandb: Run data is saved locally in /home/xty20/cem/wandb/run-20240515_131448-8vvx6dp6
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1
+wandb: ⭐️ View project at https://wandb.ai/thomasyuan/celeba_test
+wandb: 🚀 View run at https://wandb.ai/thomasyuan/celeba_test/runs/8vvx6dp6
+DEBUG:root:Loading trained model from results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+DEBUG:root:Loaded model
+DEBUG:root:Continue training model
+DEBUG:fsspec.local:open file: /home/xty20/cem/results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+[TRIAL 1/1 BEGINS AT 15/05/2024 at 13:14:46
+[Training IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1]
+config:
+<built-in function localtime>
+	top_k_accuracy -> None
+	save_model -> True
+	patience -> 5
+	emb_size -> 16
+	extra_dims -> 0
+	concept_loss_weight -> 1
+	learning_rate -> 1e-05
+	weight_decay -> 0.001
+	weight_loss -> False
+	c_extractor_arch -> resnet34
+	optimizer -> adam
+	bool -> False
+	early_stopping_monitor -> val_cbm_loss
+	early_stopping_mode -> min
+	early_stopping_delta -> 0.0
+	momentum -> 0.9
+	sigmoidal_prob -> False
+	training_intervention_prob -> 0.25
+	train_ac_model -> False
+	only_train_ac_model -> False
+	allow_no_action -> False
+	mask_no_action -> True
+	train_afa_model -> True
+	continue_training -> True
+	cbm_aneal_rate -> 1
+	cbm_starting_aneal_rate -> 1
+	enable_checkpointing -> True
+	ac_model_config -> {'architecture': 'flow', 'max_epochs': 50, 'batch_size': 32, 'transformations': ['AF', 'TL', 'TL', 'AF'], 'layer_cfg': ['ML', 'LR', 'CP2'], 'rnncp_units': 32, 'rnncp_layers': 2, 'linear_hids': [256, 256], 'linear_rank': -1, 'affine_hids': [256, 256], 'coupling_hids': [256, 256], 'prior': 'autoreg', 'n_components': 256, 'prior_units': 1, 'prior_layers': 2, 'prior_hids': [1, 1], 'optimizer': 'adam', 'learning_rate': 0.0001, 'weight_decay': 0.01, 'decay_steps': 10000, 'decay_rate': 0.5, 'clip_gradient': 1, 'num_samples': 10, 'patience': 3, 'lambda_nll': 1, 'lambda_xent': 1, 'model_classes': True, 'save_path': 'results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt'}
+	ac_model_nll_ratio -> 0.5
+	ac_model_weight -> 2
+	ac_model_rollouts -> 1
+	normalize_values -> False
+	use_ac_model -> True
+	afa_model_config -> {'lin_layers': [512, 512, 256, 256], 'act_fun': 'relu', 'ortho_init': False, 'vf_coef': 1.0, 'ent_coef': 0.0, 'clip_coef': 0.2, 'clip_vloss': True, 'normalize_advantages': True, 'num_envs': 1}
+	trials -> 1
+	results_dir -> results/afa/celeba_afa
+	dataset -> celeba
+	num_workers -> 8
+	batch_size -> 256
+	check_val_every_n_epoch -> 2
+	root_dir -> /home/xty20/data
+	use_imbalance -> True
+	image_size -> 64
+	num_classes -> 1000
+	use_binary_vector_class -> True
+	num_concepts -> 6
+	label_binary_width -> 1
+	label_dataset_subsample -> 12
+	num_hidden_concepts -> 2
+	selected_concepts -> False
+	competence_levels -> [1, 0]
+	intervention_freq -> 1
+	intervention_batch_size -> 512
+	intervention_policies -> ['afacem_policy', 'optimal_greedy_no_prior', 'group_random_no_prior']
+	max_epochs -> 300
+	time_last_called -> 2024/05/15 at 13:14:04
+	n_concepts -> 6
+	n_tasks -> 230
+	concept_map -> None
+	architecture -> IntAwareConceptEmbeddingModel
+	extra_name -> Retry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa
+	sampling_percent -> 1
+	horizon_binary_representation -> True
+	include_task_trajectory_loss -> True
+	include_only_last_trajectory_loss -> True
+	task_loss_weight -> 0
+	intervention_weight -> 5
+	intervention_task_loss_weight -> 1
+	initial_horizon -> 2
+	use_concept_groups -> False
+	use_full_mask_distr -> False
+	propagate_target_gradients -> False
+	int_model_use_bn -> True
+	int_model_layers -> [128, 128, 64, 64]
+	intcem_task_loss_weight -> 0
+	embedding_activation -> leakyrelu
+	tau -> 1
+	max_horizon -> 6
+	horizon_uniform_distr -> True
+	num_rollouts -> 6
+	beta_a -> 1
+	beta_b -> 3
+	intervention_task_discount -> 1.1
+	final_reward_ratio -> 1
+	intermediate_reward_ratio -> 0.1
+	average_trajectory -> True
+	use_horizon -> False
+	initialize_discount -> False
+	model_pretrain_path -> None
+	horizon_rate -> 1.005
+	intervention_discount -> 1
+	gradient_clip_val -> 10
+	legacy_mode -> False
+[Number of parameters in model 23357101 ]
+[Number of non-trainable parameters in model 1091360 ]
+	Found cached model... loading it
+DEBUG:root:max_nll: 1.0
+DEBUG:root:max_nll: 6.792610168457031
+DEBUG:fsspec.local:open file: /home/xty20/cem/results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1-v2.ckpt
+DEBUG:root:max_nll: 6.945398330688477
+DEBUG:root:max_nll: 6.797829627990723
+DEBUG:fsspec.local:open file: /home/xty20/cem/results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1-v2.ckpt
+DEBUG:root:max_nll: 6.854702949523926
+DEBUG:root:max_nll: 7.026300430297852
+DEBUG:fsspec.local:open file: /home/xty20/cem/results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1-v2.ckpt
+DEBUG:root:max_nll: 6.856468200683594
+DEBUG:root:max_nll: 6.9344258308410645
+DEBUG:root:max_nll: 7.027985572814941
+DEBUG:root:max_nll: 6.953824996948242
+DEBUG:root:max_nll: 7.070686340332031
+DEBUG:root:max_nll: 6.8539886474609375
+DEBUG:root:max_nll: 7.127005577087402
+DEBUG:root:max_nll: 7.382455825805664
+DEBUG:root:max_nll: 6.849768161773682
+DEBUG:root:max_nll: 7.134671688079834
+Traceback (most recent call last):
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/train/training.py", line 321, in train_model
+    torch.save(
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torch/serialization.py", line 620, in save
+    return
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torch/serialization.py", line 466, in __exit__
+    self.file_like.write_end_of_file()
+KeyboardInterrupt
+wandb: ERROR Control-C detected -- Run data was not synced
+INFO:root:Results will be dumped in results/afa/celeba_afa
+DEBUG:root:And the dataset's root directory is /home/xty20/data
+[rank: 0] Global seed set to 42
+[rank: 0] Global seed set to 42
+DEBUG:root:Concept frequency is: [0.11113579 0.26698059 0.512505   0.20457159 0.02244335 0.15157528
+ 0.24079586 0.23453225 0.23925093 0.14799185 0.05089857 0.20519351
+ 0.14216753 0.05756692 0.04668829 0.06511878 0.06276438 0.04194986
+ 0.38692195 0.45503186 0.41675428 0.48342786 0.04154512 0.11514864
+ 0.83493996 0.28414257 0.0429469  0.27744461 0.07977828 0.06572096
+ 0.05651064 0.48208037 0.20840182 0.31956722 0.18892492 0.04846026
+ 0.4724357  0.12296704 0.07271507 0.77361685]
+DEBUG:root:Selecting concepts: [2, 19, 20, 21, 31, 36]
+DEBUG:root:	And hidden concepts: [18, 33]
+DEBUG:root:Subsampling to 16883 elements.
+DEBUG:root:Data split is: 16883 = 11818 (train) + 3376 (test) + 1689 (validation)
+{
+    "batch_size": 128,
+    "check_val_every_n_epoch": 2,
+    "competence_levels": [
+        1
+    ],
+    "dataset": "celeba",
+    "image_size": 64,
+    "intervention_batch_size": 512,
+    "intervention_freq": 1,
+    "intervention_policies": [
+        "afacem_policy",
+        "optimal_greedy_no_prior",
+        "group_random_no_prior"
+    ],
+    "label_binary_width": 1,
+    "label_dataset_subsample": 12,
+    "max_epochs": 300,
+    "num_classes": 1000,
+    "num_concepts": 6,
+    "num_hidden_concepts": 2,
+    "num_workers": 8,
+    "results_dir": "results/afa/celeba_afa",
+    "root_dir": "/home/xty20/data",
+    "runs": [
+        {
+            "architecture": "IntAwareConceptEmbeddingModel",
+            "average_trajectory": true,
+            "beta_a": 1,
+            "beta_b": 3,
+            "embedding_activation": "leakyrelu",
+            "extra_name": "Retry_concept_loss_weight_{concept_loss_weight}_intervention_weight_{intervention_weight}_horizon_rate_{horizon_rate}_intervention_discount_{intervention_discount}_task_discount_{intervention_task_discount}_sampling_percent_{sampling_percent}_large_model",
+            "final_reward_ratio": 1,
+            "gradient_clip_val": 10,
+            "horizon_binary_representation": true,
+            "horizon_rate": 1.005,
+            "horizon_uniform_distr": true,
+            "include_only_last_trajectory_loss": true,
+            "include_task_trajectory_loss": true,
+            "initial_horizon": 2,
+            "initialize_discount": false,
+            "int_model_layers": [
+                128,
+                128,
+                64,
+                64
+            ],
+            "int_model_use_bn": true,
+            "intcem_task_loss_weight": 0,
+            "intermediate_reward_ratio": 0.1,
+            "intervention_discount": 1,
+            "intervention_task_discount": 1.1,
+            "intervention_task_loss_weight": 1,
+            "intervention_weight": 1,
+            "legacy_mode": false,
+            "max_horizon": 6,
+            "model_pretrain_path": null,
+            "num_rollouts": 3,
+            "propagate_target_gradients": false,
+            "sampling_percent": 1,
+            "task_loss_weight": 0,
+            "tau": 1,
+            "training_intervention_prob": 0.25,
+            "use_concept_groups": false,
+            "use_full_mask_distr": false,
+            "use_horizon": false
+        }
+    ],
+    "selected_concepts": false,
+    "shared_params": {
+        "ac_model_config": {
+            "affine_hids": [
+                256,
+                256
+            ],
+            "architecture": "flow",
+            "batch_size": 32,
+            "clip_gradient": 1,
+            "coupling_hids": [
+                256,
+                256
+            ],
+            "decay_rate": 0.5,
+            "decay_steps": 10000,
+            "lambda_nll": 1,
+            "lambda_xent": 1,
+            "layer_cfg": [
+                "ML",
+                "LR",
+                "CP2"
+            ],
+            "learning_rate": 0.0001,
+            "linear_hids": [
+                256,
+                256
+            ],
+            "linear_rank": -1,
+            "max_epochs": 50,
+            "model_classes": true,
+            "n_components": 256,
+            "num_samples": 10,
+            "optimizer": "adam",
+            "patience": 3,
+            "prior": "autoreg",
+            "prior_hids": [
+                1,
+                1
+            ],
+            "prior_layers": 2,
+            "prior_units": 1,
+            "rnncp_layers": 2,
+            "rnncp_units": 32,
+            "transformations": [
+                "AF",
+                "TL",
+                "TL",
+                "AF"
+            ],
+            "weight_decay": 0.01
+        },
+        "ac_model_nll_ratio": 0.5,
+        "ac_model_rollouts": 1,
+        "ac_model_weight": 2,
+        "afa_model_config": {
+            "act_fun": "relu",
+            "clip_coef": 0.2,
+            "clip_vloss": true,
+            "ent_coef": 0.0,
+            "lin_layers": [
+                1024,
+                1024,
+                512,
+                512
+            ],
+            "normalize_advantages": true,
+            "num_envs": 1,
+            "ortho_init": false,
+            "vf_coef": 1.0
+        },
+        "allow_no_action": false,
+        "bool": false,
+        "c_extractor_arch": "resnet34",
+        "cbm_aneal_rate": 1,
+        "cbm_starting_aneal_rate": 1,
+        "concept_loss_weight": 1,
+        "continue_training": true,
+        "early_stopping_delta": 0.0,
+        "early_stopping_mode": "min",
+        "early_stopping_monitor": "val_cbm_loss",
+        "emb_size": 16,
+        "enable_checkpointing": false,
+        "extra_dims": 0,
+        "learning_rate": 5e-06,
+        "mask_no_action": true,
+        "momentum": 0.9,
+        "normalize_values": false,
+        "only_train_ac_model": false,
+        "optimizer": "adam",
+        "patience": 5,
+        "run_ois": false,
+        "save_model": true,
+        "sigmoidal_prob": false,
+        "top_k_accuracy": null,
+        "train_ac_model": false,
+        "train_afa_model": true,
+        "training_intervention_prob": 0.25,
+        "use_ac_model": true,
+        "weight_decay": 0.001,
+        "weight_loss": false
+    },
+    "trials": 1,
+    "use_binary_vector_class": true,
+    "use_imbalance": true
+}
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+INFO:root:Training sample shape is: torch.Size([128, 3, 64, 64]) with type torch.FloatTensor
+INFO:root:Training label shape is: torch.Size([128]) with type torch.LongTensor
+INFO:root:	Number of output classes: 230
+INFO:root:Training concept shape is: torch.Size([128, 6]) with type torch.FloatTensor
+INFO:root:	Number of training concepts: 6
+INFO:root:Setting log level to: "DEBUG"
+DEBUG:root:Setting ac model save path to be results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+[rank: 0] Global seed set to 42
+DEBUG:root:AC CBM loaded AC model checkpoint from results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+DEBUG:git.util:Failed checking if running in CYGWIN due to: FileNotFoundError(2, 'No such file or directory')
+DEBUG:git.cmd:Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/xty20/cem, stdin=None, shell=False, universal_newlines=False)
+DEBUG:git.cmd:Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/xty20/cem, stdin=None, shell=False, universal_newlines=False)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.wandb.ai:443
+DEBUG:urllib3.connectionpool:https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
+wandb: Currently logged in as: thomasyuan1 (thomasyuan). Use `wandb login --relogin` to force relogin
+DEBUG:git.cmd:Popen(['git', 'cat-file', '--batch-check'], cwd=/home/xty20/cem, stdin=<valid stream>, shell=False, universal_newlines=False)
+wandb: wandb version 0.17.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.16.6
+wandb: Run data is saved locally in /home/xty20/cem/wandb/run-20240515_192620-qmmwscge
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_1_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_large_model_afa_resnet34_fold_1
+wandb: ⭐️ View project at https://wandb.ai/thomasyuan/celeba_test
+wandb: 🚀 View run at https://wandb.ai/thomasyuan/celeba_test/runs/qmmwscge
+[TRIAL 1/1 BEGINS AT 15/05/2024 at 19:26:18
+[Training IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_1_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_large_model_afa_resnet34_fold_1]
+config:
+<built-in function localtime>
+	top_k_accuracy -> None
+	save_model -> True
+	patience -> 5
+	emb_size -> 16
+	extra_dims -> 0
+	concept_loss_weight -> 1
+	learning_rate -> 5e-06
+	weight_decay -> 0.001
+	weight_loss -> False
+	c_extractor_arch -> resnet34
+	optimizer -> adam
+	bool -> False
+	early_stopping_monitor -> val_cbm_loss
+	early_stopping_mode -> min
+	early_stopping_delta -> 0.0
+	momentum -> 0.9
+	sigmoidal_prob -> False
+	training_intervention_prob -> 0.25
+	train_ac_model -> False
+	only_train_ac_model -> False
+	allow_no_action -> False
+	mask_no_action -> True
+	train_afa_model -> True
+	continue_training -> True
+	cbm_aneal_rate -> 1
+	cbm_starting_aneal_rate -> 1
+	enable_checkpointing -> False
+	run_ois -> False
+	ac_model_config -> {'architecture': 'flow', 'max_epochs': 50, 'batch_size': 32, 'transformations': ['AF', 'TL', 'TL', 'AF'], 'layer_cfg': ['ML', 'LR', 'CP2'], 'rnncp_units': 32, 'rnncp_layers': 2, 'linear_hids': [256, 256], 'linear_rank': -1, 'affine_hids': [256, 256], 'coupling_hids': [256, 256], 'prior': 'autoreg', 'n_components': 256, 'prior_units': 1, 'prior_layers': 2, 'prior_hids': [1, 1], 'optimizer': 'adam', 'learning_rate': 0.0001, 'weight_decay': 0.01, 'decay_steps': 10000, 'decay_rate': 0.5, 'clip_gradient': 1, 'num_samples': 10, 'patience': 3, 'lambda_nll': 1, 'lambda_xent': 1, 'model_classes': True, 'save_path': 'results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt'}
+	ac_model_nll_ratio -> 0.5
+	ac_model_weight -> 2
+	ac_model_rollouts -> 1
+	normalize_values -> False
+	use_ac_model -> True
+	afa_model_config -> {'lin_layers': [1024, 1024, 512, 512], 'act_fun': 'relu', 'ortho_init': False, 'vf_coef': 1.0, 'ent_coef': 0.0, 'clip_coef': 0.2, 'clip_vloss': True, 'normalize_advantages': True, 'num_envs': 1}
+	trials -> 1
+	results_dir -> results/afa/celeba_afa
+	dataset -> celeba
+	num_workers -> 8
+	batch_size -> 128
+	check_val_every_n_epoch -> 2
+	root_dir -> /home/xty20/data
+	use_imbalance -> True
+	image_size -> 64
+	num_classes -> 1000
+	use_binary_vector_class -> True
+	num_concepts -> 6
+	label_binary_width -> 1
+	label_dataset_subsample -> 12
+	num_hidden_concepts -> 2
+	selected_concepts -> False
+	competence_levels -> [1]
+	intervention_freq -> 1
+	intervention_batch_size -> 512
+	intervention_policies -> ['afacem_policy', 'optimal_greedy_no_prior', 'group_random_no_prior']
+	max_epochs -> 300
+	time_last_called -> 2024/05/15 at 19:25:38
+	n_concepts -> 6
+	n_tasks -> 230
+	concept_map -> None
+	architecture -> IntAwareConceptEmbeddingModel
+	extra_name -> Retry_concept_loss_weight_1_intervention_weight_1_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_large_model_afa
+	sampling_percent -> 1
+	horizon_binary_representation -> True
+	include_task_trajectory_loss -> True
+	include_only_last_trajectory_loss -> True
+	task_loss_weight -> 0
+	intervention_weight -> 1
+	intervention_task_loss_weight -> 1
+	initial_horizon -> 2
+	use_concept_groups -> False
+	use_full_mask_distr -> False
+	propagate_target_gradients -> False
+	int_model_use_bn -> True
+	int_model_layers -> [128, 128, 64, 64]
+	intcem_task_loss_weight -> 0
+	embedding_activation -> leakyrelu
+	tau -> 1
+	max_horizon -> 6
+	horizon_uniform_distr -> True
+	num_rollouts -> 3
+	beta_a -> 1
+	beta_b -> 3
+	intervention_task_discount -> 1.1
+	final_reward_ratio -> 1
+	intermediate_reward_ratio -> 0.1
+	average_trajectory -> True
+	use_horizon -> False
+	initialize_discount -> False
+	model_pretrain_path -> None
+	horizon_rate -> 1.005
+	intervention_discount -> 1
+	gradient_clip_val -> 10
+	legacy_mode -> False
+[Number of parameters in model 26493357 ]
+[Number of non-trainable parameters in model 1091360 ]
+DEBUG:root:max_nll: 7.390156269073486
+DEBUG:root:max_nll: 7.466375827789307
+DEBUG:root:max_nll: 7.1965651512146
+DEBUG:root:max_nll: 6.879611968994141
+DEBUG:root:max_nll: 6.821305274963379
+DEBUG:root:max_nll: 6.623638153076172
+DEBUG:root:max_nll: 6.569500923156738
+DEBUG:root:max_nll: 6.753438949584961
+DEBUG:root:max_nll: 6.731969833374023
+DEBUG:root:max_nll: 6.9137372970581055
+DEBUG:root:max_nll: 6.828006744384766
+DEBUG:root:max_nll: 6.72860860824585
+DEBUG:root:max_nll: 6.852096080780029
+Traceback (most recent call last):
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/train/training.py", line 321, in train_model
+    torch.save(
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torch/serialization.py", line 620, in save
+    return
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torch/serialization.py", line 466, in __exit__
+    self.file_like.write_end_of_file()
+KeyboardInterrupt
+wandb: - 0.014 MB of 0.014 MB uploadedwandb: ERROR Control-C detected -- Run data was not synced
+INFO:root:Results will be dumped in results/afa/celeba_afa
+DEBUG:root:And the dataset's root directory is /home/xty20/data
+[rank: 0] Global seed set to 42
+[rank: 0] Global seed set to 42
+DEBUG:root:Concept frequency is: [0.11113579 0.26698059 0.512505   0.20457159 0.02244335 0.15157528
+ 0.24079586 0.23453225 0.23925093 0.14799185 0.05089857 0.20519351
+ 0.14216753 0.05756692 0.04668829 0.06511878 0.06276438 0.04194986
+ 0.38692195 0.45503186 0.41675428 0.48342786 0.04154512 0.11514864
+ 0.83493996 0.28414257 0.0429469  0.27744461 0.07977828 0.06572096
+ 0.05651064 0.48208037 0.20840182 0.31956722 0.18892492 0.04846026
+ 0.4724357  0.12296704 0.07271507 0.77361685]
+DEBUG:root:Selecting concepts: [2, 19, 20, 21, 31, 36]
+DEBUG:root:	And hidden concepts: [18, 33]
+{
+    "batch_size": 128,
+    "check_val_every_n_epoch": 2,
+    "competence_levels": [
+        1
+    ],
+    "dataset": "celeba",
+    "image_size": 64,
+    "intervention_batch_size": 512,
+    "intervention_freq": 1,
+    "intervention_policies": [
+        "afacem_policy",
+        "optimal_greedy_no_prior",
+        "group_random_no_prior"
+    ],
+    "label_binary_width": 1,
+    "label_dataset_subsample": 12,
+    "max_epochs": 300,
+    "num_classes": 1000,
+    "num_concepts": 6,
+    "num_hidden_concepts": 2,
+    "num_workers": 8,
+    "results_dir": "results/afa/celeba_afa",
+    "root_dir": "/home/xty20/data",
+    "runs": [
+        {
+            "architecture": "IntAwareConceptEmbeddingModel",
+            "average_trajectory": true,
+            "beta_a": 1,
+            "beta_b": 3,
+            "embedding_activation": "leakyrelu",
+            "extra_name": "Retry_concept_loss_weight_{concept_loss_weight}_intervention_weight_{intervention_weight}_horizon_rate_{horizon_rate}_intervention_discount_{intervention_discount}_task_discount_{intervention_task_discount}_sampling_percent_{sampling_percent}_large_model",
+            "final_reward_ratio": 1,
+            "gradient_clip_val": 10,
+            "horizon_binary_representation": true,
+            "horizon_rate": 1.005,
+            "horizon_uniform_distr": true,
+            "include_only_last_trajectory_loss": true,
+            "include_task_trajectory_loss": true,
+            "initial_horizon": 2,
+            "initialize_discount": false,
+            "int_model_layers": [
+                128,
+                128,
+                64,
+                64
+            ],
+            "int_model_use_bn": true,
+            "intcem_task_loss_weight": 0,
+            "intermediate_reward_ratio": 0.1,
+            "intervention_discount": 1,
+            "intervention_task_discount": 1.1,
+            "intervention_task_loss_weight": 1,
+            "intervention_weight": 5,
+            "legacy_mode": false,
+            "max_horizon": 6,
+            "model_pretrain_path": null,
+            "num_rollouts": 6,
+            "propagate_target_gradients": false,
+            "sampling_percent": 1,
+            "task_loss_weight": 0,
+            "tau": 1,
+            "training_intervention_prob": 0.25,
+            "use_concept_groups": false,
+            "use_full_mask_distr": false,
+            "use_horizon": false
+        }
+    ],
+    "selected_concepts": false,
+    "shared_params": {
+        "ac_model_config": {
+            "affine_hids": [
+                256,
+                256
+            ],
+            "architecture": "flow",
+            "batch_size": 32,
+            "clip_gradient": 1,
+            "coupling_hids": [
+                256,
+                256
+            ],
+            "decay_rate": 0.5,
+            "decay_steps": 10000,
+            "lambda_nll": 1,
+            "lambda_xent": 1,
+            "layer_cfg": [
+                "ML",
+                "LR",
+                "CP2"
+            ],
+            "learning_rate": 0.0001,
+            "linear_hids": [
+                256,
+                256
+            ],
+            "linear_rank": -1,
+            "max_epochs": 50,
+            "model_classes": true,
+            "n_components": 256,
+            "num_samples": 10,
+            "optimizer": "adam",
+            "patience": 3,
+            "prior": "autoreg",
+            "prior_hids": [
+                1,
+                1
+            ],
+            "prior_layers": 2,
+            "prior_units": 1,
+            "rnncp_layers": 2,
+            "rnncp_units": 32,
+            "transformations": [
+                "AF",
+                "TL",
+                "TL",
+                "AF"
+            ],
+            "weight_decay": 0.01
+        },
+        "ac_model_nll_ratio": 0.5,
+        "ac_model_rollouts": 1,
+        "ac_model_weight": 2,
+        "afa_model_config": {
+            "act_fun": "relu",
+            "clip_coef": 0.2,
+            "clip_vloss": true,
+            "ent_coef": 0.0,
+            "lin_layers": [
+                512,
+                512,
+                256,
+                256
+            ],
+            "normalize_advantages": true,
+            "num_envs": 1,
+            "ortho_init": false,
+            "vf_coef": 1.0
+        },
+        "allow_no_action": false,
+        "bool": false,
+        "c_extractor_arch": "resnet34",
+        "cbm_aneal_rate": 1,
+        "cbm_starting_aneal_rate": 1,
+        "concept_loss_weight": 1,
+        "continue_training": true,
+        "early_stopping_delta": 0.0,
+        "early_stopping_mode": "min",
+        "early_stopping_monitor": "val_cbm_loss",
+        "emb_size": 16,
+        "enable_checkpointing": false,
+        "extra_dims": 0,
+        "learning_rate": 5e-06,
+        "mask_no_action": true,
+        "momentum": 0.9,
+        "normalize_values": false,
+        "only_train_ac_model": false,
+        "optimizer": "adam",
+        "patience": 5,
+        "run_ois": false,
+        "save_model": true,
+        "sigmoidal_prob": false,
+        "top_k_accuracy": null,
+        "train_ac_model": false,
+        "train_afa_model": true,
+        "training_intervention_prob": 0.25,
+        "use_ac_model": true,
+        "weight_decay": 0.001,
+        "weight_loss": false
+    },
+    "trials": 1,
+    "use_binary_vector_class": true,
+    "use_imbalance": true
+}
+Files already downloaded and verified
+Files already downloaded and verified
+Traceback (most recent call last):
+  File "experiments/run_experiments_rl.py", line 913, in <module>
+    main(
+  File "experiments/run_experiments_rl.py", line 72, in main
+    data_module.generate_data(
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/data/celeba_loader.py", line 170, in generate_data
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torchvision/datasets/celeba.py", line 93, in __init__
+    identity = self._load_csv("identity_CelebA.txt")
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torchvision/datasets/celeba.py", line 118, in _load_csv
+    data = list(csv.reader(csv_file, delimiter=" ", skipinitialspace=True))
+  File "/home/xty20/cem/venv/lib/python3.8/codecs.py", line 319, in decode
+    def decode(self, input, final=False):
+KeyboardInterrupt
+INFO:root:Results will be dumped in results/afa/celeba_afa
+DEBUG:root:And the dataset's root directory is /home/xty20/data
+[rank: 0] Global seed set to 42
+[rank: 0] Global seed set to 42
+DEBUG:root:Concept frequency is: [0.11113579 0.26698059 0.512505   0.20457159 0.02244335 0.15157528
+ 0.24079586 0.23453225 0.23925093 0.14799185 0.05089857 0.20519351
+ 0.14216753 0.05756692 0.04668829 0.06511878 0.06276438 0.04194986
+ 0.38692195 0.45503186 0.41675428 0.48342786 0.04154512 0.11514864
+ 0.83493996 0.28414257 0.0429469  0.27744461 0.07977828 0.06572096
+ 0.05651064 0.48208037 0.20840182 0.31956722 0.18892492 0.04846026
+ 0.4724357  0.12296704 0.07271507 0.77361685]
+DEBUG:root:Selecting concepts: [2, 19, 20, 21, 31, 36]
+DEBUG:root:	And hidden concepts: [18, 33]
+DEBUG:root:Subsampling to 16883 elements.
+DEBUG:root:Data split is: 16883 = 11818 (train) + 3376 (test) + 1689 (validation)
+{
+    "batch_size": 128,
+    "check_val_every_n_epoch": 2,
+    "competence_levels": [
+        1
+    ],
+    "dataset": "celeba",
+    "image_size": 64,
+    "intervention_batch_size": 512,
+    "intervention_freq": 1,
+    "intervention_policies": [
+        "afacem_policy",
+        "optimal_greedy_no_prior",
+        "group_random_no_prior"
+    ],
+    "label_binary_width": 1,
+    "label_dataset_subsample": 12,
+    "max_epochs": 300,
+    "num_classes": 1000,
+    "num_concepts": 6,
+    "num_hidden_concepts": 2,
+    "num_workers": 8,
+    "results_dir": "results/afa/celeba_afa",
+    "root_dir": "/home/xty20/data",
+    "runs": [
+        {
+            "architecture": "IntAwareConceptEmbeddingModel",
+            "average_trajectory": true,
+            "beta_a": 1,
+            "beta_b": 3,
+            "embedding_activation": "leakyrelu",
+            "extra_name": "Retry_concept_loss_weight_{concept_loss_weight}_intervention_weight_{intervention_weight}_horizon_rate_{horizon_rate}_intervention_discount_{intervention_discount}_task_discount_{intervention_task_discount}_sampling_percent_{sampling_percent}_large_model",
+            "final_reward_ratio": 1,
+            "gradient_clip_val": 10,
+            "horizon_binary_representation": true,
+            "horizon_rate": 1.005,
+            "horizon_uniform_distr": true,
+            "include_only_last_trajectory_loss": true,
+            "include_task_trajectory_loss": true,
+            "initial_horizon": 2,
+            "initialize_discount": false,
+            "int_model_layers": [
+                128,
+                128,
+                64,
+                64
+            ],
+            "int_model_use_bn": true,
+            "intcem_task_loss_weight": 0,
+            "intermediate_reward_ratio": 0.05,
+            "intervention_discount": 1,
+            "intervention_task_discount": 1.1,
+            "intervention_task_loss_weight": 1,
+            "intervention_weight": 5,
+            "legacy_mode": false,
+            "max_horizon": 6,
+            "model_pretrain_path": null,
+            "num_rollouts": 6,
+            "propagate_target_gradients": false,
+            "sampling_percent": 1,
+            "task_loss_weight": 0,
+            "tau": 1,
+            "training_intervention_prob": 0.25,
+            "use_concept_groups": false,
+            "use_full_mask_distr": false,
+            "use_horizon": false
+        }
+    ],
+    "selected_concepts": false,
+    "shared_params": {
+        "ac_model_config": {
+            "affine_hids": [
+                256,
+                256
+            ],
+            "architecture": "flow",
+            "batch_size": 32,
+            "clip_gradient": 1,
+            "coupling_hids": [
+                256,
+                256
+            ],
+            "decay_rate": 0.5,
+            "decay_steps": 10000,
+            "lambda_nll": 1,
+            "lambda_xent": 1,
+            "layer_cfg": [
+                "ML",
+                "LR",
+                "CP2"
+            ],
+            "learning_rate": 0.0001,
+            "linear_hids": [
+                256,
+                256
+            ],
+            "linear_rank": -1,
+            "max_epochs": 50,
+            "model_classes": true,
+            "n_components": 256,
+            "num_samples": 10,
+            "optimizer": "adam",
+            "patience": 3,
+            "prior": "autoreg",
+            "prior_hids": [
+                1,
+                1
+            ],
+            "prior_layers": 2,
+            "prior_units": 1,
+            "rnncp_layers": 2,
+            "rnncp_units": 32,
+            "transformations": [
+                "AF",
+                "TL",
+                "TL",
+                "AF"
+            ],
+            "weight_decay": 0.01
+        },
+        "ac_model_nll_ratio": 0.5,
+        "ac_model_rollouts": 1,
+        "ac_model_weight": 2,
+        "afa_model_config": {
+            "act_fun": "relu",
+            "clip_coef": 0.2,
+            "clip_vloss": true,
+            "ent_coef": 0.0,
+            "lin_layers": [
+                512,
+                512,
+                256,
+                256
+            ],
+            "normalize_advantages": true,
+            "num_envs": 1,
+            "ortho_init": false,
+            "vf_coef": 1.0
+        },
+        "allow_no_action": false,
+        "bool": false,
+        "c_extractor_arch": "resnet34",
+        "cbm_aneal_rate": 1,
+        "cbm_starting_aneal_rate": 1,
+        "concept_loss_weight": 1,
+        "continue_training": true,
+        "early_stopping_delta": 0.0,
+        "early_stopping_mode": "min",
+        "early_stopping_monitor": "val_cbm_loss",
+        "emb_size": 16,
+        "enable_checkpointing": false,
+        "extra_dims": 0,
+        "learning_rate": 5e-06,
+        "mask_no_action": true,
+        "momentum": 0.9,
+        "normalize_values": false,
+        "only_train_ac_model": false,
+        "optimizer": "adam",
+        "patience": 5,
+        "run_ois": false,
+        "save_model": true,
+        "sigmoidal_prob": false,
+        "top_k_accuracy": null,
+        "train_ac_model": false,
+        "train_afa_model": true,
+        "training_intervention_prob": 0.25,
+        "use_ac_model": true,
+        "weight_decay": 0.001,
+        "weight_loss": false
+    },
+    "trials": 1,
+    "use_binary_vector_class": true,
+    "use_imbalance": true
+}
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+INFO:root:Training sample shape is: torch.Size([128, 3, 64, 64]) with type torch.FloatTensor
+INFO:root:Training label shape is: torch.Size([128]) with type torch.LongTensor
+INFO:root:	Number of output classes: 230
+INFO:root:Training concept shape is: torch.Size([128, 6]) with type torch.FloatTensor
+INFO:root:	Number of training concepts: 6
+INFO:root:Setting log level to: "DEBUG"
+DEBUG:root:Setting ac model save path to be results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+[rank: 0] Global seed set to 42
+DEBUG:root:AC CBM loaded AC model checkpoint from results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+DEBUG:git.util:Failed checking if running in CYGWIN due to: FileNotFoundError(2, 'No such file or directory')
+DEBUG:git.cmd:Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/xty20/cem, stdin=None, shell=False, universal_newlines=False)
+DEBUG:git.cmd:Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/xty20/cem, stdin=None, shell=False, universal_newlines=False)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.wandb.ai:443
+DEBUG:urllib3.connectionpool:https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
+wandb: Currently logged in as: thomasyuan1 (thomasyuan). Use `wandb login --relogin` to force relogin
+DEBUG:git.cmd:Popen(['git', 'cat-file', '--batch-check'], cwd=/home/xty20/cem, stdin=<valid stream>, shell=False, universal_newlines=False)
+wandb: wandb version 0.17.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.16.6
+wandb: Run data is saved locally in /home/xty20/cem/wandb/run-20240515_195551-k0hmucvk
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_large_model_afa_resnet34_fold_1
+wandb: ⭐️ View project at https://wandb.ai/thomasyuan/celeba_test
+wandb: 🚀 View run at https://wandb.ai/thomasyuan/celeba_test/runs/k0hmucvk
+[TRIAL 1/1 BEGINS AT 15/05/2024 at 19:55:49
+[Training IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_large_model_afa_resnet34_fold_1]
+config:
+<built-in function localtime>
+	top_k_accuracy -> None
+	save_model -> True
+	patience -> 5
+	emb_size -> 16
+	extra_dims -> 0
+	concept_loss_weight -> 1
+	learning_rate -> 5e-06
+	weight_decay -> 0.001
+	weight_loss -> False
+	c_extractor_arch -> resnet34
+	optimizer -> adam
+	bool -> False
+	early_stopping_monitor -> val_cbm_loss
+	early_stopping_mode -> min
+	early_stopping_delta -> 0.0
+	momentum -> 0.9
+	sigmoidal_prob -> False
+	training_intervention_prob -> 0.25
+	train_ac_model -> False
+	only_train_ac_model -> False
+	allow_no_action -> False
+	mask_no_action -> True
+	train_afa_model -> True
+	continue_training -> True
+	cbm_aneal_rate -> 1
+	cbm_starting_aneal_rate -> 1
+	enable_checkpointing -> False
+	run_ois -> False
+	ac_model_config -> {'architecture': 'flow', 'max_epochs': 50, 'batch_size': 32, 'transformations': ['AF', 'TL', 'TL', 'AF'], 'layer_cfg': ['ML', 'LR', 'CP2'], 'rnncp_units': 32, 'rnncp_layers': 2, 'linear_hids': [256, 256], 'linear_rank': -1, 'affine_hids': [256, 256], 'coupling_hids': [256, 256], 'prior': 'autoreg', 'n_components': 256, 'prior_units': 1, 'prior_layers': 2, 'prior_hids': [1, 1], 'optimizer': 'adam', 'learning_rate': 0.0001, 'weight_decay': 0.01, 'decay_steps': 10000, 'decay_rate': 0.5, 'clip_gradient': 1, 'num_samples': 10, 'patience': 3, 'lambda_nll': 1, 'lambda_xent': 1, 'model_classes': True, 'save_path': 'results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt'}
+	ac_model_nll_ratio -> 0.5
+	ac_model_weight -> 2
+	ac_model_rollouts -> 1
+	normalize_values -> False
+	use_ac_model -> True
+	afa_model_config -> {'lin_layers': [512, 512, 256, 256], 'act_fun': 'relu', 'ortho_init': False, 'vf_coef': 1.0, 'ent_coef': 0.0, 'clip_coef': 0.2, 'clip_vloss': True, 'normalize_advantages': True, 'num_envs': 1}
+	trials -> 1
+	results_dir -> results/afa/celeba_afa
+	dataset -> celeba
+	num_workers -> 8
+	batch_size -> 128
+	check_val_every_n_epoch -> 2
+	root_dir -> /home/xty20/data
+	use_imbalance -> True
+	image_size -> 64
+	num_classes -> 1000
+	use_binary_vector_class -> True
+	num_concepts -> 6
+	label_binary_width -> 1
+	label_dataset_subsample -> 12
+	num_hidden_concepts -> 2
+	selected_concepts -> False
+	competence_levels -> [1]
+	intervention_freq -> 1
+	intervention_batch_size -> 512
+	intervention_policies -> ['afacem_policy', 'optimal_greedy_no_prior', 'group_random_no_prior']
+	max_epochs -> 300
+	time_last_called -> 2024/05/15 at 19:55:09
+	n_concepts -> 6
+	n_tasks -> 230
+	concept_map -> None
+	architecture -> IntAwareConceptEmbeddingModel
+	extra_name -> Retry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_large_model_afa
+	sampling_percent -> 1
+	horizon_binary_representation -> True
+	include_task_trajectory_loss -> True
+	include_only_last_trajectory_loss -> True
+	task_loss_weight -> 0
+	intervention_weight -> 5
+	intervention_task_loss_weight -> 1
+	initial_horizon -> 2
+	use_concept_groups -> False
+	use_full_mask_distr -> False
+	propagate_target_gradients -> False
+	int_model_use_bn -> True
+	int_model_layers -> [128, 128, 64, 64]
+	intcem_task_loss_weight -> 0
+	embedding_activation -> leakyrelu
+	tau -> 1
+	max_horizon -> 6
+	horizon_uniform_distr -> True
+	num_rollouts -> 6
+	beta_a -> 1
+	beta_b -> 3
+	intervention_task_discount -> 1.1
+	final_reward_ratio -> 1
+	intermediate_reward_ratio -> 0.05
+	average_trajectory -> True
+	use_horizon -> False
+	initialize_discount -> False
+	model_pretrain_path -> None
+	horizon_rate -> 1.005
+	intervention_discount -> 1
+	gradient_clip_val -> 10
+	legacy_mode -> False
+[Number of parameters in model 23357101 ]
+[Number of non-trainable parameters in model 1091360 ]
+DEBUG:root:max_nll: 7.41251802444458
+DEBUG:root:max_nll: 7.214879512786865
+DEBUG:root:max_nll: 7.1692118644714355
+DEBUG:root:max_nll: 6.9196977615356445
+DEBUG:root:max_nll: 6.97641658782959
+INFO:root:Results will be dumped in results/afa/celeba_afa
+DEBUG:root:And the dataset's root directory is /home/xty20/data
+[rank: 0] Global seed set to 42
+[rank: 0] Global seed set to 42
+DEBUG:root:Concept frequency is: [0.11113579 0.26698059 0.512505   0.20457159 0.02244335 0.15157528
+ 0.24079586 0.23453225 0.23925093 0.14799185 0.05089857 0.20519351
+ 0.14216753 0.05756692 0.04668829 0.06511878 0.06276438 0.04194986
+ 0.38692195 0.45503186 0.41675428 0.48342786 0.04154512 0.11514864
+ 0.83493996 0.28414257 0.0429469  0.27744461 0.07977828 0.06572096
+ 0.05651064 0.48208037 0.20840182 0.31956722 0.18892492 0.04846026
+ 0.4724357  0.12296704 0.07271507 0.77361685]
+DEBUG:root:Selecting concepts: [2, 19, 20, 21, 31, 36]
+DEBUG:root:	And hidden concepts: [18, 33]
+DEBUG:root:Subsampling to 16883 elements.
+DEBUG:root:Data split is: 16883 = 11818 (train) + 3376 (test) + 1689 (validation)
+{
+    "batch_size": 128,
+    "check_val_every_n_epoch": 2,
+    "competence_levels": [
+        1
+    ],
+    "dataset": "celeba",
+    "image_size": 64,
+    "intervention_batch_size": 512,
+    "intervention_freq": 1,
+    "intervention_policies": [
+        "afacem_policy",
+        "optimal_greedy_no_prior",
+        "group_random_no_prior"
+    ],
+    "label_binary_width": 1,
+    "label_dataset_subsample": 12,
+    "max_epochs": 300,
+    "num_classes": 1000,
+    "num_concepts": 6,
+    "num_hidden_concepts": 2,
+    "num_workers": 8,
+    "results_dir": "results/afa/celeba_afa",
+    "root_dir": "/home/xty20/data",
+    "runs": [
+        {
+            "architecture": "IntAwareConceptEmbeddingModel",
+            "average_trajectory": true,
+            "beta_a": 1,
+            "beta_b": 3,
+            "embedding_activation": "leakyrelu",
+            "extra_name": "Retry_concept_loss_weight_{concept_loss_weight}_intervention_weight_{intervention_weight}_horizon_rate_{horizon_rate}_intervention_discount_{intervention_discount}_task_discount_{intervention_task_discount}_sampling_percent_{sampling_percent}",
+            "final_reward_ratio": 1,
+            "gradient_clip_val": 10,
+            "grid_search_mode": "exhaustive",
+            "grid_variables": [
+                "intervention_weight"
+            ],
+            "horizon_binary_representation": true,
+            "horizon_rate": 1.005,
+            "horizon_uniform_distr": true,
+            "include_only_last_trajectory_loss": true,
+            "include_task_trajectory_loss": true,
+            "initial_horizon": 2,
+            "initialize_discount": false,
+            "int_model_layers": [
+                128,
+                128,
+                64,
+                64
+            ],
+            "int_model_use_bn": true,
+            "intcem_task_loss_weight": 0,
+            "intermediate_reward_ratio": 0.1,
+            "intervention_discount": 1,
+            "intervention_task_discount": 1.1,
+            "intervention_task_loss_weight": 1,
+            "intervention_weight": [
+                20
+            ],
+            "legacy_mode": false,
+            "max_horizon": 6,
+            "model_pretrain_path": null,
+            "num_rollouts": 3,
+            "propagate_target_gradients": false,
+            "sampling_percent": 1,
+            "task_loss_weight": 0,
+            "tau": 1,
+            "training_intervention_prob": 0.25,
+            "use_concept_groups": false,
+            "use_full_mask_distr": false,
+            "use_horizon": false
+        }
+    ],
+    "selected_concepts": false,
+    "shared_params": {
+        "ac_model_config": {
+            "affine_hids": [
+                256,
+                256
+            ],
+            "architecture": "flow",
+            "batch_size": 32,
+            "clip_gradient": 1,
+            "coupling_hids": [
+                256,
+                256
+            ],
+            "decay_rate": 0.5,
+            "decay_steps": 10000,
+            "lambda_nll": 1,
+            "lambda_xent": 1,
+            "layer_cfg": [
+                "ML",
+                "LR",
+                "CP2"
+            ],
+            "learning_rate": 0.0001,
+            "linear_hids": [
+                256,
+                256
+            ],
+            "linear_rank": -1,
+            "max_epochs": 50,
+            "model_classes": true,
+            "n_components": 256,
+            "num_samples": 10,
+            "optimizer": "adam",
+            "patience": 3,
+            "prior": "autoreg",
+            "prior_hids": [
+                1,
+                1
+            ],
+            "prior_layers": 2,
+            "prior_units": 1,
+            "rnncp_layers": 2,
+            "rnncp_units": 32,
+            "transformations": [
+                "AF",
+                "TL",
+                "TL",
+                "AF"
+            ],
+            "weight_decay": 0.01
+        },
+        "ac_model_nll_ratio": 0.5,
+        "ac_model_rollouts": 1,
+        "ac_model_weight": 2,
+        "afa_model_config": {
+            "act_fun": "relu",
+            "clip_coef": 0.2,
+            "clip_vloss": true,
+            "ent_coef": 0.0,
+            "lin_layers": [
+                512,
+                512,
+                256,
+                256
+            ],
+            "normalize_advantages": true,
+            "num_envs": 1,
+            "ortho_init": false,
+            "vf_coef": 1.0
+        },
+        "allow_no_action": false,
+        "bool": false,
+        "c_extractor_arch": "resnet34",
+        "cbm_aneal_rate": 1,
+        "cbm_starting_aneal_rate": 1,
+        "concept_loss_weight": 1,
+        "continue_training": false,
+        "early_stopping_delta": 0.0,
+        "early_stopping_mode": "min",
+        "early_stopping_monitor": "val_cbm_loss",
+        "emb_size": 16,
+        "enable_checkpointing": true,
+        "extra_dims": 0,
+        "learning_rate": 5e-06,
+        "mask_no_action": true,
+        "momentum": 0.9,
+        "normalize_values": false,
+        "only_train_ac_model": false,
+        "optimizer": "adam",
+        "patience": 5,
+        "run_ois": false,
+        "save_model": true,
+        "sigmoidal_prob": false,
+        "top_k_accuracy": null,
+        "train_ac_model": false,
+        "train_afa_model": true,
+        "training_intervention_prob": 0.25,
+        "use_ac_model": true,
+        "weight_decay": 0.001,
+        "weight_loss": false
+    },
+    "trials": 1,
+    "use_binary_vector_class": true,
+    "use_imbalance": true
+}
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+INFO:root:Training sample shape is: torch.Size([128, 3, 64, 64]) with type torch.FloatTensor
+INFO:root:Training label shape is: torch.Size([128]) with type torch.LongTensor
+INFO:root:	Number of output classes: 230
+INFO:root:Training concept shape is: torch.Size([128, 6]) with type torch.FloatTensor
+INFO:root:	Number of training concepts: 6
+INFO:root:Setting log level to: "DEBUG"
+DEBUG:root:Setting ac model save path to be results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+[rank: 0] Global seed set to 42
+DEBUG:root:AC CBM loaded AC model checkpoint from results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+DEBUG:git.util:Failed checking if running in CYGWIN due to: FileNotFoundError(2, 'No such file or directory')
+DEBUG:git.cmd:Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/xty20/cem, stdin=None, shell=False, universal_newlines=False)
+DEBUG:git.cmd:Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/xty20/cem, stdin=None, shell=False, universal_newlines=False)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.wandb.ai:443
+DEBUG:urllib3.connectionpool:https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
+wandb: Currently logged in as: thomasyuan1 (thomasyuan). Use `wandb login --relogin` to force relogin
+DEBUG:git.cmd:Popen(['git', 'cat-file', '--batch-check'], cwd=/home/xty20/cem, stdin=<valid stream>, shell=False, universal_newlines=False)
+wandb: wandb version 0.17.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.16.6
+wandb: Run data is saved locally in /home/xty20/cem/wandb/run-20240516_190240-eskkex1l
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1
+wandb: ⭐️ View project at https://wandb.ai/thomasyuan/celeba_test
+wandb: 🚀 View run at https://wandb.ai/thomasyuan/celeba_test/runs/eskkex1l
+DEBUG:root:Loading trained model from results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+DEBUG:root:Loaded model
+[TRIAL 1/1 BEGINS AT 16/05/2024 at 19:02:37
+[Training IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1]
+config:
+<built-in function localtime>
+	top_k_accuracy -> None
+	save_model -> True
+	patience -> 5
+	emb_size -> 16
+	extra_dims -> 0
+	concept_loss_weight -> 1
+	learning_rate -> 5e-06
+	weight_decay -> 0.001
+	weight_loss -> False
+	c_extractor_arch -> resnet34
+	optimizer -> adam
+	bool -> False
+	early_stopping_monitor -> val_cbm_loss
+	early_stopping_mode -> min
+	early_stopping_delta -> 0.0
+	momentum -> 0.9
+	sigmoidal_prob -> False
+	training_intervention_prob -> 0.25
+	train_ac_model -> False
+	only_train_ac_model -> False
+	allow_no_action -> False
+	mask_no_action -> True
+	train_afa_model -> True
+	continue_training -> False
+	cbm_aneal_rate -> 1
+	cbm_starting_aneal_rate -> 1
+	enable_checkpointing -> True
+	run_ois -> False
+	ac_model_config -> {'architecture': 'flow', 'max_epochs': 50, 'batch_size': 32, 'transformations': ['AF', 'TL', 'TL', 'AF'], 'layer_cfg': ['ML', 'LR', 'CP2'], 'rnncp_units': 32, 'rnncp_layers': 2, 'linear_hids': [256, 256], 'linear_rank': -1, 'affine_hids': [256, 256], 'coupling_hids': [256, 256], 'prior': 'autoreg', 'n_components': 256, 'prior_units': 1, 'prior_layers': 2, 'prior_hids': [1, 1], 'optimizer': 'adam', 'learning_rate': 0.0001, 'weight_decay': 0.01, 'decay_steps': 10000, 'decay_rate': 0.5, 'clip_gradient': 1, 'num_samples': 10, 'patience': 3, 'lambda_nll': 1, 'lambda_xent': 1, 'model_classes': True, 'save_path': 'results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt'}
+	ac_model_nll_ratio -> 0.5
+	ac_model_weight -> 2
+	ac_model_rollouts -> 1
+	normalize_values -> False
+	use_ac_model -> True
+	afa_model_config -> {'lin_layers': [512, 512, 256, 256], 'act_fun': 'relu', 'ortho_init': False, 'vf_coef': 1.0, 'ent_coef': 0.0, 'clip_coef': 0.2, 'clip_vloss': True, 'normalize_advantages': True, 'num_envs': 1}
+	trials -> 1
+	results_dir -> results/afa/celeba_afa
+	dataset -> celeba
+	num_workers -> 8
+	batch_size -> 128
+	check_val_every_n_epoch -> 2
+	root_dir -> /home/xty20/data
+	use_imbalance -> True
+	image_size -> 64
+	num_classes -> 1000
+	use_binary_vector_class -> True
+	num_concepts -> 6
+	label_binary_width -> 1
+	label_dataset_subsample -> 12
+	num_hidden_concepts -> 2
+	selected_concepts -> False
+	competence_levels -> [1]
+	intervention_freq -> 1
+	intervention_batch_size -> 512
+	intervention_policies -> ['afacem_policy', 'optimal_greedy_no_prior', 'group_random_no_prior']
+	max_epochs -> 300
+	time_last_called -> 2024/05/16 at 19:01:57
+	n_concepts -> 6
+	n_tasks -> 230
+	concept_map -> None
+	architecture -> IntAwareConceptEmbeddingModel
+	extra_name -> Retry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa
+	sampling_percent -> 1
+	horizon_binary_representation -> True
+	include_task_trajectory_loss -> True
+	include_only_last_trajectory_loss -> True
+	task_loss_weight -> 0
+	intervention_weight -> 20
+	intervention_task_loss_weight -> 1
+	initial_horizon -> 2
+	use_concept_groups -> False
+	use_full_mask_distr -> False
+	propagate_target_gradients -> False
+	int_model_use_bn -> True
+	int_model_layers -> [128, 128, 64, 64]
+	intcem_task_loss_weight -> 0
+	embedding_activation -> leakyrelu
+	tau -> 1
+	max_horizon -> 6
+	horizon_uniform_distr -> True
+	num_rollouts -> 3
+	beta_a -> 1
+	beta_b -> 3
+	intervention_task_discount -> 1.1
+	final_reward_ratio -> 1
+	intermediate_reward_ratio -> 0.1
+	average_trajectory -> True
+	use_horizon -> False
+	initialize_discount -> False
+	model_pretrain_path -> None
+	horizon_rate -> 1.005
+	intervention_discount -> 1
+	gradient_clip_val -> 10
+	legacy_mode -> False
+	grid_variables -> ['intervention_weight']
+	grid_search_mode -> exhaustive
+[Number of parameters in model 23357101 ]
+[Number of non-trainable parameters in model 1091360 ]
+	Found cached model... loading it
+DEBUG:root:max_nll: 7.147499084472656
+DEBUG:fsspec.local:open file: /home/xty20/cem/results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1-v1.ckpt
+DEBUG:root:max_nll: 6.764026641845703
+DEBUG:root:max_nll: 7.060895919799805
+DEBUG:root:max_nll: 6.861477851867676
+Traceback (most recent call last):
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/train/training.py", line 321, in train_model
+    torch.save(
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torch/serialization.py", line 620, in save
+    return
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torch/serialization.py", line 466, in __exit__
+    self.file_like.write_end_of_file()
+KeyboardInterrupt
+wandb: ERROR Control-C detected -- Run data was not synced
+INFO:root:Results will be dumped in results/afa/celeba_afa
+DEBUG:root:And the dataset's root directory is /home/xty20/data
+[rank: 0] Global seed set to 42
+[rank: 0] Global seed set to 42
+DEBUG:root:Concept frequency is: [0.11113579 0.26698059 0.512505   0.20457159 0.02244335 0.15157528
+ 0.24079586 0.23453225 0.23925093 0.14799185 0.05089857 0.20519351
+ 0.14216753 0.05756692 0.04668829 0.06511878 0.06276438 0.04194986
+ 0.38692195 0.45503186 0.41675428 0.48342786 0.04154512 0.11514864
+ 0.83493996 0.28414257 0.0429469  0.27744461 0.07977828 0.06572096
+ 0.05651064 0.48208037 0.20840182 0.31956722 0.18892492 0.04846026
+ 0.4724357  0.12296704 0.07271507 0.77361685]
+DEBUG:root:Selecting concepts: [2, 19, 20, 21, 31, 36]
+DEBUG:root:	And hidden concepts: [18, 33]
+DEBUG:root:Subsampling to 16883 elements.
+DEBUG:root:Data split is: 16883 = 11818 (train) + 3376 (test) + 1689 (validation)
+{
+    "batch_size": 128,
+    "check_val_every_n_epoch": 2,
+    "competence_levels": [
+        1
+    ],
+    "dataset": "celeba",
+    "image_size": 64,
+    "intervention_batch_size": 512,
+    "intervention_freq": 1,
+    "intervention_policies": [
+        "afacem_policy",
+        "optimal_greedy_no_prior",
+        "group_random_no_prior"
+    ],
+    "label_binary_width": 1,
+    "label_dataset_subsample": 12,
+    "max_epochs": 300,
+    "num_classes": 1000,
+    "num_concepts": 6,
+    "num_hidden_concepts": 2,
+    "num_workers": 8,
+    "results_dir": "results/afa/celeba_afa",
+    "root_dir": "/home/xty20/data",
+    "runs": [
+        {
+            "architecture": "IntAwareConceptEmbeddingModel",
+            "average_trajectory": true,
+            "beta_a": 1,
+            "beta_b": 3,
+            "embedding_activation": "leakyrelu",
+            "extra_name": "Retry_concept_loss_weight_{concept_loss_weight}_intervention_weight_{intervention_weight}_horizon_rate_{horizon_rate}_intervention_discount_{intervention_discount}_task_discount_{intervention_task_discount}_sampling_percent_{sampling_percent}",
+            "final_reward_ratio": 1,
+            "gradient_clip_val": 10,
+            "grid_search_mode": "exhaustive",
+            "grid_variables": [
+                "intervention_weight"
+            ],
+            "horizon_binary_representation": true,
+            "horizon_rate": 1.005,
+            "horizon_uniform_distr": true,
+            "include_only_last_trajectory_loss": true,
+            "include_task_trajectory_loss": true,
+            "initial_horizon": 2,
+            "initialize_discount": false,
+            "int_model_layers": [
+                128,
+                128,
+                64,
+                64
+            ],
+            "int_model_use_bn": true,
+            "intcem_task_loss_weight": 0,
+            "intermediate_reward_ratio": 0.1,
+            "intervention_discount": 1,
+            "intervention_task_discount": 1.1,
+            "intervention_task_loss_weight": 1,
+            "intervention_weight": [
+                20
+            ],
+            "legacy_mode": false,
+            "max_horizon": 6,
+            "model_pretrain_path": null,
+            "num_rollouts": 3,
+            "propagate_target_gradients": false,
+            "sampling_percent": 1,
+            "task_loss_weight": 0,
+            "tau": 1,
+            "training_intervention_prob": 0.25,
+            "use_concept_groups": false,
+            "use_full_mask_distr": false,
+            "use_horizon": false
+        }
+    ],
+    "selected_concepts": false,
+    "shared_params": {
+        "ac_model_config": {
+            "affine_hids": [
+                256,
+                256
+            ],
+            "architecture": "flow",
+            "batch_size": 32,
+            "clip_gradient": 1,
+            "coupling_hids": [
+                256,
+                256
+            ],
+            "decay_rate": 0.5,
+            "decay_steps": 10000,
+            "lambda_nll": 1,
+            "lambda_xent": 1,
+            "layer_cfg": [
+                "ML",
+                "LR",
+                "CP2"
+            ],
+            "learning_rate": 0.0001,
+            "linear_hids": [
+                256,
+                256
+            ],
+            "linear_rank": -1,
+            "max_epochs": 50,
+            "model_classes": true,
+            "n_components": 256,
+            "num_samples": 10,
+            "optimizer": "adam",
+            "patience": 3,
+            "prior": "autoreg",
+            "prior_hids": [
+                1,
+                1
+            ],
+            "prior_layers": 2,
+            "prior_units": 1,
+            "rnncp_layers": 2,
+            "rnncp_units": 32,
+            "transformations": [
+                "AF",
+                "TL",
+                "TL",
+                "AF"
+            ],
+            "weight_decay": 0.01
+        },
+        "ac_model_nll_ratio": 0.5,
+        "ac_model_rollouts": 1,
+        "ac_model_weight": 2,
+        "afa_model_config": {
+            "act_fun": "relu",
+            "clip_coef": 0.2,
+            "clip_vloss": true,
+            "ent_coef": 0.0,
+            "lin_layers": [
+                512,
+                512,
+                256,
+                256
+            ],
+            "normalize_advantages": true,
+            "num_envs": 1,
+            "ortho_init": false,
+            "vf_coef": 1.0
+        },
+        "allow_no_action": false,
+        "bool": false,
+        "c_extractor_arch": "resnet34",
+        "cbm_aneal_rate": 1,
+        "cbm_starting_aneal_rate": 1,
+        "concept_loss_weight": 1,
+        "continue_training": false,
+        "early_stopping_delta": 0.0,
+        "early_stopping_mode": "min",
+        "early_stopping_monitor": "val_cbm_loss",
+        "emb_size": 16,
+        "enable_checkpointing": true,
+        "extra_dims": 0,
+        "learning_rate": 5e-06,
+        "mask_no_action": true,
+        "momentum": 0.9,
+        "normalize_values": false,
+        "only_train_ac_model": false,
+        "optimizer": "adam",
+        "patience": 5,
+        "run_ois": false,
+        "save_model": true,
+        "sigmoidal_prob": false,
+        "top_k_accuracy": null,
+        "train_ac_model": false,
+        "train_afa_model": true,
+        "training_intervention_prob": 0.25,
+        "use_ac_model": true,
+        "weight_decay": 0.001,
+        "weight_loss": false
+    },
+    "trials": 1,
+    "use_binary_vector_class": true,
+    "use_imbalance": true
+}
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+INFO:root:Training sample shape is: torch.Size([128, 3, 64, 64]) with type torch.FloatTensor
+INFO:root:Training label shape is: torch.Size([128]) with type torch.LongTensor
+INFO:root:	Number of output classes: 230
+INFO:root:Training concept shape is: torch.Size([128, 6]) with type torch.FloatTensor
+INFO:root:	Number of training concepts: 6
+INFO:root:Setting log level to: "DEBUG"
+DEBUG:root:Setting ac model save path to be results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+[rank: 0] Global seed set to 42
+DEBUG:root:AC CBM loaded AC model checkpoint from results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+DEBUG:git.util:Failed checking if running in CYGWIN due to: FileNotFoundError(2, 'No such file or directory')
+DEBUG:git.cmd:Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/xty20/cem, stdin=None, shell=False, universal_newlines=False)
+DEBUG:git.cmd:Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/xty20/cem, stdin=None, shell=False, universal_newlines=False)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.wandb.ai:443
+DEBUG:urllib3.connectionpool:https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
+wandb: Currently logged in as: thomasyuan1 (thomasyuan). Use `wandb login --relogin` to force relogin
+DEBUG:git.cmd:Popen(['git', 'cat-file', '--batch-check'], cwd=/home/xty20/cem, stdin=<valid stream>, shell=False, universal_newlines=False)
+wandb: wandb version 0.17.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.16.6
+wandb: Run data is saved locally in /home/xty20/cem/wandb/run-20240516_191356-q4ien7j6
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1
+wandb: ⭐️ View project at https://wandb.ai/thomasyuan/celeba_test
+wandb: 🚀 View run at https://wandb.ai/thomasyuan/celeba_test/runs/q4ien7j6
+DEBUG:root:Loading trained model from results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+DEBUG:root:Loaded model
+DEBUG:root:Restarting run because we could not find val_acc_c_IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa in old results.
+DEBUG:root:Getting validation results.
+DEBUG:root:Testing with budget None
+[TRIAL 1/1 BEGINS AT 16/05/2024 at 19:13:55
+[Training IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1]
+config:
+<built-in function localtime>
+	top_k_accuracy -> None
+	save_model -> True
+	patience -> 5
+	emb_size -> 16
+	extra_dims -> 0
+	concept_loss_weight -> 1
+	learning_rate -> 5e-06
+	weight_decay -> 0.001
+	weight_loss -> False
+	c_extractor_arch -> resnet34
+	optimizer -> adam
+	bool -> False
+	early_stopping_monitor -> val_cbm_loss
+	early_stopping_mode -> min
+	early_stopping_delta -> 0.0
+	momentum -> 0.9
+	sigmoidal_prob -> False
+	training_intervention_prob -> 0.25
+	train_ac_model -> False
+	only_train_ac_model -> False
+	allow_no_action -> False
+	mask_no_action -> True
+	train_afa_model -> True
+	continue_training -> False
+	cbm_aneal_rate -> 1
+	cbm_starting_aneal_rate -> 1
+	enable_checkpointing -> True
+	run_ois -> False
+	ac_model_config -> {'architecture': 'flow', 'max_epochs': 50, 'batch_size': 32, 'transformations': ['AF', 'TL', 'TL', 'AF'], 'layer_cfg': ['ML', 'LR', 'CP2'], 'rnncp_units': 32, 'rnncp_layers': 2, 'linear_hids': [256, 256], 'linear_rank': -1, 'affine_hids': [256, 256], 'coupling_hids': [256, 256], 'prior': 'autoreg', 'n_components': 256, 'prior_units': 1, 'prior_layers': 2, 'prior_hids': [1, 1], 'optimizer': 'adam', 'learning_rate': 0.0001, 'weight_decay': 0.01, 'decay_steps': 10000, 'decay_rate': 0.5, 'clip_gradient': 1, 'num_samples': 10, 'patience': 3, 'lambda_nll': 1, 'lambda_xent': 1, 'model_classes': True, 'save_path': 'results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt'}
+	ac_model_nll_ratio -> 0.5
+	ac_model_weight -> 2
+	ac_model_rollouts -> 1
+	normalize_values -> False
+	use_ac_model -> True
+	afa_model_config -> {'lin_layers': [512, 512, 256, 256], 'act_fun': 'relu', 'ortho_init': False, 'vf_coef': 1.0, 'ent_coef': 0.0, 'clip_coef': 0.2, 'clip_vloss': True, 'normalize_advantages': True, 'num_envs': 1}
+	trials -> 1
+	results_dir -> results/afa/celeba_afa
+	dataset -> celeba
+	num_workers -> 8
+	batch_size -> 128
+	check_val_every_n_epoch -> 2
+	root_dir -> /home/xty20/data
+	use_imbalance -> True
+	image_size -> 64
+	num_classes -> 1000
+	use_binary_vector_class -> True
+	num_concepts -> 6
+	label_binary_width -> 1
+	label_dataset_subsample -> 12
+	num_hidden_concepts -> 2
+	selected_concepts -> False
+	competence_levels -> [1]
+	intervention_freq -> 1
+	intervention_batch_size -> 512
+	intervention_policies -> ['afacem_policy', 'optimal_greedy_no_prior', 'group_random_no_prior']
+	max_epochs -> 300
+	time_last_called -> 2024/05/16 at 19:13:15
+	n_concepts -> 6
+	n_tasks -> 230
+	concept_map -> None
+	architecture -> IntAwareConceptEmbeddingModel
+	extra_name -> Retry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa
+	sampling_percent -> 1
+	horizon_binary_representation -> True
+	include_task_trajectory_loss -> True
+	include_only_last_trajectory_loss -> True
+	task_loss_weight -> 0
+	intervention_weight -> 20
+	intervention_task_loss_weight -> 1
+	initial_horizon -> 2
+	use_concept_groups -> False
+	use_full_mask_distr -> False
+	propagate_target_gradients -> False
+	int_model_use_bn -> True
+	int_model_layers -> [128, 128, 64, 64]
+	intcem_task_loss_weight -> 0
+	embedding_activation -> leakyrelu
+	tau -> 1
+	max_horizon -> 6
+	horizon_uniform_distr -> True
+	num_rollouts -> 3
+	beta_a -> 1
+	beta_b -> 3
+	intervention_task_discount -> 1.1
+	final_reward_ratio -> 1
+	intermediate_reward_ratio -> 0.1
+	average_trajectory -> True
+	use_horizon -> False
+	initialize_discount -> False
+	model_pretrain_path -> None
+	horizon_rate -> 1.005
+	intervention_discount -> 1
+	gradient_clip_val -> 10
+	legacy_mode -> False
+	grid_variables -> ['intervention_weight']
+	grid_search_mode -> exhaustive
+[Number of parameters in model 23357101 ]
+[Number of non-trainable parameters in model 1091360 ]
+	Found cached model... loading it
+DEBUG:root:Restarting run because we could not find test_acc_c_IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa in old results.
+DEBUG:root:Getting test results without interventions
+DEBUG:root:Testing with budget None
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+        Test metric               DataLoader 0
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+         ent_loss                      0.0
+    mean_rewards_epoch         0.16511301696300507
+          pg_loss              0.1936158984899521
+      test_agent_loss            62.08056640625
+     test_avg_c_y_acc          0.49743437931715023
+      test_c_accuracy          0.7491612393921452
+        test_c_auc             0.7499739249045646
+         test_c_f1             0.7457891647501727
+       test_cbm_loss           31.033187866210938
+     test_concept_loss         0.5067265033721924
+    test_current_steps           2611.103515625
+    test_horizon_limit                 2.0
+test_intervention_accuracy     0.29504637852772847
+   test_intervention_auc               0.0
+  test_intervention_loss         62.08056640625
+test_intervention_task_loss     30.52646255493164
+         test_loss              31.37574005126953
+    test_mask_accuracy                 0.0
+      test_task_loss                   0.0
+      test_y_accuracy          0.24570751924215511
+        test_y_auc                     0.0
+         test_y_f1             0.05201089012579815
+          v_loss                2.910412311553955
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+val_c_acc: 74.92%, val_y_acc: 24.57%, val_c_auc: 75.00%, val_y_auc: 0.00% with 0 epochs in 0.00 seconds
+wandb: - 0.014 MB of 0.014 MB uploadedwandb: \ 0.014 MB of 0.014 MB uploadedwandb: | 0.014 MB of 0.014 MB uploadedwandb: / 0.014 MB of 0.014 MB uploadedwandb: - 0.014 MB of 0.014 MB uploadedwandb: \ 0.056 MB of 0.056 MB uploaded (0.007 MB deduped)wandb:                                                                                
+wandb: W&B sync reduced upload amount by 12.5%             
+wandb: 🚀 View run IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1 at: https://wandb.ai/thomasyuan/celeba_test/runs/q4ien7j6
+wandb: ⭐️ View project at: https://wandb.ai/thomasyuan/celeba_test
+wandb: Synced 5 W&B file(s), 0 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20240516_191356-q4ien7j6/logs
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): o151352.ingest.sentry.io:443
+DEBUG:urllib3.connectionpool:https://o151352.ingest.sentry.io:443 "POST /api/4504800232407040/envelope/ HTTP/1.1" 200 0
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+        Test metric               DataLoader 0
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+         ent_loss                      0.0
+    mean_rewards_epoch         0.1526314616203308
+          pg_loss              0.34313732385635376
+      test_agent_loss           76.12014770507812
+     test_avg_c_y_acc          0.4864978278041074
+      test_c_accuracy          0.7404719589257504
+        test_c_auc               0.7398859062999
+         test_c_f1             0.7365356619080692
+       test_cbm_loss           32.477272033691406
+     test_concept_loss         0.5261582732200623
+    test_current_steps          2631.69189453125
+    test_horizon_limit                 2.0
+test_intervention_accuracy     0.27517772511848343
+   test_intervention_auc               0.0
+  test_intervention_loss        76.12014770507812
+test_intervention_task_loss     31.95111083984375
+         test_loss              36.5499153137207
+    test_mask_accuracy                 0.0
+      test_task_loss                   0.0
+      test_y_accuracy          0.23252369668246445
+        test_y_auc                     0.0
+         test_y_f1             0.05297774415581256
+          v_loss               3.4628703594207764
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+c_acc: 74.05%, y_acc: 23.25%, c_auc: 73.99%, y_auc: 0.00% with 0 epochs in 0.00 seconds
+DEBUG:root:Restarting run because we could not find test_acc_y_afacem_policy_ints_IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa in old results.
+[rank: 0] Global seed set to 42
+DEBUG:root:AC CBM loaded AC model checkpoint from results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+DEBUG:root:Loading trained model from results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+DEBUG:root:Intervention groups: [0, 1, 2, 3, 4, 5, 6]
+DEBUG:root:Intervening in <class 'cem.models.afacbm.AFAModel'> using <class 'cem.interventions.afacem_policy.AFACemInterventionPolicy'>
+DEBUG:root:Intervening with 0 out of 6 concept groups
+DEBUG:root:	For split 0 with 0 groups intervened
+DEBUG:root:Testing with budget 0
+DEBUG:root:	Test Accuracy when intervening with 0 concept groups is 23.25.
+DEBUG:root:Intervening with 1 out of 6 concept groups
+DEBUG:root:	For split 0 with 1 groups intervened
+DEBUG:root:Testing with budget 1
+DEBUG:root:	Test Accuracy when intervening with 1 concept groups is 24.64.
+DEBUG:root:Intervening with 2 out of 6 concept groups
+DEBUG:root:	For split 0 with 2 groups intervened
+DEBUG:root:Testing with budget 2
+DEBUG:root:	Test Accuracy when intervening with 2 concept groups is 26.13.
+DEBUG:root:Intervening with 3 out of 6 concept groups
+DEBUG:root:	For split 0 with 3 groups intervened
+DEBUG:root:Testing with budget 3
+DEBUG:root:	Test Accuracy when intervening with 3 concept groups is 27.81.
+DEBUG:root:Intervening with 4 out of 6 concept groups
+DEBUG:root:	For split 0 with 4 groups intervened
+DEBUG:root:Testing with budget 4
+DEBUG:root:	Test Accuracy when intervening with 4 concept groups is 28.97.
+DEBUG:root:Intervening with 5 out of 6 concept groups
+DEBUG:root:	For split 0 with 5 groups intervened
+DEBUG:root:Testing with budget 5
+DEBUG:root:	Test Accuracy when intervening with 5 concept groups is 29.80.
+DEBUG:root:Intervening with 6 out of 6 concept groups
+DEBUG:root:	For split 0 with 6 groups intervened
+DEBUG:root:Testing with budget 6
+DEBUG:root:	Test Accuracy when intervening with 6 concept groups is 30.15.
+DEBUG:root:	Average intervention took 0.00085 seconds and construction took 0.00012 seconds.
+	In total interventions took 60.56616 seconds
+DEBUG:root:		Test accuracy when intervening with 0 concept groups is 23.25% (avg int time is 0.00085s and construction time is 0.00012s).
+DEBUG:root:		Test accuracy when intervening with 1 concept groups is 24.64% (avg int time is 0.00085s and construction time is 0.00012s).
+DEBUG:root:		Test accuracy when intervening with 2 concept groups is 26.13% (avg int time is 0.00085s and construction time is 0.00012s).
+DEBUG:root:		Test accuracy when intervening with 3 concept groups is 27.81% (avg int time is 0.00085s and construction time is 0.00012s).
+DEBUG:root:		Test accuracy when intervening with 4 concept groups is 28.97% (avg int time is 0.00085s and construction time is 0.00012s).
+DEBUG:root:		Test accuracy when intervening with 5 concept groups is 29.80% (avg int time is 0.00085s and construction time is 0.00012s).
+DEBUG:root:		Test accuracy when intervening with 6 concept groups is 30.15% (avg int time is 0.00085s and construction time is 0.00012s).
+DEBUG:root:Restarting run because we could not find test_acc_y_optimal_greedy_no_prior_ints_IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa in old results.
+[rank: 0] Global seed set to 42
+DEBUG:root:AC CBM loaded AC model checkpoint from results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+DEBUG:root:Loading trained model from results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+DEBUG:root:Intervention groups: [0, 1, 2, 3, 4, 5, 6]
+DEBUG:root:Intervening in <class 'cem.models.afacbm.AFAModel'> using <class 'cem.interventions.optimal.GreedyOptimal'>
+DEBUG:root:Intervening with 0 out of 6 concept groups
+DEBUG:root:	For split 0 with 0 groups intervened
+DEBUG:root:	Test accuracy when intervening with 0 concept groups is 23.25%.
+DEBUG:root:Intervening with 1 out of 6 concept groups
+DEBUG:root:	For split 0 with 1 groups intervened
+DEBUG:root:	Test accuracy when intervening with 1 concept groups is 28.91%.
+DEBUG:root:Intervening with 2 out of 6 concept groups
+DEBUG:root:	For split 0 with 2 groups intervened
+DEBUG:root:	Test accuracy when intervening with 2 concept groups is 31.72%.
+DEBUG:root:Intervening with 3 out of 6 concept groups
+DEBUG:root:	For split 0 with 3 groups intervened
+DEBUG:root:	Test accuracy when intervening with 3 concept groups is 32.61%.
+DEBUG:root:Intervening with 4 out of 6 concept groups
+DEBUG:root:	For split 0 with 4 groups intervened
+DEBUG:root:	Test accuracy when intervening with 4 concept groups is 32.55%.
+DEBUG:root:Intervening with 5 out of 6 concept groups
+DEBUG:root:	For split 0 with 5 groups intervened
+DEBUG:root:	Test accuracy when intervening with 5 concept groups is 31.90%.
+DEBUG:root:Intervening with 6 out of 6 concept groups
+DEBUG:root:	For split 0 with 6 groups intervened
+DEBUG:root:	Test accuracy when intervening with 6 concept groups is 30.15%.
+DEBUG:root:	Average intervention took 0.00024 seconds and construction took 0.00009 seconds.
+	In total interventions took 5.59598 seconds
+DEBUG:root:		Test accuracy when intervening with 0 concept groups is 23.25% (avg int time is 0.00024s and construction time is 0.00009s).
+DEBUG:root:		Test accuracy when intervening with 1 concept groups is 28.91% (avg int time is 0.00024s and construction time is 0.00009s).
+DEBUG:root:		Test accuracy when intervening with 2 concept groups is 31.72% (avg int time is 0.00024s and construction time is 0.00009s).
+DEBUG:root:		Test accuracy when intervening with 3 concept groups is 32.61% (avg int time is 0.00024s and construction time is 0.00009s).
+DEBUG:root:		Test accuracy when intervening with 4 concept groups is 32.55% (avg int time is 0.00024s and construction time is 0.00009s).
+DEBUG:root:		Test accuracy when intervening with 5 concept groups is 31.90% (avg int time is 0.00024s and construction time is 0.00009s).
+DEBUG:root:		Test accuracy when intervening with 6 concept groups is 30.15% (avg int time is 0.00024s and construction time is 0.00009s).
+DEBUG:root:Restarting run because we could not find test_acc_y_group_random_no_prior_ints_IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa in old results.
+[rank: 0] Global seed set to 42
+DEBUG:root:AC CBM loaded AC model checkpoint from results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+DEBUG:root:Loading trained model from results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+DEBUG:root:Intervention groups: [0, 1, 2, 3, 4, 5, 6]
+DEBUG:root:Intervening in <class 'cem.models.afacbm.AFAModel'> using <class 'cem.interventions.random.IndependentRandomMaskIntPolicy'>
+DEBUG:root:Intervening with 0 out of 6 concept groups
+DEBUG:root:	For split 0 with 0 groups intervened
+DEBUG:root:	Test accuracy when intervening with 0 concept groups is 23.25%.
+DEBUG:root:Intervening with 1 out of 6 concept groups
+DEBUG:root:	For split 0 with 1 groups intervened
+DEBUG:root:	Test accuracy when intervening with 1 concept groups is 24.32%.
+DEBUG:root:Intervening with 2 out of 6 concept groups
+DEBUG:root:	For split 0 with 2 groups intervened
+DEBUG:root:	Test accuracy when intervening with 2 concept groups is 25.71%.
+DEBUG:root:Intervening with 3 out of 6 concept groups
+DEBUG:root:	For split 0 with 3 groups intervened
+DEBUG:root:	Test accuracy when intervening with 3 concept groups is 26.51%.
+DEBUG:root:Intervening with 4 out of 6 concept groups
+DEBUG:root:	For split 0 with 4 groups intervened
+DEBUG:root:	Test accuracy when intervening with 4 concept groups is 27.84%.
+DEBUG:root:Intervening with 5 out of 6 concept groups
+DEBUG:root:	For split 0 with 5 groups intervened
+DEBUG:root:	Test accuracy when intervening with 5 concept groups is 28.94%.
+DEBUG:root:Intervening with 6 out of 6 concept groups
+DEBUG:root:	For split 0 with 6 groups intervened
+DEBUG:root:	Test accuracy when intervening with 6 concept groups is 30.15%.
+DEBUG:root:	Average intervention took 0.00022 seconds and construction took 0.00005 seconds.
+	In total interventions took 5.28258 seconds
+DEBUG:root:		Test accuracy when intervening with 0 concept groups is 23.25% (avg int time is 0.00022s and construction time is 0.00005s).
+DEBUG:root:		Test accuracy when intervening with 1 concept groups is 24.32% (avg int time is 0.00022s and construction time is 0.00005s).
+DEBUG:root:		Test accuracy when intervening with 2 concept groups is 25.71% (avg int time is 0.00022s and construction time is 0.00005s).
+DEBUG:root:		Test accuracy when intervening with 3 concept groups is 26.51% (avg int time is 0.00022s and construction time is 0.00005s).
+DEBUG:root:		Test accuracy when intervening with 4 concept groups is 27.84% (avg int time is 0.00022s and construction time is 0.00005s).
+DEBUG:root:		Test accuracy when intervening with 5 concept groups is 28.94% (avg int time is 0.00022s and construction time is 0.00005s).
+DEBUG:root:		Test accuracy when intervening with 6 concept groups is 30.15% (avg int time is 0.00022s and construction time is 0.00005s).
+[rank: 0] Global seed set to 42
+DEBUG:root:AC CBM loaded AC model checkpoint from results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+DEBUG:root:Loading trained model from results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+Predicting: 0it [00:00, ?it/s]Predicting:   0%|          | 0/27 [00:00<?, ?it/s]Predicting DataLoader 0:   0%|          | 0/27 [00:00<?, ?it/s]Predicting DataLoader 0:   4%|▎         | 1/27 [00:00<00:00, 117.46it/s]Predicting DataLoader 0:   7%|▋         | 2/27 [00:00<00:00, 128.06it/s]Predicting DataLoader 0:  11%|█         | 3/27 [00:00<00:00, 123.44it/s]Predicting DataLoader 0:  15%|█▍        | 4/27 [00:00<00:00, 116.79it/s]Predicting DataLoader 0:  19%|█▊        | 5/27 [00:00<00:00, 120.19it/s]Predicting DataLoader 0:  22%|██▏       | 6/27 [00:00<00:00, 115.60it/s]Predicting DataLoader 0:  26%|██▌       | 7/27 [00:00<00:00, 118.35it/s]Predicting DataLoader 0:  30%|██▉       | 8/27 [00:00<00:00, 118.67it/s]Predicting DataLoader 0:  33%|███▎      | 9/27 [00:00<00:00, 61.62it/s] Predicting DataLoader 0:  37%|███▋      | 10/27 [00:00<00:00, 64.70it/s]Predicting DataLoader 0:  41%|████      | 11/27 [00:00<00:00, 67.54it/s]Predicting DataLoader 0:  44%|████▍     | 12/27 [00:00<00:00, 67.54it/s]Predicting DataLoader 0:  48%|████▊     | 13/27 [00:00<00:00, 70.29it/s]Predicting DataLoader 0:  52%|█████▏    | 14/27 [00:00<00:00, 72.33it/s]Predicting DataLoader 0:  56%|█████▌    | 15/27 [00:00<00:00, 74.74it/s]Predicting DataLoader 0:  59%|█████▉    | 16/27 [00:00<00:00, 76.54it/s]Predicting DataLoader 0:  63%|██████▎   | 17/27 [00:00<00:00, 59.32it/s]Predicting DataLoader 0:  67%|██████▋   | 18/27 [00:00<00:00, 60.99it/s]Predicting DataLoader 0:  70%|███████   | 19/27 [00:00<00:00, 62.64it/s]Predicting DataLoader 0:  74%|███████▍  | 20/27 [00:00<00:00, 62.92it/s]Predicting DataLoader 0:  78%|███████▊  | 21/27 [00:00<00:00, 64.61it/s]Predicting DataLoader 0:  81%|████████▏ | 22/27 [00:00<00:00, 66.02it/s]Predicting DataLoader 0:  85%|████████▌ | 23/27 [00:00<00:00, 67.58it/s]Predicting DataLoader 0:  89%|████████▉ | 24/27 [00:00<00:00, 68.91it/s]Predicting DataLoader 0:  93%|█████████▎| 25/27 [00:00<00:00, 58.66it/s]Predicting DataLoader 0:  96%|█████████▋| 26/27 [00:00<00:00, 59.90it/s]Predicting DataLoader 0: 100%|██████████| 27/27 [00:00<00:00, 61.22it/s]Predicting DataLoader 0: 100%|██████████| 27/27 [00:00<00:00, 54.62it/s]INFO:root:Computing NIS score...
+
+  0%|          | 0/20 [00:00<?, ?it/s] 15%|█▌        | 3/20 [00:00<00:00, 28.02it/s] 40%|████      | 8/20 [00:00<00:00, 37.09it/s] 65%|██████▌   | 13/20 [00:00<00:00, 40.06it/s] 90%|█████████ | 18/20 [00:00<00:00, 41.62it/s]100%|██████████| 20/20 [00:00<00:00, 40.19it/s]
+INFO:root:	Done....NIS score is 59.90%
+INFO:root:Computing entire representation CAS score...
+in cas c_vec shape is (3376, 6, 16)
+n_clusters is [   2   70  139  208  277  346  415  484  552  621  690  759  828  897
+  966 1034 1103 1172 1241 1310 1379 1448 1516 1585 1654 1723 1792 1861
+ 1930 1998 2067 2136 2205 2274 2343 2412 2480 2549 2618 2687 2756 2825
+ 2894 2962 3031 3100 3169 3238 3307 3376]
+step is 50
+  0%|          | 0/6 [00:00<?, ?it/s]  0%|          | 0/6 [00:00<?, ?it/s]
+Process SpawnProcess-218:
+Traceback (most recent call last):
+  File "/usr/local/software/master/python/3.8/lib/python3.8/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/usr/local/software/master/python/3.8/lib/python3.8/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/train/utils.py", line 19, in _save_result
+    result = fun(**kwargs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/train/utils.py", line 90, in load_call
+    return function(**kwargs), False
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/metrics/cas.py", line 83, in concept_alignment_score
+    c_cluster_labels = kmedoids.fit_predict(c_vec[:, concept_id, :])
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/sklearn/base.py", line 791, in fit_predict
+    self.fit(X)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/sklearn_extra/cluster/_k_medoids.py", line 270, in fit
+    self._update_medoid_idxs_in_place(D, labels, medoid_idxs)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/sklearn_extra/cluster/_k_medoids.py", line 337, in _update_medoid_idxs_in_place
+    in_cluster_distances = D[
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "experiments/run_experiments_rl.py", line 913, in <module>
+    main(
+  File "experiments/run_experiments_rl.py", line 536, in main
+    training.evaluate_representation_metrics(
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/train/training.py", line 1999, in evaluate_representation_metrics
+    cas, _ = utils.execute_and_save(
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/train/utils.py", line 46, in execute_and_save
+    p.join()
+  File "/usr/local/software/master/python/3.8/lib/python3.8/multiprocessing/process.py", line 149, in join
+    res = self._popen.wait(timeout)
+  File "/usr/local/software/master/python/3.8/lib/python3.8/multiprocessing/popen_fork.py", line 47, in wait
+    return self.poll(os.WNOHANG if timeout == 0.0 else 0)
+  File "/usr/local/software/master/python/3.8/lib/python3.8/multiprocessing/popen_fork.py", line 27, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt
+Error in atexit._run_exitfuncs:
+Traceback (most recent call last):
+  File "/usr/local/software/master/python/3.8/lib/python3.8/subprocess.py", line 1079, in wait
+    return self._wait(timeout=timeout)
+  File "/usr/local/software/master/python/3.8/lib/python3.8/subprocess.py", line 1804, in _wait
+    (pid, sts) = self._try_wait(0)
+  File "/usr/local/software/master/python/3.8/lib/python3.8/subprocess.py", line 1762, in _try_wait
+    (pid, sts) = os.waitpid(self.pid, wait_flags)
+KeyboardInterrupt
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/wandb/sdk/wandb_manager.py", line 176, in _teardown
+    result = self._service.join()
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/wandb/sdk/service/service.py", line 263, in join
+    ret = self._internal_proc.wait()
+  File "/usr/local/software/master/python/3.8/lib/python3.8/subprocess.py", line 1092, in wait
+    self._wait(timeout=sigint_timeout)
+  File "/usr/local/software/master/python/3.8/lib/python3.8/subprocess.py", line 1798, in _wait
+    time.sleep(delay)
+KeyboardInterrupt
+INFO:root:Results will be dumped in results/afa/celeba_afa
+DEBUG:root:And the dataset's root directory is /home/xty20/data
+[rank: 0] Global seed set to 42
+[rank: 0] Global seed set to 42
+DEBUG:root:Concept frequency is: [0.11113579 0.26698059 0.512505   0.20457159 0.02244335 0.15157528
+ 0.24079586 0.23453225 0.23925093 0.14799185 0.05089857 0.20519351
+ 0.14216753 0.05756692 0.04668829 0.06511878 0.06276438 0.04194986
+ 0.38692195 0.45503186 0.41675428 0.48342786 0.04154512 0.11514864
+ 0.83493996 0.28414257 0.0429469  0.27744461 0.07977828 0.06572096
+ 0.05651064 0.48208037 0.20840182 0.31956722 0.18892492 0.04846026
+ 0.4724357  0.12296704 0.07271507 0.77361685]
+DEBUG:root:Selecting concepts: [2, 19, 20, 21, 31, 36]
+DEBUG:root:	And hidden concepts: [18, 33]
+{
+    "batch_size": 128,
+    "check_val_every_n_epoch": 2,
+    "competence_levels": [
+        1
+    ],
+    "dataset": "celeba",
+    "image_size": 64,
+    "intervention_batch_size": 512,
+    "intervention_freq": 1,
+    "intervention_policies": [
+        "afacem_policy",
+        "optimal_greedy_no_prior",
+        "group_random_no_prior"
+    ],
+    "label_binary_width": 1,
+    "label_dataset_subsample": 12,
+    "max_epochs": 300,
+    "num_classes": 1000,
+    "num_concepts": 6,
+    "num_hidden_concepts": 2,
+    "num_workers": 8,
+    "results_dir": "results/afa/celeba_afa",
+    "root_dir": "/home/xty20/data",
+    "runs": [
+        {
+            "architecture": "IntAwareConceptEmbeddingModel",
+            "average_trajectory": true,
+            "beta_a": 1,
+            "beta_b": 3,
+            "embedding_activation": "leakyrelu",
+            "extra_name": "Retry_concept_loss_weight_{concept_loss_weight}_intervention_weight_{intervention_weight}_horizon_rate_{horizon_rate}_intervention_discount_{intervention_discount}_task_discount_{intervention_task_discount}_sampling_percent_{sampling_percent}",
+            "final_reward_ratio": 1,
+            "gradient_clip_val": 10,
+            "grid_search_mode": "exhaustive",
+            "grid_variables": [
+                "intervention_weight"
+            ],
+            "horizon_binary_representation": true,
+            "horizon_rate": 1.005,
+            "horizon_uniform_distr": true,
+            "include_only_last_trajectory_loss": true,
+            "include_task_trajectory_loss": true,
+            "initial_horizon": 2,
+            "initialize_discount": false,
+            "int_model_layers": [
+                128,
+                128,
+                64,
+                64
+            ],
+            "int_model_use_bn": true,
+            "intcem_task_loss_weight": 0,
+            "intermediate_reward_ratio": 0.1,
+            "intervention_discount": 1,
+            "intervention_task_discount": 1.1,
+            "intervention_task_loss_weight": 1,
+            "intervention_weight": [
+                20
+            ],
+            "legacy_mode": false,
+            "max_horizon": 6,
+            "model_pretrain_path": null,
+            "num_rollouts": 3,
+            "propagate_target_gradients": false,
+            "sampling_percent": 1,
+            "task_loss_weight": 0,
+            "tau": 1,
+            "training_intervention_prob": 0.25,
+            "use_concept_groups": false,
+            "use_full_mask_distr": false,
+            "use_horizon": false
+        }
+    ],
+    "selected_concepts": false,
+    "shared_params": {
+        "ac_model_config": {
+            "affine_hids": [
+                256,
+                256
+            ],
+            "architecture": "flow",
+            "batch_size": 32,
+            "clip_gradient": 1,
+            "coupling_hids": [
+                256,
+                256
+            ],
+            "decay_rate": 0.5,
+            "decay_steps": 10000,
+            "lambda_nll": 1,
+            "lambda_xent": 1,
+            "layer_cfg": [
+                "ML",
+                "LR",
+                "CP2"
+            ],
+            "learning_rate": 0.0001,
+            "linear_hids": [
+                256,
+                256
+            ],
+            "linear_rank": -1,
+            "max_epochs": 50,
+            "model_classes": true,
+            "n_components": 256,
+            "num_samples": 10,
+            "optimizer": "adam",
+            "patience": 3,
+            "prior": "autoreg",
+            "prior_hids": [
+                1,
+                1
+            ],
+            "prior_layers": 2,
+            "prior_units": 1,
+            "rnncp_layers": 2,
+            "rnncp_units": 32,
+            "transformations": [
+                "AF",
+                "TL",
+                "TL",
+                "AF"
+            ],
+            "weight_decay": 0.01
+        },
+        "ac_model_nll_ratio": 0.5,
+        "ac_model_rollouts": 1,
+        "ac_model_weight": 2,
+        "afa_model_config": {
+            "act_fun": "relu",
+            "clip_coef": 0.2,
+            "clip_vloss": true,
+            "ent_coef": 0.0,
+            "lin_layers": [
+                1024,
+                1024,
+                512,
+                512
+            ],
+            "normalize_advantages": true,
+            "num_envs": 1,
+            "ortho_init": false,
+            "vf_coef": 1.0
+        },
+        "allow_no_action": false,
+        "bool": false,
+        "c_extractor_arch": "resnet34",
+        "cbm_aneal_rate": 1,
+        "cbm_starting_aneal_rate": 1,
+        "concept_loss_weight": 1,
+        "continue_training": false,
+        "early_stopping_delta": 0.0,
+        "early_stopping_mode": "min",
+        "early_stopping_monitor": "val_cbm_loss",
+        "emb_size": 16,
+        "enable_checkpointing": true,
+        "extra_dims": 0,
+        "learning_rate": 5e-06,
+        "mask_no_action": true,
+        "momentum": 0.9,
+        "normalize_values": false,
+        "only_train_ac_model": false,
+        "optimizer": "adam",
+        "patience": 5,
+        "run_ois": false,
+        "save_model": true,
+        "sigmoidal_prob": false,
+        "top_k_accuracy": null,
+        "train_ac_model": false,
+        "train_afa_model": true,
+        "training_intervention_prob": 0.25,
+        "use_ac_model": true,
+        "weight_decay": 0.001,
+        "weight_loss": false
+    },
+    "trials": 1,
+    "use_binary_vector_class": true,
+    "use_imbalance": true
+}
+Files already downloaded and verified
+Files already downloaded and verified
+Traceback (most recent call last):
+  File "experiments/run_experiments_rl.py", line 913, in <module>
+    main(
+  File "experiments/run_experiments_rl.py", line 72, in main
+    data_module.generate_data(
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/data/celeba_loader.py", line 170, in generate_data
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torchvision/datasets/celeba.py", line 96, in __init__
+    attr = self._load_csv("list_attr_celeba.txt", header=1)
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torchvision/datasets/celeba.py", line 130, in _load_csv
+    return CSV(headers, indices, torch.tensor(data_int))
+KeyboardInterrupt
+INFO:root:Results will be dumped in results/afa/celeba_afa
+DEBUG:root:And the dataset's root directory is /home/xty20/data
+[rank: 0] Global seed set to 42
+[rank: 0] Global seed set to 42
+DEBUG:root:Concept frequency is: [0.11113579 0.26698059 0.512505   0.20457159 0.02244335 0.15157528
+ 0.24079586 0.23453225 0.23925093 0.14799185 0.05089857 0.20519351
+ 0.14216753 0.05756692 0.04668829 0.06511878 0.06276438 0.04194986
+ 0.38692195 0.45503186 0.41675428 0.48342786 0.04154512 0.11514864
+ 0.83493996 0.28414257 0.0429469  0.27744461 0.07977828 0.06572096
+ 0.05651064 0.48208037 0.20840182 0.31956722 0.18892492 0.04846026
+ 0.4724357  0.12296704 0.07271507 0.77361685]
+DEBUG:root:Selecting concepts: [2, 19, 20, 21, 31, 36]
+DEBUG:root:	And hidden concepts: [18, 33]
+DEBUG:root:Subsampling to 16883 elements.
+DEBUG:root:Data split is: 16883 = 11818 (train) + 3376 (test) + 1689 (validation)
+{
+    "batch_size": 128,
+    "check_val_every_n_epoch": 2,
+    "competence_levels": [
+        1
+    ],
+    "dataset": "celeba",
+    "image_size": 64,
+    "intervention_batch_size": 512,
+    "intervention_freq": 1,
+    "intervention_policies": [
+        "afacem_policy",
+        "optimal_greedy_no_prior",
+        "group_random_no_prior"
+    ],
+    "label_binary_width": 1,
+    "label_dataset_subsample": 12,
+    "max_epochs": 300,
+    "num_classes": 1000,
+    "num_concepts": 6,
+    "num_hidden_concepts": 2,
+    "num_workers": 8,
+    "results_dir": "results/afa/celeba_afa",
+    "root_dir": "/home/xty20/data",
+    "runs": [
+        {
+            "architecture": "IntAwareConceptEmbeddingModel",
+            "average_trajectory": true,
+            "beta_a": 1,
+            "beta_b": 3,
+            "embedding_activation": "leakyrelu",
+            "extra_name": "Retry_concept_loss_weight_{concept_loss_weight}_intervention_weight_{intervention_weight}_horizon_rate_{horizon_rate}_intervention_discount_{intervention_discount}_task_discount_{intervention_task_discount}_sampling_percent_{sampling_percent}",
+            "final_reward_ratio": 1,
+            "gradient_clip_val": 10,
+            "grid_search_mode": "exhaustive",
+            "grid_variables": [
+                "intervention_weight"
+            ],
+            "horizon_binary_representation": true,
+            "horizon_rate": 1.005,
+            "horizon_uniform_distr": true,
+            "include_only_last_trajectory_loss": true,
+            "include_task_trajectory_loss": true,
+            "initial_horizon": 2,
+            "initialize_discount": false,
+            "int_model_layers": [
+                128,
+                128,
+                64,
+                64
+            ],
+            "int_model_use_bn": true,
+            "intcem_task_loss_weight": 0,
+            "intermediate_reward_ratio": 0.05,
+            "intervention_discount": 1,
+            "intervention_task_discount": 1.1,
+            "intervention_task_loss_weight": 1,
+            "intervention_weight": [
+                20
+            ],
+            "legacy_mode": false,
+            "max_horizon": 6,
+            "model_pretrain_path": null,
+            "num_rollouts": 3,
+            "propagate_target_gradients": false,
+            "sampling_percent": 1,
+            "task_loss_weight": 0,
+            "tau": 1,
+            "training_intervention_prob": 0.25,
+            "use_concept_groups": false,
+            "use_full_mask_distr": false,
+            "use_horizon": false
+        }
+    ],
+    "selected_concepts": false,
+    "shared_params": {
+        "ac_model_config": {
+            "affine_hids": [
+                256,
+                256
+            ],
+            "architecture": "flow",
+            "batch_size": 32,
+            "clip_gradient": 1,
+            "coupling_hids": [
+                256,
+                256
+            ],
+            "decay_rate": 0.5,
+            "decay_steps": 10000,
+            "lambda_nll": 1,
+            "lambda_xent": 1,
+            "layer_cfg": [
+                "ML",
+                "LR",
+                "CP2"
+            ],
+            "learning_rate": 0.0001,
+            "linear_hids": [
+                256,
+                256
+            ],
+            "linear_rank": -1,
+            "max_epochs": 50,
+            "model_classes": true,
+            "n_components": 256,
+            "num_samples": 10,
+            "optimizer": "adam",
+            "patience": 3,
+            "prior": "autoreg",
+            "prior_hids": [
+                1,
+                1
+            ],
+            "prior_layers": 2,
+            "prior_units": 1,
+            "rnncp_layers": 2,
+            "rnncp_units": 32,
+            "transformations": [
+                "AF",
+                "TL",
+                "TL",
+                "AF"
+            ],
+            "weight_decay": 0.01
+        },
+        "ac_model_nll_ratio": 0.5,
+        "ac_model_rollouts": 1,
+        "ac_model_weight": 2,
+        "afa_model_config": {
+            "act_fun": "relu",
+            "clip_coef": 0.2,
+            "clip_vloss": true,
+            "ent_coef": 0.0,
+            "lin_layers": [
+                1024,
+                1024,
+                512,
+                512
+            ],
+            "normalize_advantages": true,
+            "num_envs": 1,
+            "ortho_init": false,
+            "vf_coef": 1.0
+        },
+        "allow_no_action": false,
+        "bool": false,
+        "c_extractor_arch": "resnet34",
+        "cbm_aneal_rate": 1,
+        "cbm_starting_aneal_rate": 1,
+        "concept_loss_weight": 1,
+        "continue_training": false,
+        "early_stopping_delta": 0.0,
+        "early_stopping_mode": "min",
+        "early_stopping_monitor": "val_cbm_loss",
+        "emb_size": 16,
+        "enable_checkpointing": true,
+        "extra_dims": 0,
+        "learning_rate": 5e-06,
+        "mask_no_action": true,
+        "momentum": 0.9,
+        "normalize_values": false,
+        "only_train_ac_model": false,
+        "optimizer": "adam",
+        "patience": 5,
+        "run_ois": false,
+        "save_model": true,
+        "sigmoidal_prob": false,
+        "top_k_accuracy": null,
+        "train_ac_model": false,
+        "train_afa_model": true,
+        "training_intervention_prob": 0.25,
+        "use_ac_model": true,
+        "weight_decay": 0.001,
+        "weight_loss": false
+    },
+    "trials": 1,
+    "use_binary_vector_class": true,
+    "use_imbalance": true
+}
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+INFO:root:Training sample shape is: torch.Size([128, 3, 64, 64]) with type torch.FloatTensor
+INFO:root:Training label shape is: torch.Size([128]) with type torch.LongTensor
+INFO:root:	Number of output classes: 230
+INFO:root:Training concept shape is: torch.Size([128, 6]) with type torch.FloatTensor
+INFO:root:	Number of training concepts: 6
+INFO:root:Setting log level to: "DEBUG"
+DEBUG:root:Setting ac model save path to be results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+[rank: 0] Global seed set to 42
+DEBUG:root:AC CBM loaded AC model checkpoint from results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+DEBUG:git.util:Failed checking if running in CYGWIN due to: FileNotFoundError(2, 'No such file or directory')
+DEBUG:git.cmd:Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/xty20/cem, stdin=None, shell=False, universal_newlines=False)
+DEBUG:git.cmd:Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/xty20/cem, stdin=None, shell=False, universal_newlines=False)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.wandb.ai:443
+DEBUG:urllib3.connectionpool:https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
+wandb: Currently logged in as: thomasyuan1 (thomasyuan). Use `wandb login --relogin` to force relogin
+DEBUG:git.cmd:Popen(['git', 'cat-file', '--batch-check'], cwd=/home/xty20/cem, stdin=<valid stream>, shell=False, universal_newlines=False)
+wandb: wandb version 0.17.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.16.6
+wandb: Run data is saved locally in /home/xty20/cem/wandb/run-20240516_191812-rl8nw4qc
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1
+wandb: ⭐️ View project at https://wandb.ai/thomasyuan/celeba_test
+wandb: 🚀 View run at https://wandb.ai/thomasyuan/celeba_test/runs/rl8nw4qc
+[TRIAL 1/1 BEGINS AT 16/05/2024 at 19:18:10
+[Training IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1]
+config:
+<built-in function localtime>
+	top_k_accuracy -> None
+	save_model -> True
+	patience -> 5
+	emb_size -> 16
+	extra_dims -> 0
+	concept_loss_weight -> 1
+	learning_rate -> 5e-06
+	weight_decay -> 0.001
+	weight_loss -> False
+	c_extractor_arch -> resnet34
+	optimizer -> adam
+	bool -> False
+	early_stopping_monitor -> val_cbm_loss
+	early_stopping_mode -> min
+	early_stopping_delta -> 0.0
+	momentum -> 0.9
+	sigmoidal_prob -> False
+	training_intervention_prob -> 0.25
+	train_ac_model -> False
+	only_train_ac_model -> False
+	allow_no_action -> False
+	mask_no_action -> True
+	train_afa_model -> True
+	continue_training -> False
+	cbm_aneal_rate -> 1
+	cbm_starting_aneal_rate -> 1
+	enable_checkpointing -> True
+	run_ois -> False
+	ac_model_config -> {'architecture': 'flow', 'max_epochs': 50, 'batch_size': 32, 'transformations': ['AF', 'TL', 'TL', 'AF'], 'layer_cfg': ['ML', 'LR', 'CP2'], 'rnncp_units': 32, 'rnncp_layers': 2, 'linear_hids': [256, 256], 'linear_rank': -1, 'affine_hids': [256, 256], 'coupling_hids': [256, 256], 'prior': 'autoreg', 'n_components': 256, 'prior_units': 1, 'prior_layers': 2, 'prior_hids': [1, 1], 'optimizer': 'adam', 'learning_rate': 0.0001, 'weight_decay': 0.01, 'decay_steps': 10000, 'decay_rate': 0.5, 'clip_gradient': 1, 'num_samples': 10, 'patience': 3, 'lambda_nll': 1, 'lambda_xent': 1, 'model_classes': True, 'save_path': 'results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt'}
+	ac_model_nll_ratio -> 0.5
+	ac_model_weight -> 2
+	ac_model_rollouts -> 1
+	normalize_values -> False
+	use_ac_model -> True
+	afa_model_config -> {'lin_layers': [1024, 1024, 512, 512], 'act_fun': 'relu', 'ortho_init': False, 'vf_coef': 1.0, 'ent_coef': 0.0, 'clip_coef': 0.2, 'clip_vloss': True, 'normalize_advantages': True, 'num_envs': 1}
+	trials -> 1
+	results_dir -> results/afa/celeba_afa
+	dataset -> celeba
+	num_workers -> 8
+	batch_size -> 128
+	check_val_every_n_epoch -> 2
+	root_dir -> /home/xty20/data
+	use_imbalance -> True
+	image_size -> 64
+	num_classes -> 1000
+	use_binary_vector_class -> True
+	num_concepts -> 6
+	label_binary_width -> 1
+	label_dataset_subsample -> 12
+	num_hidden_concepts -> 2
+	selected_concepts -> False
+	competence_levels -> [1]
+	intervention_freq -> 1
+	intervention_batch_size -> 512
+	intervention_policies -> ['afacem_policy', 'optimal_greedy_no_prior', 'group_random_no_prior']
+	max_epochs -> 300
+	time_last_called -> 2024/05/16 at 19:17:31
+	n_concepts -> 6
+	n_tasks -> 230
+	concept_map -> None
+	architecture -> IntAwareConceptEmbeddingModel
+	extra_name -> Retry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa
+	sampling_percent -> 1
+	horizon_binary_representation -> True
+	include_task_trajectory_loss -> True
+	include_only_last_trajectory_loss -> True
+	task_loss_weight -> 0
+	intervention_weight -> 20
+	intervention_task_loss_weight -> 1
+	initial_horizon -> 2
+	use_concept_groups -> False
+	use_full_mask_distr -> False
+	propagate_target_gradients -> False
+	int_model_use_bn -> True
+	int_model_layers -> [128, 128, 64, 64]
+	intcem_task_loss_weight -> 0
+	embedding_activation -> leakyrelu
+	tau -> 1
+	max_horizon -> 6
+	horizon_uniform_distr -> True
+	num_rollouts -> 3
+	beta_a -> 1
+	beta_b -> 3
+	intervention_task_discount -> 1.1
+	final_reward_ratio -> 1
+	intermediate_reward_ratio -> 0.05
+	average_trajectory -> True
+	use_horizon -> False
+	initialize_discount -> False
+	model_pretrain_path -> None
+	horizon_rate -> 1.005
+	intervention_discount -> 1
+	gradient_clip_val -> 10
+	legacy_mode -> False
+	grid_variables -> ['intervention_weight']
+	grid_search_mode -> exhaustive
+[Number of parameters in model 26493357 ]
+[Number of non-trainable parameters in model 1091360 ]
+DEBUG:root:max_nll: 7.3888959884643555
+DEBUG:fsspec.local:open file: /home/xty20/cem/results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+DEBUG:root:max_nll: 7.467717170715332
+DEBUG:root:max_nll: 7.209096908569336
+DEBUG:fsspec.local:open file: /home/xty20/cem/results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+DEBUG:root:max_nll: 6.8662567138671875
+DEBUG:root:max_nll: 6.821754455566406
+DEBUG:fsspec.local:open file: /home/xty20/cem/results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+DEBUG:root:max_nll: 6.652685165405273
+DEBUG:root:max_nll: 6.537687301635742
+DEBUG:fsspec.local:open file: /home/xty20/cem/results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+DEBUG:root:max_nll: 6.712531566619873
+DEBUG:root:max_nll: 6.699260711669922
+DEBUG:fsspec.local:open file: /home/xty20/cem/results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+DEBUG:root:max_nll: 6.821990966796875
+DEBUG:root:max_nll: 6.788374900817871
+DEBUG:fsspec.local:open file: /home/xty20/cem/results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+DEBUG:root:max_nll: 6.821872234344482
+DEBUG:root:max_nll: 7.063893795013428
+DEBUG:fsspec.local:open file: /home/xty20/cem/results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_20_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+DEBUG:root:max_nll: 7.043164253234863
+Traceback (most recent call last):
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/train/training.py", line 321, in train_model
+    torch.save(
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torch/serialization.py", line 620, in save
+    return
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torch/serialization.py", line 466, in __exit__
+    self.file_like.write_end_of_file()
+KeyboardInterrupt
+wandb: ERROR Control-C detected -- Run data was not synced
+INFO:root:Results will be dumped in results/afa/celeba_afa
+DEBUG:root:And the dataset's root directory is /home/xty20/data
+[rank: 0] Global seed set to 42
+[rank: 0] Global seed set to 42
+DEBUG:root:Concept frequency is: [0.11113579 0.26698059 0.512505   0.20457159 0.02244335 0.15157528
+ 0.24079586 0.23453225 0.23925093 0.14799185 0.05089857 0.20519351
+ 0.14216753 0.05756692 0.04668829 0.06511878 0.06276438 0.04194986
+ 0.38692195 0.45503186 0.41675428 0.48342786 0.04154512 0.11514864
+ 0.83493996 0.28414257 0.0429469  0.27744461 0.07977828 0.06572096
+ 0.05651064 0.48208037 0.20840182 0.31956722 0.18892492 0.04846026
+ 0.4724357  0.12296704 0.07271507 0.77361685]
+DEBUG:root:Selecting concepts: [2, 19, 20, 21, 31, 36]
+DEBUG:root:	And hidden concepts: [18, 33]
+DEBUG:root:Subsampling to 16883 elements.
+DEBUG:root:Data split is: 16883 = 11818 (train) + 3376 (test) + 1689 (validation)
+{
+    "batch_size": 128,
+    "check_val_every_n_epoch": 3,
+    "competence_levels": [
+        1
+    ],
+    "dataset": "celeba",
+    "image_size": 64,
+    "intervention_batch_size": 512,
+    "intervention_freq": 1,
+    "intervention_policies": [
+        "afacem_policy",
+        "optimal_greedy_no_prior",
+        "group_random_no_prior"
+    ],
+    "label_binary_width": 1,
+    "label_dataset_subsample": 12,
+    "max_epochs": 300,
+    "num_classes": 1000,
+    "num_concepts": 6,
+    "num_hidden_concepts": 2,
+    "num_workers": 8,
+    "results_dir": "results/afa/celeba_afa",
+    "root_dir": "/home/xty20/data",
+    "runs": [
+        {
+            "architecture": "IntAwareConceptEmbeddingModel",
+            "average_trajectory": true,
+            "beta_a": 1,
+            "beta_b": 3,
+            "embedding_activation": "leakyrelu",
+            "extra_name": "Retry_concept_loss_weight_{concept_loss_weight}_intervention_weight_{intervention_weight}_horizon_rate_{horizon_rate}_intervention_discount_{intervention_discount}_task_discount_{intervention_task_discount}_sampling_percent_{sampling_percent}",
+            "final_reward_ratio": 1,
+            "gradient_clip_val": 10,
+            "grid_search_mode": "exhaustive",
+            "grid_variables": [
+                "intervention_weight",
+                "intermediate_reward_ratio"
+            ],
+            "horizon_binary_representation": true,
+            "horizon_rate": 1.005,
+            "horizon_uniform_distr": true,
+            "include_only_last_trajectory_loss": true,
+            "include_task_trajectory_loss": true,
+            "initial_horizon": 2,
+            "initialize_discount": false,
+            "int_model_layers": [
+                128,
+                128,
+                64,
+                64
+            ],
+            "int_model_use_bn": true,
+            "intcem_task_loss_weight": 0,
+            "intermediate_reward_ratio": [
+                0.05,
+                0.1
+            ],
+            "intervention_discount": 1,
+            "intervention_task_discount": 1.1,
+            "intervention_task_loss_weight": 1,
+            "intervention_weight": [
+                5,
+                20
+            ],
+            "legacy_mode": false,
+            "max_horizon": 6,
+            "model_pretrain_path": null,
+            "num_rollouts": 3,
+            "propagate_target_gradients": false,
+            "sampling_percent": 1,
+            "task_loss_weight": 0,
+            "tau": 1,
+            "training_intervention_prob": 0.25,
+            "use_concept_groups": false,
+            "use_full_mask_distr": false,
+            "use_horizon": false
+        }
+    ],
+    "selected_concepts": false,
+    "shared_params": {
+        "ac_model_config": {
+            "affine_hids": [
+                256,
+                256
+            ],
+            "architecture": "flow",
+            "batch_size": 32,
+            "clip_gradient": 1,
+            "coupling_hids": [
+                256,
+                256
+            ],
+            "decay_rate": 0.5,
+            "decay_steps": 10000,
+            "lambda_nll": 1,
+            "lambda_xent": 1,
+            "lamdba_l2": 0.4,
+            "layer_cfg": [
+                "ML",
+                "LR",
+                "CP2"
+            ],
+            "learning_rate": 0.0001,
+            "linear_hids": [
+                256,
+                256
+            ],
+            "linear_rank": -1,
+            "max_epochs": 50,
+            "model_classes": true,
+            "n_components": 256,
+            "num_samples": 10,
+            "optimizer": "adam",
+            "patience": 3,
+            "prior": "autoreg",
+            "prior_hids": [
+                1,
+                1
+            ],
+            "prior_layers": 2,
+            "prior_units": 1,
+            "rnncp_layers": 2,
+            "rnncp_units": 32,
+            "transformations": [
+                "AF",
+                "TL",
+                "TL",
+                "AF"
+            ],
+            "weight_decay": 0.01
+        },
+        "ac_model_nll_ratio": 0.5,
+        "ac_model_rollouts": 1,
+        "ac_model_weight": 2,
+        "afa_model_config": {
+            "act_fun": "relu",
+            "clip_coef": 0.2,
+            "clip_vloss": true,
+            "ent_coef": 0.0,
+            "lin_layers": [
+                1024,
+                1024,
+                512,
+                512
+            ],
+            "normalize_advantages": true,
+            "num_envs": 1,
+            "ortho_init": false,
+            "vf_coef": 1.0
+        },
+        "allow_no_action": false,
+        "bool": false,
+        "c_extractor_arch": "resnet34",
+        "cbm_aneal_rate": 1,
+        "cbm_starting_aneal_rate": 1,
+        "concept_loss_weight": 5,
+        "continue_training": true,
+        "early_stopping_delta": 0.0,
+        "early_stopping_mode": "min",
+        "early_stopping_monitor": "val_cbm_loss",
+        "emb_size": 16,
+        "enable_checkpointing": true,
+        "extra_dims": 0,
+        "learning_rate": 5e-06,
+        "mask_no_action": true,
+        "momentum": 0.9,
+        "normalize_values": false,
+        "only_train_ac_model": false,
+        "optimizer": "adam",
+        "patience": 5,
+        "run_ois": false,
+        "save_model": true,
+        "sigmoidal_prob": false,
+        "top_k_accuracy": null,
+        "train_ac_model": false,
+        "train_afa_model": true,
+        "training_intervention_prob": 0.25,
+        "use_ac_model": true,
+        "weight_decay": 0.001,
+        "weight_loss": false
+    },
+    "trials": 1,
+    "use_binary_vector_class": true,
+    "use_imbalance": true
+}
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+INFO:root:Training sample shape is: torch.Size([128, 3, 64, 64]) with type torch.FloatTensor
+INFO:root:Training label shape is: torch.Size([128]) with type torch.LongTensor
+INFO:root:	Number of output classes: 230
+INFO:root:Training concept shape is: torch.Size([128, 6]) with type torch.FloatTensor
+INFO:root:	Number of training concepts: 6
+INFO:root:Setting log level to: "DEBUG"
+DEBUG:root:Setting ac model save path to be results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+[rank: 0] Global seed set to 42
+DEBUG:root:AC CBM loaded AC model checkpoint from results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+DEBUG:git.util:Failed checking if running in CYGWIN due to: FileNotFoundError(2, 'No such file or directory')
+DEBUG:git.cmd:Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/xty20/cem, stdin=None, shell=False, universal_newlines=False)
+DEBUG:git.cmd:Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/xty20/cem, stdin=None, shell=False, universal_newlines=False)
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.wandb.ai:443
+DEBUG:urllib3.connectionpool:https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
+DEBUG:urllib3.connectionpool:https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
+wandb: Currently logged in as: thomasyuan1 (thomasyuan). Use `wandb login --relogin` to force relogin
+DEBUG:git.cmd:Popen(['git', 'cat-file', '--batch-check'], cwd=/home/xty20/cem, stdin=<valid stream>, shell=False, universal_newlines=False)
+wandb: wandb version 0.17.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.16.6
+wandb: Run data is saved locally in /home/xty20/cem/wandb/run-20240517_124138-vuz17qmq
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1
+wandb: ⭐️ View project at https://wandb.ai/thomasyuan/celeba_test
+wandb: 🚀 View run at https://wandb.ai/thomasyuan/celeba_test/runs/vuz17qmq
+DEBUG:root:Loading trained model from results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+DEBUG:root:Loaded model
+DEBUG:fsspec.local:open file: /home/xty20/cem/results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+[TRIAL 1/1 BEGINS AT 17/05/2024 at 12:41:35
+[Training IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1]
+config:
+<built-in function localtime>
+	top_k_accuracy -> None
+	save_model -> True
+	patience -> 5
+	emb_size -> 16
+	extra_dims -> 0
+	concept_loss_weight -> 5
+	learning_rate -> 5e-06
+	weight_decay -> 0.001
+	weight_loss -> False
+	c_extractor_arch -> resnet34
+	optimizer -> adam
+	bool -> False
+	early_stopping_monitor -> val_cbm_loss
+	early_stopping_mode -> min
+	early_stopping_delta -> 0.0
+	momentum -> 0.9
+	sigmoidal_prob -> False
+	training_intervention_prob -> 0.25
+	train_ac_model -> False
+	only_train_ac_model -> False
+	allow_no_action -> False
+	mask_no_action -> True
+	train_afa_model -> True
+	continue_training -> True
+	cbm_aneal_rate -> 1
+	cbm_starting_aneal_rate -> 1
+	enable_checkpointing -> True
+	run_ois -> False
+	ac_model_config -> {'architecture': 'flow', 'max_epochs': 50, 'batch_size': 32, 'transformations': ['AF', 'TL', 'TL', 'AF'], 'layer_cfg': ['ML', 'LR', 'CP2'], 'rnncp_units': 32, 'rnncp_layers': 2, 'linear_hids': [256, 256], 'linear_rank': -1, 'affine_hids': [256, 256], 'coupling_hids': [256, 256], 'prior': 'autoreg', 'n_components': 256, 'prior_units': 1, 'prior_layers': 2, 'prior_hids': [1, 1], 'optimizer': 'adam', 'learning_rate': 0.0001, 'weight_decay': 0.01, 'decay_steps': 10000, 'decay_rate': 0.5, 'clip_gradient': 1, 'num_samples': 10, 'patience': 3, 'lambda_nll': 1, 'lambda_xent': 1, 'lamdba_l2': 0.4, 'model_classes': True, 'save_path': 'results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt'}
+	ac_model_nll_ratio -> 0.5
+	ac_model_weight -> 2
+	ac_model_rollouts -> 1
+	normalize_values -> False
+	use_ac_model -> True
+	afa_model_config -> {'lin_layers': [1024, 1024, 512, 512], 'act_fun': 'relu', 'ortho_init': False, 'vf_coef': 1.0, 'ent_coef': 0.0, 'clip_coef': 0.2, 'clip_vloss': True, 'normalize_advantages': True, 'num_envs': 1}
+	trials -> 1
+	results_dir -> results/afa/celeba_afa
+	dataset -> celeba
+	num_workers -> 8
+	batch_size -> 128
+	check_val_every_n_epoch -> 3
+	root_dir -> /home/xty20/data
+	use_imbalance -> True
+	image_size -> 64
+	num_classes -> 1000
+	use_binary_vector_class -> True
+	num_concepts -> 6
+	label_binary_width -> 1
+	label_dataset_subsample -> 12
+	num_hidden_concepts -> 2
+	selected_concepts -> False
+	competence_levels -> [1]
+	intervention_freq -> 1
+	intervention_batch_size -> 512
+	intervention_policies -> ['afacem_policy', 'optimal_greedy_no_prior', 'group_random_no_prior']
+	max_epochs -> 300
+	time_last_called -> 2024/05/17 at 12:40:55
+	n_concepts -> 6
+	n_tasks -> 230
+	concept_map -> None
+	architecture -> IntAwareConceptEmbeddingModel
+	extra_name -> Retry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa
+	sampling_percent -> 1
+	horizon_binary_representation -> True
+	include_task_trajectory_loss -> True
+	include_only_last_trajectory_loss -> True
+	task_loss_weight -> 0
+	intervention_weight -> 5
+	intervention_task_loss_weight -> 1
+	initial_horizon -> 2
+	use_concept_groups -> False
+	use_full_mask_distr -> False
+	propagate_target_gradients -> False
+	int_model_use_bn -> True
+	int_model_layers -> [128, 128, 64, 64]
+	intcem_task_loss_weight -> 0
+	embedding_activation -> leakyrelu
+	tau -> 1
+	max_horizon -> 6
+	horizon_uniform_distr -> True
+	num_rollouts -> 3
+	beta_a -> 1
+	beta_b -> 3
+	intervention_task_discount -> 1.1
+	final_reward_ratio -> 1
+	intermediate_reward_ratio -> 0.05
+	average_trajectory -> True
+	use_horizon -> False
+	initialize_discount -> False
+	model_pretrain_path -> None
+	horizon_rate -> 1.005
+	intervention_discount -> 1
+	gradient_clip_val -> 10
+	legacy_mode -> False
+	grid_variables -> ['intervention_weight', 'intermediate_reward_ratio']
+	grid_search_mode -> exhaustive
+[Number of parameters in model 26493357 ]
+[Number of non-trainable parameters in model 1091360 ]
+	Found cached model... loading it
+DEBUG:root:max_nll: 1.0
+DEBUG:root:max_nll: 7.207953453063965
+DEBUG:root:max_nll: 6.392823219299316
+DEBUG:fsspec.local:open file: /home/xty20/cem/results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1-v1.ckpt
+DEBUG:root:max_nll: 7.198286056518555
+DEBUG:root:max_nll: 6.486462593078613
+DEBUG:root:max_nll: 6.420317649841309
+DEBUG:root:max_nll: 6.846419811248779
+DEBUG:root:max_nll: 7.307822227478027
+Epoch 00030: reducing learning rate of group 0 to 5.0000e-08.
+DEBUG:root:max_nll: 6.669637203216553
+DEBUG:root:max_nll: 6.833880424499512
+DEBUG:root:max_nll: 6.867497444152832
+DEBUG:root:max_nll: 6.885087966918945
+DEBUG:root:max_nll: 6.732669830322266
+DEBUG:root:max_nll: 7.017009735107422
+DEBUG:root:max_nll: 6.033390522003174
+DEBUG:root:max_nll: 7.185088157653809
+DEBUG:root:Restarting run because we could not find val_acc_c_IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa in old results.
+DEBUG:root:Getting validation results.
+DEBUG:root:Testing with budget None
+DEBUG:root:Restarting run because we could not find test_acc_c_IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa in old results.
+DEBUG:root:Getting test results without interventions
+DEBUG:root:Testing with budget None
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+        Test metric               DataLoader 0
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+         ent_loss                      0.0
+    mean_rewards_epoch         0.1673295497894287
+          pg_loss              0.2607325315475464
+      test_agent_loss           82.92922973632812
+     test_avg_c_y_acc          0.5381882770870338
+      test_c_accuracy          0.8016577856719953
+        test_c_auc             0.8010701641497313
+         test_c_f1             0.7994902358100977
+       test_cbm_loss           31.258224487304688
+     test_concept_loss         2.1379637718200684
+    test_current_steps           3874.103515625
+    test_horizon_limit                 2.0
+test_intervention_accuracy     0.30708506019340825
+   test_intervention_auc               0.0
+  test_intervention_loss        82.92922973632812
+test_intervention_task_loss    29.120258331298828
+         test_loss             39.487789154052734
+    test_mask_accuracy                 0.0
+      test_task_loss                   0.0
+      test_y_accuracy          0.2747187685020722
+        test_y_auc                     0.0
+         test_y_f1             0.06324849987855198
+          v_loss                16.32511329650879
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+val_c_acc: 80.17%, val_y_acc: 27.47%, val_c_auc: 80.11%, val_y_auc: 0.00% with 39 epochs in 1741.99 seconds
+wandb: - 0.014 MB of 0.014 MB uploadedwandb: \ 0.014 MB of 0.014 MB uploadedwandb: | 0.046 MB of 0.068 MB uploaded (0.007 MB deduped)wandb: / 0.046 MB of 0.068 MB uploaded (0.007 MB deduped)wandb: - 0.068 MB of 0.068 MB uploaded (0.007 MB deduped)wandb:                                                                                
+wandb: W&B sync reduced upload amount by 10.3%             
+wandb: 
+wandb: Run history:
+wandb:             agent_loss_epoch ▁▅▄▂▅████▁▂▇▃█▃
+wandb:              agent_loss_step ▃▂▅▃▁▆▃▅▃▁▄▅█▄▄▇█▂▅█▂▁▄▅▃▄▁▁
+wandb:            avg_c_y_acc_epoch ▂▁▁▄▄▅▇▇▇█▇▇██▆
+wandb:             avg_c_y_acc_step ▆▆█▅▄▄▄▇▁▅▇▃▆▆▆▃█▆▆▇▅▇▇▅▄▆▇▅
+wandb:             c_accuracy_epoch ▃▂▁▅▄▄▇█▇▇▄▆▆▇▇
+wandb:              c_accuracy_step ▅▆▇▅▃▅▅▆▁▅▆▃▄▆▃▃▇▃▃▇▄▅█▅▅▅▅▄
+wandb:                  c_auc_epoch ▂▂▁▄▄▄▆█▇▇▄▇▆▇▇
+wandb:                   c_auc_step ▅▆█▆▃▅▅▆▁▅▆▂▄▅▃▃▇▃▄▇▄▅█▄▅▅▅▄
+wandb:                   c_f1_epoch ▃▂▁▅▄▄▇█▇▇▄▆▆▇▇
+wandb:                    c_f1_step ▅▆█▆▃▅▅▆▁▅▆▃▄▆▃▃▇▃▃▇▄▅█▅▅▅▅▄
+wandb:       cbm_current_aneal_rate ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:               cbm_loss_epoch █▇▇▆▆▄▄▂▃▃▁▃▃▄▁
+wandb:                cbm_loss_step ▄▄▂▅▆▆▇▂█▂▂▅▄▄▃▆▂▅▄▃▅▂▁▃▆▅▃▃
+wandb:           concept_loss_epoch █▇▇▄▆▄▃▁▂▃▃▂▁▂▂
+wandb:            concept_loss_step ▅▅▃▅▆▅▇▄█▄▄▇▆▄▆▇▃▆▇▃▅▅▁▆▆▅▄▆
+wandb:          current_steps_epoch ▁▁▂▃▃▃▄▅▅▆▆▆▇██
+wandb:           current_steps_step ▁▁▁▂▂▂▃▃▃▃▄▄▄▄▅▅▅▅▆▆▆▆▇▇▇███
+wandb:                     ent_loss ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:                        epoch ▁▁▁▁▁▂▂▂▂▂▂▃▃▃▃▃▄▄▄▄▅▅▅▅▅▅▆▆▆▆▆▇▇▇▇▇████
+wandb:          horizon_limit_epoch ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:           horizon_limit_step ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:  intervention_accuracy_epoch ▂▁▁▅▃▄▅█▆▆▇▇▆▇▆
+wandb:   intervention_accuracy_step ▇▆▇▄▄▄▅█▁▅█▃▆▅▇▂▇▅▆▆▆▇█▄▄▇▇▅
+wandb:       intervention_auc_epoch ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:        intervention_auc_step ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:      intervention_loss_epoch ▁▅▄▂▅████▁▂▇▃█▃
+wandb:       intervention_loss_step ▃▂▅▃▁▆▃▅▃▁▄▅█▄▄▇█▂▅█▂▁▄▅▃▄▁▁
+wandb: intervention_task_loss_epoch █▇█▆▆▄▄▂▃▃▁▄▃▄▂
+wandb:  intervention_task_loss_step ▄▄▂▅▆▆▇▂█▂▂▅▄▄▃▆▂▅▄▃▅▂▁▃▆▅▃▃
+wandb:                learning_rate ███████▁▁▁▁▁▁▁▁
+wandb:                   loss_epoch ▂▅▄▂▅████▁▂▇▃█▃
+wandb:                    loss_step ▃▂▅▃▂▆▃▅▃▁▃▅█▄▄▇█▂▅█▂▁▃▅▃▄▁▁
+wandb:          mask_accuracy_epoch ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:           mask_accuracy_step ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:           mean_rewards_epoch ██▂███▂███▂███▂███▂█▂▁
+wandb:            mean_rewards_step ▇▇▄▂▁▁█▃▂▂▄▅█▃▄▂▃▇█▃▂▄▄█▇▃▂▁▃▂▂▂▃▂▃▄▂▂▂▂
+wandb:                      pg_loss ▄▅▇▄▂▇▅▃▇▄▃▆▅▇█▅▅▇█▆▂▇█▁▃▅▆▇▃▅▃▄▅▆▆
+wandb:              task_loss_epoch ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:               task_loss_step ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:              test_agent_loss ▁█
+wandb:             test_avg_c_y_acc █▁
+wandb:              test_c_accuracy █▁
+wandb:                   test_c_auc █▁
+wandb:                    test_c_f1 █▁
+wandb:                test_cbm_loss ▁█
+wandb:            test_concept_loss ▁█
+wandb:           test_current_steps ▁█
+wandb:           test_horizon_limit ▁▁
+wandb:   test_intervention_accuracy █▁
+wandb:        test_intervention_auc ▁▁
+wandb:       test_intervention_loss ▁█
+wandb:  test_intervention_task_loss ▁█
+wandb:                    test_loss ▁█
+wandb:           test_mask_accuracy ▁▁
+wandb:               test_task_loss ▁▁
+wandb:              test_y_accuracy █▁
+wandb:                   test_y_auc ▁▁
+wandb:                    test_y_f1 █▁
+wandb:          trainer/global_step ▅▆▁▁▁▁▆▆▁▁▁▆▇▇▁▁▁▇▇▇▁▁▁▇██▁▁▁█▁▁▁▁▁▁▁▁▁▁
+wandb:                       v_loss ▃▂▅▃▂▆▃▃▅▃▁▃▃▅█▄▄▇█▄▂▅█▃▁▄▃▅▄▄▁▁▃▃▄
+wandb:               val_agent_loss ▁▃█▆▁
+wandb:              val_avg_c_y_acc ▃▁▅█▄
+wandb:               val_c_accuracy ▃▃█▅▁
+wandb:                    val_c_auc ▄▃█▅▁
+wandb:                     val_c_f1 ▃▃█▅▁
+wandb:                 val_cbm_loss ▁▂▃█▃
+wandb:             val_concept_loss ▇██▁▆
+wandb:            val_current_steps ▁▃▅▆█
+wandb:            val_horizon_limit ▁▁▁▁▁
+wandb:    val_intervention_accuracy ▁▁▁▄█
+wandb:         val_intervention_auc ▁▁▁▁▁
+wandb:        val_intervention_loss ▁▃█▆▁
+wandb:   val_intervention_task_loss ▁▂▃█▃
+wandb:                     val_loss ▁▃█▆▁
+wandb:            val_mask_accuracy ▁▁▁▁▁
+wandb:                val_task_loss ▁▁▁▁▁
+wandb:               val_y_accuracy ▃▁▅█▅
+wandb:                    val_y_auc ▁▁▁▁▁
+wandb:                     val_y_f1 ▂▁▃█▅
+wandb:             y_accuracy_epoch ▂▁▁▄▄▅▆▆▇██▇██▆
+wandb:              y_accuracy_step ▆▅▇▅▄▄▄▇▁▅▇▃▇▅▆▃█▆▆▆▆▇▇▅▄▇▇▆
+wandb:                  y_auc_epoch ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:                   y_auc_step ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:                   y_f1_epoch ▅▁▁▁▂▄▃▆▄▆▇▆█▇▆
+wandb:                    y_f1_step ▅▂▅▄▄▃▂▅▁▂▇▄▄▂▄▂▅█▃▂▅▅▆▃▃▆█▇
+wandb: 
+wandb: Run summary:
+wandb:             agent_loss_epoch 78.5819
+wandb:              agent_loss_step 18.8369
+wandb:            avg_c_y_acc_epoch 0.65251
+wandb:             avg_c_y_acc_step 0.65039
+wandb:             c_accuracy_epoch 0.87144
+wandb:              c_accuracy_step 0.86328
+wandb:                  c_auc_epoch 0.87216
+wandb:                   c_auc_step 0.86445
+wandb:                   c_f1_epoch 0.87002
+wandb:                    c_f1_step 0.86226
+wandb:       cbm_current_aneal_rate 1.0
+wandb:               cbm_loss_epoch 22.36584
+wandb:                cbm_loss_step 21.65769
+wandb:           concept_loss_epoch 1.47534
+wandb:            concept_loss_step 1.51213
+wandb:          current_steps_epoch 3806.66504
+wandb:           current_steps_step 3827.0
+wandb:                     ent_loss 0.0
+wandb:                        epoch 39
+wandb:          horizon_limit_epoch 2.0
+wandb:           horizon_limit_step 2.0
+wandb:  intervention_accuracy_epoch 0.43936
+wandb:   intervention_accuracy_step 0.42448
+wandb:       intervention_auc_epoch 0.0
+wandb:        intervention_auc_step 0.0
+wandb:      intervention_loss_epoch 78.5819
+wandb:       intervention_loss_step 18.8369
+wandb: intervention_task_loss_epoch 20.89051
+wandb:  intervention_task_loss_step 20.14556
+wandb:                learning_rate 0.0
+wandb:                   loss_epoch 34.63281
+wandb:                    loss_step 14.50628
+wandb:          mask_accuracy_epoch 0.0
+wandb:           mask_accuracy_step 0.0
+wandb:           mean_rewards_epoch 0.15008
+wandb:            mean_rewards_step 0.11493
+wandb:                      pg_loss 0.40858
+wandb:              task_loss_epoch 0.0
+wandb:               task_loss_step 0.0
+wandb:              test_agent_loss 95.86128
+wandb:             test_avg_c_y_acc 0.52777
+wandb:              test_c_accuracy 0.79902
+wandb:                   test_c_auc 0.79634
+wandb:                    test_c_f1 0.79583
+wandb:                test_cbm_loss 32.23885
+wandb:            test_concept_loss 2.18708
+wandb:           test_current_steps 3894.69189
+wandb:           test_horizon_limit 2.0
+wandb:   test_intervention_accuracy 0.29088
+wandb:        test_intervention_auc 0.0
+wandb:       test_intervention_loss 95.86128
+wandb:  test_intervention_task_loss 30.05178
+wandb:                    test_loss 44.1581
+wandb:           test_mask_accuracy 0.0
+wandb:               test_task_loss 0.0
+wandb:              test_y_accuracy 0.25652
+wandb:                   test_y_auc 0.0
+wandb:                    test_y_f1 0.0624
+wandb:          trainer/global_step 3626
+wandb:                       v_loss 18.76368
+wandb:               val_agent_loss 70.12601
+wandb:              val_avg_c_y_acc 0.53819
+wandb:               val_c_accuracy 0.80166
+wandb:                    val_c_auc 0.80107
+wandb:                     val_c_f1 0.79949
+wandb:                 val_cbm_loss 31.74537
+wandb:             val_concept_loss 2.13796
+wandb:            val_current_steps 3860.10352
+wandb:            val_horizon_limit 2.0
+wandb:    val_intervention_accuracy 0.30985
+wandb:         val_intervention_auc 0.0
+wandb:        val_intervention_loss 70.12601
+wandb:   val_intervention_task_loss 29.60741
+wandb:                     val_loss 35.38244
+wandb:            val_mask_accuracy 0.0
+wandb:                val_task_loss 0.0
+wandb:               val_y_accuracy 0.27472
+wandb:                    val_y_auc 0.0
+wandb:                     val_y_f1 0.06325
+wandb:             y_accuracy_epoch 0.43358
+wandb:              y_accuracy_step 0.4375
+wandb:                  y_auc_epoch 0.0
+wandb:                   y_auc_step 0.0
+wandb:                   y_f1_epoch 0.13633
+wandb:                    y_f1_step 0.18328
+wandb: 
+wandb: 🚀 View run IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1 at: https://wandb.ai/thomasyuan/celeba_test/runs/vuz17qmq
+wandb: ⭐️ View project at: https://wandb.ai/thomasyuan/celeba_test
+wandb: Synced 5 W&B file(s), 0 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20240517_124138-vuz17qmq/logs
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): o151352.ingest.sentry.io:443
+DEBUG:urllib3.connectionpool:https://o151352.ingest.sentry.io:443 "POST /api/4504800232407040/envelope/ HTTP/1.1" 200 0
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+        Test metric               DataLoader 0
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+         ent_loss                      0.0
+    mean_rewards_epoch         0.1500774770975113
+          pg_loss              0.4085817337036133
+      test_agent_loss           95.86128234863281
+     test_avg_c_y_acc          0.5277695497630331
+      test_c_accuracy          0.7990225118483413
+        test_c_auc             0.7963410296276233
+         test_c_f1             0.7958290482367076
+       test_cbm_loss            32.23884963989258
+     test_concept_loss          2.187077283859253
+    test_current_steps          3894.69189453125
+    test_horizon_limit                 2.0
+test_intervention_accuracy     0.2908767772511849
+   test_intervention_auc               0.0
+  test_intervention_loss        95.86128234863281
+test_intervention_task_loss    30.051776885986328
+         test_loss              44.15810012817383
+    test_mask_accuracy                 0.0
+      test_task_loss                   0.0
+      test_y_accuracy          0.2565165876777251
+        test_y_auc                     0.0
+         test_y_f1             0.06239669194083152
+          v_loss               18.763675689697266
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+c_acc: 79.90%, y_acc: 25.65%, c_auc: 79.63%, y_auc: 0.00% with 39 epochs in 1741.99 seconds
+DEBUG:root:Restarting run because we could not find test_acc_y_afacem_policy_ints_IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa in old results.
+[rank: 0] Global seed set to 42
+DEBUG:root:AC CBM loaded AC model checkpoint from results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+DEBUG:root:Loading trained model from results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+DEBUG:root:Intervention groups: [0, 1, 2, 3, 4, 5, 6]
+DEBUG:root:Intervening in <class 'cem.models.afacbm.AFAModel'> using <class 'cem.interventions.afacem_policy.AFACemInterventionPolicy'>
+DEBUG:root:Intervening with 0 out of 6 concept groups
+DEBUG:root:	For split 0 with 0 groups intervened
+DEBUG:root:Testing with budget 0
+DEBUG:root:	Test Accuracy when intervening with 0 concept groups is 25.59.
+DEBUG:root:Intervening with 1 out of 6 concept groups
+DEBUG:root:	For split 0 with 1 groups intervened
+DEBUG:root:Testing with budget 1
+DEBUG:root:	Test Accuracy when intervening with 1 concept groups is 26.95.
+DEBUG:root:Intervening with 2 out of 6 concept groups
+DEBUG:root:	For split 0 with 2 groups intervened
+DEBUG:root:Testing with budget 2
+DEBUG:root:	Test Accuracy when intervening with 2 concept groups is 28.17.
+DEBUG:root:Intervening with 3 out of 6 concept groups
+DEBUG:root:	For split 0 with 3 groups intervened
+DEBUG:root:Testing with budget 3
+DEBUG:root:	Test Accuracy when intervening with 3 concept groups is 28.88.
+DEBUG:root:Intervening with 4 out of 6 concept groups
+DEBUG:root:	For split 0 with 4 groups intervened
+DEBUG:root:Testing with budget 4
+DEBUG:root:	Test Accuracy when intervening with 4 concept groups is 29.89.
+DEBUG:root:Intervening with 5 out of 6 concept groups
+DEBUG:root:	For split 0 with 5 groups intervened
+DEBUG:root:Testing with budget 5
+DEBUG:root:	Test Accuracy when intervening with 5 concept groups is 31.25.
+DEBUG:root:Intervening with 6 out of 6 concept groups
+DEBUG:root:	For split 0 with 6 groups intervened
+DEBUG:root:Testing with budget 6
+DEBUG:root:	Test Accuracy when intervening with 6 concept groups is 32.02.
+DEBUG:root:	Average intervention took 0.00085 seconds and construction took 0.00018 seconds.
+	In total interventions took 60.46919 seconds
+DEBUG:root:		Test accuracy when intervening with 0 concept groups is 25.59% (avg int time is 0.00085s and construction time is 0.00018s).
+DEBUG:root:		Test accuracy when intervening with 1 concept groups is 26.95% (avg int time is 0.00085s and construction time is 0.00018s).
+DEBUG:root:		Test accuracy when intervening with 2 concept groups is 28.17% (avg int time is 0.00085s and construction time is 0.00018s).
+DEBUG:root:		Test accuracy when intervening with 3 concept groups is 28.88% (avg int time is 0.00085s and construction time is 0.00018s).
+DEBUG:root:		Test accuracy when intervening with 4 concept groups is 29.89% (avg int time is 0.00085s and construction time is 0.00018s).
+DEBUG:root:		Test accuracy when intervening with 5 concept groups is 31.25% (avg int time is 0.00085s and construction time is 0.00018s).
+DEBUG:root:		Test accuracy when intervening with 6 concept groups is 32.02% (avg int time is 0.00085s and construction time is 0.00018s).
+DEBUG:root:Restarting run because we could not find test_acc_y_optimal_greedy_no_prior_ints_IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa in old results.
+[rank: 0] Global seed set to 42
+DEBUG:root:AC CBM loaded AC model checkpoint from results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+DEBUG:root:Loading trained model from results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+DEBUG:root:Intervention groups: [0, 1, 2, 3, 4, 5, 6]
+DEBUG:root:Intervening in <class 'cem.models.afacbm.AFAModel'> using <class 'cem.interventions.optimal.GreedyOptimal'>
+DEBUG:root:Intervening with 0 out of 6 concept groups
+DEBUG:root:	For split 0 with 0 groups intervened
+DEBUG:root:	Test accuracy when intervening with 0 concept groups is 25.59%.
+DEBUG:root:Intervening with 1 out of 6 concept groups
+DEBUG:root:	For split 0 with 1 groups intervened
+DEBUG:root:	Test accuracy when intervening with 1 concept groups is 31.10%.
+DEBUG:root:Intervening with 2 out of 6 concept groups
+DEBUG:root:	For split 0 with 2 groups intervened
+DEBUG:root:	Test accuracy when intervening with 2 concept groups is 33.35%.
+DEBUG:root:Intervening with 3 out of 6 concept groups
+DEBUG:root:	For split 0 with 3 groups intervened
+DEBUG:root:	Test accuracy when intervening with 3 concept groups is 34.06%.
+DEBUG:root:Intervening with 4 out of 6 concept groups
+DEBUG:root:	For split 0 with 4 groups intervened
+DEBUG:root:	Test accuracy when intervening with 4 concept groups is 34.21%.
+DEBUG:root:Intervening with 5 out of 6 concept groups
+DEBUG:root:	For split 0 with 5 groups intervened
+DEBUG:root:	Test accuracy when intervening with 5 concept groups is 33.83%.
+DEBUG:root:Intervening with 6 out of 6 concept groups
+DEBUG:root:	For split 0 with 6 groups intervened
+DEBUG:root:	Test accuracy when intervening with 6 concept groups is 32.02%.
+DEBUG:root:	Average intervention took 0.00025 seconds and construction took 0.00008 seconds.
+	In total interventions took 5.88881 seconds
+DEBUG:root:		Test accuracy when intervening with 0 concept groups is 25.59% (avg int time is 0.00025s and construction time is 0.00008s).
+DEBUG:root:		Test accuracy when intervening with 1 concept groups is 31.10% (avg int time is 0.00025s and construction time is 0.00008s).
+DEBUG:root:		Test accuracy when intervening with 2 concept groups is 33.35% (avg int time is 0.00025s and construction time is 0.00008s).
+DEBUG:root:		Test accuracy when intervening with 3 concept groups is 34.06% (avg int time is 0.00025s and construction time is 0.00008s).
+DEBUG:root:		Test accuracy when intervening with 4 concept groups is 34.21% (avg int time is 0.00025s and construction time is 0.00008s).
+DEBUG:root:		Test accuracy when intervening with 5 concept groups is 33.83% (avg int time is 0.00025s and construction time is 0.00008s).
+DEBUG:root:		Test accuracy when intervening with 6 concept groups is 32.02% (avg int time is 0.00025s and construction time is 0.00008s).
+DEBUG:root:Restarting run because we could not find test_acc_y_group_random_no_prior_ints_IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa in old results.
+[rank: 0] Global seed set to 42
+DEBUG:root:AC CBM loaded AC model checkpoint from results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+DEBUG:root:Loading trained model from results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+DEBUG:root:Intervention groups: [0, 1, 2, 3, 4, 5, 6]
+DEBUG:root:Intervening in <class 'cem.models.afacbm.AFAModel'> using <class 'cem.interventions.random.IndependentRandomMaskIntPolicy'>
+DEBUG:root:Intervening with 0 out of 6 concept groups
+DEBUG:root:	For split 0 with 0 groups intervened
+DEBUG:root:	Test accuracy when intervening with 0 concept groups is 25.59%.
+DEBUG:root:Intervening with 1 out of 6 concept groups
+DEBUG:root:	For split 0 with 1 groups intervened
+DEBUG:root:	Test accuracy when intervening with 1 concept groups is 26.57%.
+DEBUG:root:Intervening with 2 out of 6 concept groups
+DEBUG:root:	For split 0 with 2 groups intervened
+DEBUG:root:	Test accuracy when intervening with 2 concept groups is 28.08%.
+DEBUG:root:Intervening with 3 out of 6 concept groups
+DEBUG:root:	For split 0 with 3 groups intervened
+DEBUG:root:	Test accuracy when intervening with 3 concept groups is 29.35%.
+DEBUG:root:Intervening with 4 out of 6 concept groups
+DEBUG:root:	For split 0 with 4 groups intervened
+DEBUG:root:	Test accuracy when intervening with 4 concept groups is 30.45%.
+DEBUG:root:Intervening with 5 out of 6 concept groups
+DEBUG:root:	For split 0 with 5 groups intervened
+DEBUG:root:	Test accuracy when intervening with 5 concept groups is 31.31%.
+DEBUG:root:Intervening with 6 out of 6 concept groups
+DEBUG:root:	For split 0 with 6 groups intervened
+DEBUG:root:	Test accuracy when intervening with 6 concept groups is 32.02%.
+DEBUG:root:	Average intervention took 0.00024 seconds and construction took 0.00004 seconds.
+	In total interventions took 5.61343 seconds
+DEBUG:root:		Test accuracy when intervening with 0 concept groups is 25.59% (avg int time is 0.00024s and construction time is 0.00004s).
+DEBUG:root:		Test accuracy when intervening with 1 concept groups is 26.57% (avg int time is 0.00024s and construction time is 0.00004s).
+DEBUG:root:		Test accuracy when intervening with 2 concept groups is 28.08% (avg int time is 0.00024s and construction time is 0.00004s).
+DEBUG:root:		Test accuracy when intervening with 3 concept groups is 29.35% (avg int time is 0.00024s and construction time is 0.00004s).
+DEBUG:root:		Test accuracy when intervening with 4 concept groups is 30.45% (avg int time is 0.00024s and construction time is 0.00004s).
+DEBUG:root:		Test accuracy when intervening with 5 concept groups is 31.31% (avg int time is 0.00024s and construction time is 0.00004s).
+DEBUG:root:		Test accuracy when intervening with 6 concept groups is 32.02% (avg int time is 0.00024s and construction time is 0.00004s).
+[rank: 0] Global seed set to 42
+DEBUG:root:AC CBM loaded AC model checkpoint from results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+DEBUG:root:Loading trained model from results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+Predicting: 0it [00:00, ?it/s]Predicting:   0%|          | 0/27 [00:00<?, ?it/s]Predicting DataLoader 0:   0%|          | 0/27 [00:00<?, ?it/s]Predicting DataLoader 0:   4%|▎         | 1/27 [00:00<00:00, 112.35it/s]Predicting DataLoader 0:   7%|▋         | 2/27 [00:00<00:00, 122.96it/s]Predicting DataLoader 0:  11%|█         | 3/27 [00:00<00:00, 125.89it/s]Predicting DataLoader 0:  15%|█▍        | 4/27 [00:00<00:00, 128.06it/s]Predicting DataLoader 0:  19%|█▊        | 5/27 [00:00<00:00, 124.22it/s]Predicting DataLoader 0:  22%|██▏       | 6/27 [00:00<00:00, 116.71it/s]Predicting DataLoader 0:  26%|██▌       | 7/27 [00:00<00:00, 119.21it/s]Predicting DataLoader 0:  30%|██▉       | 8/27 [00:00<00:00, 120.89it/s]Predicting DataLoader 0:  33%|███▎      | 9/27 [00:00<00:00, 57.01it/s] Predicting DataLoader 0:  37%|███▋      | 10/27 [00:00<00:00, 60.56it/s]Predicting DataLoader 0:  41%|████      | 11/27 [00:00<00:00, 63.59it/s]Predicting DataLoader 0:  44%|████▍     | 12/27 [00:00<00:00, 66.58it/s]Predicting DataLoader 0:  48%|████▊     | 13/27 [00:00<00:00, 69.36it/s]Predicting DataLoader 0:  52%|█████▏    | 14/27 [00:00<00:00, 71.43it/s]Predicting DataLoader 0:  56%|█████▌    | 15/27 [00:00<00:00, 73.80it/s]Predicting DataLoader 0:  59%|█████▉    | 16/27 [00:00<00:00, 76.01it/s]Predicting DataLoader 0:  63%|██████▎   | 17/27 [00:00<00:00, 53.93it/s]Predicting DataLoader 0:  67%|██████▋   | 18/27 [00:00<00:00, 55.83it/s]Predicting DataLoader 0:  70%|███████   | 19/27 [00:00<00:00, 57.61it/s]Predicting DataLoader 0:  74%|███████▍  | 20/27 [00:00<00:00, 59.33it/s]Predicting DataLoader 0:  78%|███████▊  | 21/27 [00:00<00:00, 60.99it/s]Predicting DataLoader 0:  81%|████████▏ | 22/27 [00:00<00:00, 62.54it/s]Predicting DataLoader 0:  85%|████████▌ | 23/27 [00:00<00:00, 64.04it/s]Predicting DataLoader 0:  89%|████████▉ | 24/27 [00:00<00:00, 65.50it/s]Predicting DataLoader 0:  93%|█████████▎| 25/27 [00:00<00:00, 52.90it/s]Predicting DataLoader 0:  96%|█████████▋| 26/27 [00:00<00:00, 54.20it/s]Predicting DataLoader 0: 100%|██████████| 27/27 [00:00<00:00, 55.44it/s]Predicting DataLoader 0: 100%|██████████| 27/27 [00:00<00:00, 48.52it/s]INFO:root:Computing NIS score...
+
+  0%|          | 0/20 [00:00<?, ?it/s] 10%|█         | 2/20 [00:00<00:01, 17.54it/s] 35%|███▌      | 7/20 [00:00<00:00, 32.20it/s] 60%|██████    | 12/20 [00:00<00:00, 36.87it/s] 85%|████████▌ | 17/20 [00:00<00:00, 39.29it/s]100%|██████████| 20/20 [00:00<00:00, 37.27it/s]
+INFO:root:	Done....NIS score is 62.56%
+INFO:root:Computing entire representation CAS score...
+in cas c_vec shape is (3376, 6, 16)
+n_clusters is [   2   70  139  208  277  346  415  484  552  621  690  759  828  897
+  966 1034 1103 1172 1241 1310 1379 1448 1516 1585 1654 1723 1792 1861
+ 1930 1998 2067 2136 2205 2274 2343 2412 2480 2549 2618 2687 2756 2825
+ 2894 2962 3031 3100 3169 3238 3307 3376]
+step is 50
+  0%|          | 0/6 [00:00<?, ?it/s] 17%|█▋        | 1/6 [00:12<01:02, 12.47s/it] 33%|███▎      | 2/6 [00:25<00:50, 12.65s/it] 50%|█████     | 3/6 [00:37<00:37, 12.49s/it] 67%|██████▋   | 4/6 [00:49<00:24, 12.43s/it] 83%|████████▎ | 5/6 [01:01<00:12, 12.15s/it]100%|██████████| 6/6 [01:14<00:00, 12.47s/it]100%|██████████| 6/6 [01:14<00:00, 12.44s/it]
+INFO:root:	Done....CAS score is 72.90%
+DEBUG:root:	Results for IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa in split 0:
+DEBUG:root:		test_acc_y -> 0.2565165876777251
+DEBUG:root:		test_auc_y -> 0.0
+DEBUG:root:		test_f1_y -> 0.06239669194083152
+DEBUG:root:		test_acc_c -> 0.7990225118483413
+DEBUG:root:		test_auc_c -> 0.7963410296276233
+DEBUG:root:		test_f1_c -> 0.7958290482367076
+DEBUG:root:		training_epochs -> 39
+DEBUG:root:		training_time -> 1741.9893519878387
+DEBUG:root:		num_trainable_params -> 0
+DEBUG:root:		num_non_trainable_params -> 27584717
+DEBUG:root:		test_acc_y_afacem_policy_ints -> [0.2559241706161137, 0.26954976303317535, 0.28169431279620855, 0.288803317535545, 0.2988744075829384, 0.3125, 0.32020142180094785]
+DEBUG:root:		avg_int_time_afacem_policy_ints -> 0.0008523716172403095
+DEBUG:root:		construction_time_afacem_policy_ints -> 0.00018072128295898438
+DEBUG:root:		test_acc_y_optimal_greedy_no_prior_ints -> [0.2559241706161137, 0.31101895734597157, 0.3335308056872038, 0.3406398104265403, 0.3421208530805687, 0.33827014218009477, 0.32020142180094785]
+DEBUG:root:		avg_int_time_optimal_greedy_no_prior_ints -> 0.0002491879620581119
+DEBUG:root:		construction_time_optimal_greedy_no_prior_ints -> 7.557868957519531e-05
+DEBUG:root:		test_acc_y_group_random_no_prior_ints -> [0.2559241706161137, 0.2656990521327014, 0.28080568720379145, 0.29354265402843605, 0.30450236966824645, 0.3130924170616114, 0.32020142180094785]
+DEBUG:root:		avg_int_time_group_random_no_prior_ints -> 0.0002375352842709303
+DEBUG:root:		construction_time_group_random_no_prior_ints -> 4.482269287109375e-05
+DEBUG:root:		test_nis -> 0.6256067767412199
+DEBUG:root:		test_cas -> 0.7290037377168295
+DEBUG:root:	Trial 1 COMPLETED for IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa ending at 17/05/2024 at 13:14:40 (33.0786 minutes):	Time Breakdown:		Initialization: 0.0000 minutes		Training: 30.1115 minutes		Test Interventions: 1.2612 minutes		Evaluate Representation Metric: 1.7059 minutes
+DEBUG:root:Setting ac model save path to be results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+[rank: 0] Global seed set to 42
+DEBUG:root:AC CBM loaded AC model checkpoint from results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
+DEBUG:git.cmd:Popen(['git', 'cat-file', '--batch-check'], cwd=/home/xty20/cem, stdin=<valid stream>, shell=False, universal_newlines=False)
+wandb: wandb version 0.17.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.16.6
+wandb: Run data is saved locally in /home/xty20/cem/wandb/run-20240517_131440-uv36g0kb
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1
+wandb: ⭐️ View project at https://wandb.ai/thomasyuan/celeba_test
+wandb: 🚀 View run at https://wandb.ai/thomasyuan/celeba_test/runs/uv36g0kb
+DEBUG:root:Loading trained model from results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+DEBUG:root:Loaded model
+DEBUG:root:Continue training model
+DEBUG:fsspec.local:open file: /home/xty20/cem/results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1.ckpt
+[Training IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1]
+config:
+<built-in function localtime>
+	top_k_accuracy -> None
+	save_model -> True
+	patience -> 5
+	emb_size -> 16
+	extra_dims -> 0
+	concept_loss_weight -> 5
+	learning_rate -> 5e-06
+	weight_decay -> 0.001
+	weight_loss -> False
+	c_extractor_arch -> resnet34
+	optimizer -> adam
+	bool -> False
+	early_stopping_monitor -> val_cbm_loss
+	early_stopping_mode -> min
+	early_stopping_delta -> 0.0
+	momentum -> 0.9
+	sigmoidal_prob -> False
+	training_intervention_prob -> 0.25
+	train_ac_model -> False
+	only_train_ac_model -> False
+	allow_no_action -> False
+	mask_no_action -> True
+	train_afa_model -> True
+	continue_training -> True
+	cbm_aneal_rate -> 1
+	cbm_starting_aneal_rate -> 1
+	enable_checkpointing -> True
+	run_ois -> False
+	ac_model_config -> {'architecture': 'flow', 'max_epochs': 50, 'batch_size': 32, 'transformations': ['AF', 'TL', 'TL', 'AF'], 'layer_cfg': ['ML', 'LR', 'CP2'], 'rnncp_units': 32, 'rnncp_layers': 2, 'linear_hids': [256, 256], 'linear_rank': -1, 'affine_hids': [256, 256], 'coupling_hids': [256, 256], 'prior': 'autoreg', 'n_components': 256, 'prior_units': 1, 'prior_layers': 2, 'prior_hids': [1, 1], 'optimizer': 'adam', 'learning_rate': 0.0001, 'weight_decay': 0.01, 'decay_steps': 10000, 'decay_rate': 0.5, 'clip_gradient': 1, 'num_samples': 10, 'patience': 3, 'lambda_nll': 1, 'lambda_xent': 1, 'lamdba_l2': 0.4, 'model_classes': True, 'save_path': 'results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt'}
+	ac_model_nll_ratio -> 0.5
+	ac_model_weight -> 2
+	ac_model_rollouts -> 1
+	normalize_values -> False
+	use_ac_model -> True
+	afa_model_config -> {'lin_layers': [1024, 1024, 512, 512], 'act_fun': 'relu', 'ortho_init': False, 'vf_coef': 1.0, 'ent_coef': 0.0, 'clip_coef': 0.2, 'clip_vloss': True, 'normalize_advantages': True, 'num_envs': 1}
+	trials -> 1
+	results_dir -> results/afa/celeba_afa
+	dataset -> celeba
+	num_workers -> 8
+	batch_size -> 128
+	check_val_every_n_epoch -> 3
+	root_dir -> /home/xty20/data
+	use_imbalance -> True
+	image_size -> 64
+	num_classes -> 1000
+	use_binary_vector_class -> True
+	num_concepts -> 6
+	label_binary_width -> 1
+	label_dataset_subsample -> 12
+	num_hidden_concepts -> 2
+	selected_concepts -> False
+	competence_levels -> [1]
+	intervention_freq -> 1
+	intervention_batch_size -> 512
+	intervention_policies -> ['afacem_policy', 'optimal_greedy_no_prior', 'group_random_no_prior']
+	max_epochs -> 300
+	time_last_called -> 2024/05/17 at 12:40:55
+	n_concepts -> 6
+	n_tasks -> 230
+	concept_map -> None
+	architecture -> IntAwareConceptEmbeddingModel
+	extra_name -> Retry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa
+	sampling_percent -> 1
+	horizon_binary_representation -> True
+	include_task_trajectory_loss -> True
+	include_only_last_trajectory_loss -> True
+	task_loss_weight -> 0
+	intervention_weight -> 5
+	intervention_task_loss_weight -> 1
+	initial_horizon -> 2
+	use_concept_groups -> False
+	use_full_mask_distr -> False
+	propagate_target_gradients -> False
+	int_model_use_bn -> True
+	int_model_layers -> [128, 128, 64, 64]
+	intcem_task_loss_weight -> 0
+	embedding_activation -> leakyrelu
+	tau -> 1
+	max_horizon -> 6
+	horizon_uniform_distr -> True
+	num_rollouts -> 3
+	beta_a -> 1
+	beta_b -> 3
+	intervention_task_discount -> 1.1
+	final_reward_ratio -> 1
+	intermediate_reward_ratio -> 0.1
+	average_trajectory -> True
+	use_horizon -> False
+	initialize_discount -> False
+	model_pretrain_path -> None
+	horizon_rate -> 1.005
+	intervention_discount -> 1
+	gradient_clip_val -> 10
+	legacy_mode -> False
+	grid_variables -> ['intervention_weight', 'intermediate_reward_ratio']
+	grid_search_mode -> exhaustive
+[Number of parameters in model 26493357 ]
+[Number of non-trainable parameters in model 1091360 ]
+	Found cached model... loading it
+DEBUG:root:max_nll: 1.0
+DEBUG:root:max_nll: 7.208339691162109
+DEBUG:root:max_nll: 6.393405914306641
+DEBUG:fsspec.local:open file: /home/xty20/cem/results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1-v2.ckpt
+DEBUG:root:max_nll: 7.202991485595703
+DEBUG:root:max_nll: 6.486545562744141
+DEBUG:root:max_nll: 6.419798851013184
+DEBUG:root:max_nll: 6.845705986022949
+DEBUG:root:max_nll: 7.307386875152588
+Epoch 00030: reducing learning rate of group 0 to 5.0000e-08.
+DEBUG:root:max_nll: 6.669064521789551
+DEBUG:root:max_nll: 6.834828853607178
+
+[1]+  Stopped                 python experiments/run_experiments_rl.py -c experiments/configs/afa_configs/celeba_afa.yaml --debug --project_name="celeba_test"
+Traceback (most recent call last):
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/train/training.py", line 321, in train_model
+    torch.save(
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torch/serialization.py", line 620, in save
+    return
+  File "/home/xty20/cem/venv/lib/python3.8/site-packages/torch/serialization.py", line 466, in __exit__
+    self.file_like.write_end_of_file()
+KeyboardInterrupt
+wandb: - 0.014 MB of 0.014 MB uploadedwandb: \ 0.014 MB of 0.014 MB uploadedwandb: | 0.014 MB of 0.014 MB uploadedwandb: / 0.044 MB of 0.061 MB uploaded (0.007 MB deduped)wandb: - 0.044 MB of 0.061 MB uploaded (0.007 MB deduped)wandb: \ 0.061 MB of 0.061 MB uploaded (0.007 MB deduped)wandb:                                                                                
+wandb: W&B sync reduced upload amount by 11.5%             
+wandb: 
+wandb: Run history:
+wandb:             agent_loss_epoch ▁▅▃▂▅████
+wandb:              agent_loss_step ▂▂▅▂▁▆▃▅▂▁▃▅█▄▄▇█▂
+wandb:            avg_c_y_acc_epoch ▂▁▁▅▄▅▇██
+wandb:             avg_c_y_acc_step ▆▆█▅▄▄▅▇▁▅▇▃▆▆▆▃█▆
+wandb:             c_accuracy_epoch ▃▂▁▅▄▄▇█▇
+wandb:              c_accuracy_step ▆▇█▆▃▅▅▇▁▅▆▃▄▆▃▃▇▃
+wandb:                  c_auc_epoch ▂▂▁▄▄▄▆█▇
+wandb:                   c_auc_step ▅▆█▆▃▆▅▇▁▅▆▃▄▆▃▃▇▃
+wandb:                   c_f1_epoch ▃▂▁▅▄▄▇█▇
+wandb:                    c_f1_step ▅▇█▆▃▅▅▇▁▅▆▃▄▆▃▃▇▃
+wandb:       cbm_current_aneal_rate ▁▁▁▁▁▁▁▁▁
+wandb:               cbm_loss_epoch █▆▇▆▆▄▃▁▂
+wandb:                cbm_loss_step ▄▄▂▅▆▆▇▁█▂▁▄▄▃▂▆▁▄
+wandb:           concept_loss_epoch █▇▇▄▅▄▂▁▂
+wandb:            concept_loss_step ▄▄▂▄▆▅▇▃█▃▃▇▅▃▅▇▁▅
+wandb:          current_steps_epoch ▁▂▃▄▄▅▆▇█
+wandb:           current_steps_step ▁▁▂▂▃▃▃▄▄▅▅▆▆▆▇▇▇█
+wandb:                     ent_loss ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:                        epoch ▁▁▁▂▂▂▃▃▃▃▃▃▃▄▄▅▅▅▅▆▆▆▆▆▆▇▇▇▇█
+wandb:          horizon_limit_epoch ▁▁▁▁▁▁▁▁▁
+wandb:           horizon_limit_step ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:  intervention_accuracy_epoch ▂▁▁▅▃▄▅█▆
+wandb:   intervention_accuracy_step ▇▆▇▄▄▄▅▇▁▅█▃▆▅▇▂▇▅
+wandb:       intervention_auc_epoch ▁▁▁▁▁▁▁▁▁
+wandb:        intervention_auc_step ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:      intervention_loss_epoch ▁▅▃▂▅████
+wandb:       intervention_loss_step ▂▂▅▂▁▆▃▅▂▁▃▅█▄▄▇█▂
+wandb: intervention_task_loss_epoch █▆▇▆▆▄▃▁▂
+wandb:  intervention_task_loss_step ▄▄▂▅▅▆▇▁█▂▁▄▄▄▂▆▁▄
+wandb:                learning_rate ███████▁▁
+wandb:                   loss_epoch ▁▅▃▂▅████
+wandb:                    loss_step ▃▂▅▃▂▆▃▅▃▁▃▅█▄▄▇█▂
+wandb:          mask_accuracy_epoch ▁▁▁▁▁▁▁▁▁
+wandb:           mask_accuracy_step ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:           mean_rewards_epoch ██▁███▁███▁█
+wandb:            mean_rewards_step █▇▇▆▃▃▂▄▁▁▄▃▃▄█▅█▃▂▂▂▁▂▄▁▃▅▇█▆▂▄▂▃▂▂▃▃▃▇
+wandb:                      pg_loss ▃▅▆▃▁▇▅▂▆▃▃▅▅▆█▄▄▇█▅▁
+wandb:              task_loss_epoch ▁▁▁▁▁▁▁▁▁
+wandb:               task_loss_step ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:          trainer/global_step ▆▆▆▆▇▁▁▁▁▁▁▁▁▇▇▇▇▇▁▁▁▁▁▁▁▇▇████▁▁▁▁▁▁▁██
+wandb:                       v_loss ▃▂▄▃▂▆▃▃▅▃▁▃▃▅█▄▄▇█▄▂
+wandb:               val_agent_loss ▁▃█
+wandb:              val_avg_c_y_acc ▄▁█
+wandb:               val_c_accuracy ▂▁█
+wandb:                    val_c_auc ▂▁█
+wandb:                     val_c_f1 ▁▁█
+wandb:                 val_cbm_loss ▁▇█
+wandb:             val_concept_loss ▁▆█
+wandb:            val_current_steps ▁▅█
+wandb:            val_horizon_limit ▁▁▁
+wandb:    val_intervention_accuracy ▁▆█
+wandb:         val_intervention_auc ▁▁▁
+wandb:        val_intervention_loss ▁▃█
+wandb:   val_intervention_task_loss ▁▇█
+wandb:                     val_loss ▁▃█
+wandb:            val_mask_accuracy ▁▁▁
+wandb:                val_task_loss ▁▁▁
+wandb:               val_y_accuracy ▅▁█
+wandb:                    val_y_auc ▁▁▁
+wandb:                     val_y_f1 ▅▁█
+wandb:             y_accuracy_epoch ▂▁▂▄▅▆▇▇█
+wandb:              y_accuracy_step ▆▅▇▅▄▄▄▇▁▅▇▃▇▅▆▃█▆
+wandb:                  y_auc_epoch ▁▁▁▁▁▁▁▁▁
+wandb:                   y_auc_step ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:                   y_f1_epoch ▇▁▂▂▂▆▄█▆
+wandb:                    y_f1_step ▅▂▅▄▄▃▂▅▁▂▇▄▄▂▄▂▅█
+wandb: 
+wandb: Run summary:
+wandb:             agent_loss_epoch 89.95237
+wandb:              agent_loss_step 36.18343
+wandb:            avg_c_y_acc_epoch 0.6532
+wandb:             avg_c_y_acc_step 0.65299
+wandb:             c_accuracy_epoch 0.87164
+wandb:              c_accuracy_step 0.85286
+wandb:                  c_auc_epoch 0.87217
+wandb:                   c_auc_step 0.85289
+wandb:                   c_f1_epoch 0.87022
+wandb:                    c_f1_step 0.85178
+wandb:       cbm_current_aneal_rate 1.0
+wandb:               cbm_loss_epoch 22.4712
+wandb:                cbm_loss_step 23.61704
+wandb:           concept_loss_epoch 1.47721
+wandb:            concept_loss_step 1.50849
+wandb:          current_steps_epoch 3220.66553
+wandb:           current_steps_step 3313.0
+wandb:                     ent_loss 0.0
+wandb:                        epoch 33
+wandb:          horizon_limit_epoch 2.0
+wandb:           horizon_limit_step 2.0
+wandb:  intervention_accuracy_epoch 0.44023
+wandb:   intervention_accuracy_step 0.42448
+wandb:       intervention_auc_epoch 0.0
+wandb:        intervention_auc_step 0.0
+wandb:      intervention_loss_epoch 89.95237
+wandb:       intervention_loss_step 36.18343
+wandb: intervention_task_loss_epoch 20.99399
+wandb:  intervention_task_loss_step 22.10854
+wandb:                learning_rate 0.0
+wandb:                   loss_epoch 38.45933
+wandb:                    loss_step 20.93915
+wandb:          mask_accuracy_epoch 0.0
+wandb:           mask_accuracy_step 0.0
+wandb:           mean_rewards_epoch 0.29233
+wandb:            mean_rewards_step 0.28314
+wandb:                      pg_loss -4.95142
+wandb:              task_loss_epoch 0.0
+wandb:               task_loss_step 0.0
+wandb:          trainer/global_step 3099
+wandb:                       v_loss 12.18811
+wandb:               val_agent_loss 104.28897
+wandb:              val_avg_c_y_acc 0.53903
+wandb:               val_c_accuracy 0.80334
+wandb:                    val_c_auc 0.80301
+wandb:                     val_c_f1 0.80126
+wandb:                 val_cbm_loss 31.69759
+wandb:             val_concept_loss 2.13893
+wandb:            val_current_steps 3274.10352
+wandb:            val_horizon_limit 2.0
+wandb:    val_intervention_accuracy 0.30353
+wandb:         val_intervention_auc 0.0
+wandb:        val_intervention_loss 104.28897
+wandb:   val_intervention_task_loss 29.55866
+wandb:                     val_loss 46.75481
+wandb:            val_mask_accuracy 0.0
+wandb:                val_task_loss 0.0
+wandb:               val_y_accuracy 0.27472
+wandb:                    val_y_auc 0.0
+wandb:                     val_y_f1 0.06261
+wandb:             y_accuracy_epoch 0.43476
+wandb:              y_accuracy_step 0.45312
+wandb:                  y_auc_epoch 0.0
+wandb:                   y_auc_step 0.0
+wandb:                   y_f1_epoch 0.13473
+wandb:                    y_f1_step 0.20255
+wandb: 
+wandb: 🚀 View run IntAwareConceptEmbeddingModelRetry_concept_loss_weight_5_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_afa_resnet34_fold_1 at: https://wandb.ai/thomasyuan/celeba_test/runs/uv36g0kb
+wandb: ⭐️ View project at: https://wandb.ai/thomasyuan/celeba_test
+wandb: Synced 5 W&B file(s), 0 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20240517_131440-uv36g0kb/logs
+DEBUG:urllib3.connectionpool:Resetting dropped connection: o151352.ingest.sentry.io
+DEBUG:urllib3.connectionpool:https://o151352.ingest.sentry.io:443 "POST /api/4504800232407040/envelope/ HTTP/1.1" 200 0

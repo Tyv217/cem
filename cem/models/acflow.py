@@ -13,7 +13,7 @@ from torch.utils.data import Dataset, RandomSampler
 
 class ACFlow(pl.LightningModule):
 
-    def __init__(self, n_concepts, n_tasks, layer_cfg, affine_hids,  linear_rank, linear_hids, transformations, prior_units, prior_layers, prior_hids, n_components, model_classes = True, class_weights = None, optimizer = None, learning_rate = None, weight_decay = None, momentum = None, lambda_xent = 1, lambda_nll = 1, float_type = "float32"):
+    def __init__(self, n_concepts, n_tasks, layer_cfg, affine_hids,  linear_rank, linear_hids, transformations, prior_units, prior_layers, prior_hids, n_components, model_classes = True, class_weights = None, optimizer = None, learning_rate = None, weight_decay = None, momentum = None, lambda_xent = 1, lambda_nll = 1, lambda_l2 = 1, float_type = "float32"):
         super().__init__()
         self.n_concepts = n_concepts
         n_tasks = n_tasks if n_tasks > 1 else 2 
@@ -21,6 +21,7 @@ class ACFlow(pl.LightningModule):
         self.flow = Flow(n_concepts, n_tasks, layer_cfg, affine_hids, linear_rank, linear_hids, transformations,  prior_units, prior_layers, prior_hids, n_components, float_type)
         self.lambda_xent = lambda_xent
         self.lambda_nll = lambda_nll
+        self.lambda_l2 = lambda_l2
         self.xent_loss = torch.nn.CrossEntropyLoss() if n_tasks > 1 else torch.nn.BCEWithLogitsLoss()
         self.accuracy = Accuracy(task = "multiclass" if n_tasks > 2 else "binary", num_classes = n_tasks if n_tasks > 1 else 2)
         self.optimizer_name = optimizer
@@ -154,10 +155,14 @@ class ACFlow(pl.LightningModule):
         # loglikel = torch.clamp(loglikel, max = 0)
         nll = torch.mean(-loglikel)
         
+        m = torch.max(torch.abs(loglikel))
+        m_pos = torch.max(loglikel)
         logging.debug(
-            f"{logits}"
+            f"max: {m.detach()}"
+            f"max pos: {m_pos.detach()}"
         )
-        loss = self.lambda_nll * nll + xent * self.lambda_xent + (0.001 * torch.mean(torch.square(logits)))
+        loss = self.lambda_nll * nll + xent * self.lambda_xent
+        loss = loss + (self.lambda_l2 * (torch.mean(torch.square(logpo)) + torch.mean(torch.square(logpu))))
 
         if self.model_classes:
             pred = torch.argmax(logits, dim=1)
@@ -181,7 +186,7 @@ class ACFlow(pl.LightningModule):
         # logpu = torch.log(torch.sigmoid(torch.exp(logpu)))
         # logpo = torch.log(torch.sigmoid(torch.exp(logpo)))
 
-        logits = logpu + logpo
+        logits = logpu + logpo  
         xent = self.xent_loss(logits, y)
 
         class_weights = torch.tile(torch.unsqueeze(self.class_weights, dim = 0), [x.shape[0], 1]).to(logpu.device)

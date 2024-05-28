@@ -857,7 +857,11 @@ class CUBDataset(Dataset):
             class_label = self.label_transform(class_label)
         if self.transform:
             img = self.transform(img)
-
+        import logging
+        logging.debug(
+            f"img_path: {img_path}\n"
+            f"class_label: {class_label}\n"
+        )
         if self.use_attr:
             if self.uncertain_label:
                 attr_label = img_data['uncertain_attribute_label']
@@ -875,6 +879,21 @@ class CUBDataset(Dataset):
                 else:
                     return attr_label, class_label
             else:
+                
+                logging.debug(
+                    f"attr_label: {attr_label}\n"
+                )
+                attr_label = np.array(attr_label)
+                has_indices = np.where(attr_label == 1)
+                no_indices = np.where(attr_label == 0)
+                has_concepts = np.array(CONCEPT_SEMANTICS)[has_indices]
+                no_concepts = np.array(CONCEPT_SEMANTICS)[no_indices]
+                
+                logging.debug(
+                    f"has_concepts {class_label}: {has_concepts}\n"
+                    f"no_concepts {class_label}: {no_concepts}\n"
+                )
+                exit()
                 return img, class_label, torch.FloatTensor(attr_label)
         else:
             return img, class_label

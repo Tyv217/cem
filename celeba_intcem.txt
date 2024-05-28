@@ -1,967 +1,0 @@
-{
-    "batch_size": 256,
-    "check_val_every_n_epoch": 2,
-    "competence_levels": [
-        1,
-        0
-    ],
-    "dataset": "celeba",
-    "image_size": 64,
-    "intervention_batch_size": 512,
-    "intervention_freq": 1,
-    "intervention_policies": [
-        "intcem_policy",
-        "optimal_greedy_no_prior",
-        "group_random_no_prior"
-    ],
-    "label_binary_width": 1,
-    "label_dataset_subsample": 12,
-    "max_epochs": 300,
-    "num_classes": 1000,
-    "num_concepts": 6,
-    "num_hidden_concepts": 2,
-    "num_workers": 8,
-    "results_dir": "results/afa/celeba_afa",
-    "root_dir": "/home/xty20/data",
-    "runs": [
-        {
-            "architecture": "IntAwareConceptEmbeddingModel",
-            "average_trajectory": true,
-            "beta_a": 1,
-            "beta_b": 3,
-            "embedding_activation": "leakyrelu",
-            "extra_name": "Retry_concept_loss_weight_{concept_loss_weight}_intervention_weight_{intervention_weight}_horizon_rate_{horizon_rate}_intervention_discount_{intervention_discount}_task_discount_{intervention_task_discount}_sampling_percent_{sampling_percent}",
-            "final_reward_ratio": 1,
-            "gradient_clip_val": 10,
-            "horizon_binary_representation": true,
-            "horizon_rate": 1.005,
-            "horizon_uniform_distr": true,
-            "include_only_last_trajectory_loss": true,
-            "include_task_trajectory_loss": true,
-            "initial_horizon": 2,
-            "initialize_discount": false,
-            "int_model_layers": [
-                128,
-                128,
-                64,
-                64
-            ],
-            "int_model_use_bn": true,
-            "intcem_task_loss_weight": 0,
-            "intermediate_reward_ratio": 0.1,
-            "intervention_discount": 1,
-            "intervention_task_discount": 1.1,
-            "intervention_task_loss_weight": 1,
-            "intervention_weight": 5,
-            "legacy_mode": false,
-            "max_horizon": 6,
-            "model_pretrain_path": null,
-            "num_rollouts": 3,
-            "propagate_target_gradients": false,
-            "sampling_percent": 1,
-            "task_loss_weight": 0,
-            "tau": 1,
-            "training_intervention_prob": 0.25,
-            "use_concept_groups": false,
-            "use_full_mask_distr": false,
-            "use_horizon": false
-        }
-    ],
-    "selected_concepts": false,
-    "shared_params": {
-        "ac_model_config": {
-            "affine_hids": [
-                256,
-                256
-            ],
-            "architecture": "flow",
-            "batch_size": 32,
-            "clip_gradient": 1,
-            "coupling_hids": [
-                256,
-                256
-            ],
-            "decay_rate": 0.5,
-            "decay_steps": 10000,
-            "lambda_nll": 1,
-            "lambda_xent": 1,
-            "layer_cfg": [
-                "ML",
-                "LR",
-                "CP2"
-            ],
-            "learning_rate": 0.0001,
-            "linear_hids": [
-                256,
-                256
-            ],
-            "linear_rank": -1,
-            "max_epochs": 50,
-            "model_classes": true,
-            "n_components": 256,
-            "num_samples": 10,
-            "optimizer": "adam",
-            "patience": 3,
-            "prior": "autoreg",
-            "prior_hids": [
-                1,
-                1
-            ],
-            "prior_layers": 2,
-            "prior_units": 1,
-            "rnncp_layers": 2,
-            "rnncp_units": 32,
-            "transformations": [
-                "AF",
-                "TL",
-                "TL",
-                "AF"
-            ],
-            "weight_decay": 0.01
-        },
-        "ac_model_nll_ratio": 0.5,
-        "ac_model_rollouts": 1,
-        "ac_model_weight": 2,
-        "afa_model_config": {
-            "act_fun": "relu",
-            "clip_coef": 0.2,
-            "clip_vloss": true,
-            "ent_coef": 0.0,
-            "lin_layers": [
-                512,
-                512,
-                256,
-                256
-            ],
-            "normalize_advantages": true,
-            "num_envs": 1,
-            "ortho_init": false,
-            "vf_coef": 1.0
-        },
-        "allow_no_action": false,
-        "bool": false,
-        "c_extractor_arch": "resnet34",
-        "cbm_aneal_rate": 1,
-        "cbm_starting_aneal_rate": 1,
-        "concept_loss_weight": 1,
-        "continue_training": true,
-        "early_stopping_delta": 0.0,
-        "early_stopping_mode": "min",
-        "early_stopping_monitor": "val_loss",
-        "emb_size": 16,
-        "enable_checkpointing": true,
-        "extra_dims": 0,
-        "learning_rate": 1e-05,
-        "mask_no_action": true,
-        "momentum": 0.9,
-        "normalize_values": false,
-        "only_train_ac_model": false,
-        "optimizer": "adam",
-        "patience": 5,
-        "save_model": true,
-        "sigmoidal_prob": false,
-        "top_k_accuracy": null,
-        "train_ac_model": true,
-        "train_afa_model": false,
-        "training_intervention_prob": 0.25,
-        "use_ac_model": true,
-        "weight_decay": 0.001,
-        "weight_loss": false
-    },
-    "trials": 1,
-    "use_binary_vector_class": true,
-    "use_imbalance": true
-}
-Files already downloaded and verified
-Files already downloaded and verified
-Files already downloaded and verified
-[TRIAL 1/1 BEGINS AT 14/05/2024 at 18:02:55
-Testing: 0it [00:00, ?it/s]Testing:   0%|          | 0/106 [00:00<?, ?it/s]Testing DataLoader 0:   0%|          | 0/106 [00:00<?, ?it/s]Testing DataLoader 0:   1%|          | 1/106 [00:00<00:50,  2.08it/s]Testing DataLoader 0:   2%|▏         | 2/106 [00:00<00:27,  3.80it/s]Testing DataLoader 0:   3%|▎         | 3/106 [00:00<00:19,  5.25it/s]Testing DataLoader 0:   4%|▍         | 4/106 [00:00<00:15,  6.46it/s]Testing DataLoader 0:   5%|▍         | 5/106 [00:00<00:13,  7.51it/s]Testing DataLoader 0:   6%|▌         | 6/106 [00:00<00:11,  8.42it/s]Testing DataLoader 0:   7%|▋         | 7/106 [00:00<00:10,  9.25it/s]Testing DataLoader 0:   8%|▊         | 8/106 [00:00<00:09,  9.99it/s]Testing DataLoader 0:   8%|▊         | 9/106 [00:00<00:09, 10.63it/s]Testing DataLoader 0:   9%|▉         | 10/106 [00:00<00:08, 11.22it/s]Testing DataLoader 0:  10%|█         | 11/106 [00:00<00:08, 11.76it/s]Testing DataLoader 0:  11%|█▏        | 12/106 [00:00<00:07, 12.24it/s]Testing DataLoader 0:  12%|█▏        | 13/106 [00:01<00:07, 12.66it/s]Testing DataLoader 0:  13%|█▎        | 14/106 [00:01<00:07, 13.04it/s]Testing DataLoader 0:  14%|█▍        | 15/106 [00:01<00:06, 13.42it/s]Testing DataLoader 0:  15%|█▌        | 16/106 [00:01<00:06, 13.77it/s]Testing DataLoader 0:  16%|█▌        | 17/106 [00:01<00:06, 14.08it/s]Testing DataLoader 0:  17%|█▋        | 18/106 [00:01<00:06, 14.37it/s]Testing DataLoader 0:  18%|█▊        | 19/106 [00:01<00:05, 14.63it/s]Testing DataLoader 0:  19%|█▉        | 20/106 [00:01<00:05, 14.88it/s]Testing DataLoader 0:  20%|█▉        | 21/106 [00:01<00:05, 15.11it/s]Testing DataLoader 0:  21%|██        | 22/106 [00:01<00:05, 15.33it/s]Testing DataLoader 0:  22%|██▏       | 23/106 [00:01<00:05, 15.54it/s]Testing DataLoader 0:  23%|██▎       | 24/106 [00:01<00:05, 15.73it/s]Testing DataLoader 0:  24%|██▎       | 25/106 [00:01<00:05, 15.91it/s]Testing DataLoader 0:  25%|██▍       | 26/106 [00:01<00:04, 16.08it/s]Testing DataLoader 0:  25%|██▌       | 27/106 [00:01<00:04, 16.25it/s]Testing DataLoader 0:  26%|██▋       | 28/106 [00:01<00:04, 16.40it/s]Testing DataLoader 0:  27%|██▋       | 29/106 [00:01<00:04, 16.55it/s]Testing DataLoader 0:  28%|██▊       | 30/106 [00:01<00:04, 16.69it/s]Testing DataLoader 0:  29%|██▉       | 31/106 [00:01<00:04, 16.82it/s]Testing DataLoader 0:  30%|███       | 32/106 [00:01<00:04, 16.94it/s]Testing DataLoader 0:  31%|███       | 33/106 [00:01<00:04, 17.06it/s]Testing DataLoader 0:  32%|███▏      | 34/106 [00:01<00:04, 17.17it/s]Testing DataLoader 0:  33%|███▎      | 35/106 [00:02<00:04, 17.28it/s]Testing DataLoader 0:  34%|███▍      | 36/106 [00:02<00:04, 17.39it/s]Testing DataLoader 0:  35%|███▍      | 37/106 [00:02<00:03, 17.49it/s]Testing DataLoader 0:  36%|███▌      | 38/106 [00:02<00:03, 17.58it/s]Testing DataLoader 0:  37%|███▋      | 39/106 [00:02<00:03, 17.67it/s]Testing DataLoader 0:  38%|███▊      | 40/106 [00:02<00:03, 17.76it/s]Testing DataLoader 0:  39%|███▊      | 41/106 [00:02<00:03, 17.85it/s]Testing DataLoader 0:  40%|███▉      | 42/106 [00:02<00:03, 17.93it/s]Testing DataLoader 0:  41%|████      | 43/106 [00:02<00:03, 18.00it/s]Testing DataLoader 0:  42%|████▏     | 44/106 [00:02<00:03, 18.08it/s]Testing DataLoader 0:  42%|████▏     | 45/106 [00:02<00:03, 18.15it/s]Testing DataLoader 0:  43%|████▎     | 46/106 [00:02<00:03, 18.22it/s]Testing DataLoader 0:  44%|████▍     | 47/106 [00:02<00:03, 18.29it/s]Testing DataLoader 0:  45%|████▌     | 48/106 [00:02<00:03, 18.35it/s]Testing DataLoader 0:  46%|████▌     | 49/106 [00:02<00:03, 18.42it/s]Testing DataLoader 0:  47%|████▋     | 50/106 [00:02<00:03, 18.48it/s]Testing DataLoader 0:  48%|████▊     | 51/106 [00:02<00:02, 18.54it/s]Testing DataLoader 0:  49%|████▉     | 52/106 [00:02<00:02, 18.59it/s]Testing DataLoader 0:  50%|█████     | 53/106 [00:02<00:02, 18.65it/s]Testing DataLoader 0:  51%|█████     | 54/106 [00:02<00:02, 18.70it/s]Testing DataLoader 0:  52%|█████▏    | 55/106 [00:02<00:02, 18.75it/s]Testing DataLoader 0:  53%|█████▎    | 56/106 [00:02<00:02, 18.80it/s]Testing DataLoader 0:  54%|█████▍    | 57/106 [00:03<00:02, 18.85it/s]Testing DataLoader 0:  55%|█████▍    | 58/106 [00:03<00:02, 18.90it/s]Testing DataLoader 0:  56%|█████▌    | 59/106 [00:03<00:02, 18.94it/s]Testing DataLoader 0:  57%|█████▋    | 60/106 [00:03<00:02, 18.99it/s]Testing DataLoader 0:  58%|█████▊    | 61/106 [00:03<00:02, 19.03it/s]Testing DataLoader 0:  58%|█████▊    | 62/106 [00:03<00:02, 19.08it/s]Testing DataLoader 0:  59%|█████▉    | 63/106 [00:03<00:02, 19.12it/s]Testing DataLoader 0:  60%|██████    | 64/106 [00:03<00:02, 19.15it/s]Testing DataLoader 0:  61%|██████▏   | 65/106 [00:03<00:02, 19.19it/s]Testing DataLoader 0:  62%|██████▏   | 66/106 [00:03<00:02, 19.23it/s]Testing DataLoader 0:  63%|██████▎   | 67/106 [00:03<00:02, 19.27it/s]Testing DataLoader 0:  64%|██████▍   | 68/106 [00:03<00:01, 19.31it/s]Testing DataLoader 0:  65%|██████▌   | 69/106 [00:03<00:01, 19.33it/s]Testing DataLoader 0:  66%|██████▌   | 70/106 [00:03<00:01, 19.36it/s]Testing DataLoader 0:  67%|██████▋   | 71/106 [00:03<00:01, 19.40it/s]Testing DataLoader 0:  68%|██████▊   | 72/106 [00:03<00:01, 19.43it/s]Testing DataLoader 0:  69%|██████▉   | 73/106 [00:03<00:01, 19.45it/s]Testing DataLoader 0:  70%|██████▉   | 74/106 [00:03<00:01, 19.47it/s]Testing DataLoader 0:  71%|███████   | 75/106 [00:03<00:01, 19.50it/s]Testing DataLoader 0:  72%|███████▏  | 76/106 [00:03<00:01, 19.53it/s]Testing DataLoader 0:  73%|███████▎  | 77/106 [00:03<00:01, 19.56it/s]Testing DataLoader 0:  74%|███████▎  | 78/106 [00:03<00:01, 19.58it/s]Testing DataLoader 0:  75%|███████▍  | 79/106 [00:04<00:01, 19.61it/s]Testing DataLoader 0:  75%|███████▌  | 80/106 [00:04<00:01, 19.64it/s]Testing DataLoader 0:  76%|███████▋  | 81/106 [00:04<00:01, 19.66it/s]Testing DataLoader 0:  77%|███████▋  | 82/106 [00:04<00:01, 19.69it/s]Testing DataLoader 0:  78%|███████▊  | 83/106 [00:04<00:01, 19.71it/s]Testing DataLoader 0:  79%|███████▉  | 84/106 [00:04<00:01, 19.74it/s]Testing DataLoader 0:  80%|████████  | 85/106 [00:04<00:01, 19.76it/s]Testing DataLoader 0:  81%|████████  | 86/106 [00:04<00:01, 19.78it/s]Testing DataLoader 0:  82%|████████▏ | 87/106 [00:04<00:00, 19.81it/s]Testing DataLoader 0:  83%|████████▎ | 88/106 [00:04<00:00, 19.83it/s]Testing DataLoader 0:  84%|████████▍ | 89/106 [00:04<00:00, 19.85it/s]Testing DataLoader 0:  85%|████████▍ | 90/106 [00:04<00:00, 19.87it/s]Testing DataLoader 0:  86%|████████▌ | 91/106 [00:04<00:00, 19.89it/s]Testing DataLoader 0:  87%|████████▋ | 92/106 [00:04<00:00, 19.92it/s]Testing DataLoader 0:  88%|████████▊ | 93/106 [00:04<00:00, 19.94it/s]Testing DataLoader 0:  89%|████████▊ | 94/106 [00:04<00:00, 19.96it/s]Testing DataLoader 0:  90%|████████▉ | 95/106 [00:04<00:00, 19.98it/s]Testing DataLoader 0:  91%|█████████ | 96/106 [00:04<00:00, 20.00it/s]Testing DataLoader 0:  92%|█████████▏| 97/106 [00:04<00:00, 20.02it/s]Testing DataLoader 0:  92%|█████████▏| 98/106 [00:04<00:00, 20.03it/s]Testing DataLoader 0:  93%|█████████▎| 99/106 [00:04<00:00, 20.05it/s]Testing DataLoader 0:  94%|█████████▍| 100/106 [00:04<00:00, 20.07it/s]Testing DataLoader 0:  95%|█████████▌| 101/106 [00:05<00:00, 20.09it/s]Testing DataLoader 0:  96%|█████████▌| 102/106 [00:05<00:00, 20.11it/s]Testing DataLoader 0:  97%|█████████▋| 103/106 [00:05<00:00, 20.13it/s]Testing DataLoader 0:  98%|█████████▊| 104/106 [00:05<00:00, 20.14it/s]Testing DataLoader 0:  99%|█████████▉| 105/106 [00:05<00:00, 20.16it/s]Testing DataLoader 0: 100%|██████████| 106/106 [00:05<00:00, 20.15it/s]Testing DataLoader 0: 100%|██████████| 106/106 [00:05<00:00, 20.15it/s]
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-       Test metric             DataLoader 0
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-      test_accuracy         0.3981042802333832
-        test_nll            0.03969743102788925
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-AC Model test_accuracy: 39.81%, 
-AC Model test_nll: 3.97%, 
-AC Model training_time: 16425.96%, 
-AC Model num_epochs: 700.00%, 
-with 7.0 epochs in 164.26 seconds
-[Training IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_resnet34_fold_1]
-config:
-<built-in function localtime>
-	top_k_accuracy -> None
-	save_model -> True
-	patience -> 5
-	emb_size -> 16
-	extra_dims -> 0
-	concept_loss_weight -> 1
-	learning_rate -> 1e-05
-	weight_decay -> 0.001
-	weight_loss -> False
-	c_extractor_arch -> resnet34
-	optimizer -> adam
-	bool -> False
-	early_stopping_monitor -> val_loss
-	early_stopping_mode -> min
-	early_stopping_delta -> 0.0
-	momentum -> 0.9
-	sigmoidal_prob -> False
-	training_intervention_prob -> 0.25
-	train_ac_model -> True
-	only_train_ac_model -> False
-	allow_no_action -> False
-	mask_no_action -> True
-	train_afa_model -> False
-	continue_training -> True
-	cbm_aneal_rate -> 1
-	cbm_starting_aneal_rate -> 1
-	enable_checkpointing -> True
-	ac_model_config -> {'architecture': 'flow', 'max_epochs': 50, 'batch_size': 32, 'transformations': ['AF', 'TL', 'TL', 'AF'], 'layer_cfg': ['ML', 'LR', 'CP2'], 'rnncp_units': 32, 'rnncp_layers': 2, 'linear_hids': [256, 256], 'linear_rank': -1, 'affine_hids': [256, 256], 'coupling_hids': [256, 256], 'prior': 'autoreg', 'n_components': 256, 'prior_units': 1, 'prior_layers': 2, 'prior_hids': [1, 1], 'optimizer': 'adam', 'learning_rate': 0.0001, 'weight_decay': 0.01, 'decay_steps': 10000, 'decay_rate': 0.5, 'clip_gradient': 1, 'num_samples': 10, 'patience': 3, 'lambda_nll': 1, 'lambda_xent': 1, 'model_classes': True, 'save_path': 'results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt'}
-	ac_model_nll_ratio -> 0.5
-	ac_model_weight -> 2
-	ac_model_rollouts -> 1
-	normalize_values -> False
-	use_ac_model -> True
-	afa_model_config -> {'lin_layers': [512, 512, 256, 256], 'act_fun': 'relu', 'ortho_init': False, 'vf_coef': 1.0, 'ent_coef': 0.0, 'clip_coef': 0.2, 'clip_vloss': True, 'normalize_advantages': True, 'num_envs': 1}
-	trials -> 1
-	results_dir -> results/afa/celeba_afa
-	dataset -> celeba
-	num_workers -> 8
-	batch_size -> 256
-	check_val_every_n_epoch -> 2
-	root_dir -> /home/xty20/data
-	use_imbalance -> True
-	image_size -> 64
-	num_classes -> 1000
-	use_binary_vector_class -> True
-	num_concepts -> 6
-	label_binary_width -> 1
-	label_dataset_subsample -> 12
-	num_hidden_concepts -> 2
-	selected_concepts -> False
-	competence_levels -> [1, 0]
-	intervention_freq -> 1
-	intervention_batch_size -> 512
-	intervention_policies -> ['intcem_policy', 'optimal_greedy_no_prior', 'group_random_no_prior']
-	max_epochs -> 300
-	time_last_called -> 2024/05/14 at 18:02:15
-	n_concepts -> 6
-	n_tasks -> 230
-	concept_map -> None
-	architecture -> IntAwareConceptEmbeddingModel
-	extra_name -> Retry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1
-	sampling_percent -> 1
-	horizon_binary_representation -> True
-	include_task_trajectory_loss -> True
-	include_only_last_trajectory_loss -> True
-	task_loss_weight -> 0
-	intervention_weight -> 5
-	intervention_task_loss_weight -> 1
-	initial_horizon -> 2
-	use_concept_groups -> False
-	use_full_mask_distr -> False
-	propagate_target_gradients -> False
-	int_model_use_bn -> True
-	int_model_layers -> [128, 128, 64, 64]
-	intcem_task_loss_weight -> 0
-	embedding_activation -> leakyrelu
-	tau -> 1
-	max_horizon -> 6
-	horizon_uniform_distr -> True
-	num_rollouts -> 3
-	beta_a -> 1
-	beta_b -> 3
-	intervention_task_discount -> 1.1
-	final_reward_ratio -> 1
-	intermediate_reward_ratio -> 0.1
-	average_trajectory -> True
-	use_horizon -> False
-	initialize_discount -> False
-	model_pretrain_path -> None
-	horizon_rate -> 1.005
-	intervention_discount -> 1
-	gradient_clip_val -> 10
-	legacy_mode -> False
-[Number of parameters in model 22055846 ]
-[Number of non-trainable parameters in model 2 ]
-	Found cached model... loading it
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-        Test metric               DataLoader 0
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-     test_avg_c_y_acc          0.5056246299585552
-      test_c_accuracy          0.7619893428063942
-        test_c_auc             0.7625077832640829
-         test_c_f1              0.758931707803817
-     test_concept_loss         0.4749900996685028
-    test_current_steps           10417.81640625
-    test_horizon_limit          7.028732776641846
-  test_intervention_loss               0.0
-test_intervention_task_loss            0.0
-         test_loss             0.4749900996685028
-    test_mask_accuracy                -1.0
-      test_task_loss                   0.0
-      test_y_accuracy          0.2492599171107164
-        test_y_auc                     0.0
-         test_y_f1            0.057910520917511234
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-val_c_acc: 76.20%, val_y_acc: 24.93%, val_c_auc: 76.25%, val_y_auc: 0.00% with 116 epochs in 76.48 seconds
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-        Test metric               DataLoader 0
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-     test_avg_c_y_acc          0.48938586097946296
-      test_c_accuracy          0.7569115323854663
-        test_c_auc             0.7541714791709437
-         test_c_f1             0.7518166941396833
-     test_concept_loss         0.4878205358982086
-    test_current_steps           10428.099609375
-    test_horizon_limit         7.0287322998046875
-  test_intervention_loss               0.0
-test_intervention_task_loss            0.0
-         test_loss             0.4878205358982086
-    test_mask_accuracy                -1.0
-      test_task_loss                   0.0
-      test_y_accuracy          0.2218601895734597
-        test_y_auc                     0.0
-         test_y_f1             0.05084245718203713
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-c_acc: 75.69%, y_acc: 22.19%, c_auc: 75.42%, y_auc: 0.00% with 116 epochs in 76.48 seconds
-Predicting: 0it [00:00, ?it/s]Predicting:   0%|          | 0/14 [00:00<?, ?it/s]Predicting DataLoader 0:   0%|          | 0/14 [00:00<?, ?it/s]Predicting DataLoader 0:   7%|▋         | 1/14 [00:00<00:00, 115.97it/s]Predicting DataLoader 0:  14%|█▍        | 2/14 [00:00<00:00, 109.29it/s]Predicting DataLoader 0:  21%|██▏       | 3/14 [00:00<00:00, 101.91it/s]Predicting DataLoader 0:  29%|██▊       | 4/14 [00:00<00:00, 87.54it/s] Predicting DataLoader 0:  36%|███▌      | 5/14 [00:00<00:00, 87.83it/s]Predicting DataLoader 0:  43%|████▎     | 6/14 [00:00<00:00, 87.87it/s]Predicting DataLoader 0:  50%|█████     | 7/14 [00:00<00:00, 86.72it/s]Predicting DataLoader 0:  57%|█████▋    | 8/14 [00:00<00:00, 86.00it/s]Predicting DataLoader 0:  64%|██████▍   | 9/14 [00:00<00:00, 25.41it/s]Predicting DataLoader 0:  71%|███████▏  | 10/14 [00:00<00:00, 27.33it/s]Predicting DataLoader 0:  79%|███████▊  | 11/14 [00:00<00:00, 29.17it/s]Predicting DataLoader 0:  86%|████████▌ | 12/14 [00:00<00:00, 30.83it/s]Predicting DataLoader 0:  93%|█████████▎| 13/14 [00:00<00:00, 32.44it/s]Predicting DataLoader 0: 100%|██████████| 14/14 [00:00<00:00, 34.03it/s]Predicting DataLoader 0: 100%|██████████| 14/14 [00:00<00:00, 30.08it/s]
-INFO:root:Results will be dumped in results/afa/celeba_afa
-DEBUG:root:And the dataset's root directory is /home/xty20/data
-[rank: 0] Global seed set to 42
-[rank: 0] Global seed set to 42
-DEBUG:root:Concept frequency is: [0.11113579 0.26698059 0.512505   0.20457159 0.02244335 0.15157528
- 0.24079586 0.23453225 0.23925093 0.14799185 0.05089857 0.20519351
- 0.14216753 0.05756692 0.04668829 0.06511878 0.06276438 0.04194986
- 0.38692195 0.45503186 0.41675428 0.48342786 0.04154512 0.11514864
- 0.83493996 0.28414257 0.0429469  0.27744461 0.07977828 0.06572096
- 0.05651064 0.48208037 0.20840182 0.31956722 0.18892492 0.04846026
- 0.4724357  0.12296704 0.07271507 0.77361685]
-DEBUG:root:Selecting concepts: [2, 19, 20, 21, 31, 36]
-DEBUG:root:	And hidden concepts: [18, 33]
-DEBUG:root:Subsampling to 16883 elements.
-DEBUG:root:Data split is: 16883 = 11818 (train) + 3376 (test) + 1689 (validation)
-{
-    "batch_size": 256,
-    "check_val_every_n_epoch": 2,
-    "competence_levels": [
-        1,
-        0
-    ],
-    "dataset": "celeba",
-    "image_size": 64,
-    "intervention_batch_size": 512,
-    "intervention_freq": 1,
-    "intervention_policies": [
-        "intcem_policy",
-        "optimal_greedy_no_prior",
-        "group_random_no_prior"
-    ],
-    "label_binary_width": 1,
-    "label_dataset_subsample": 12,
-    "max_epochs": 300,
-    "num_classes": 1000,
-    "num_concepts": 6,
-    "num_hidden_concepts": 2,
-    "num_workers": 8,
-    "results_dir": "results/afa/celeba_afa",
-    "root_dir": "/home/xty20/data",
-    "runs": [
-        {
-            "architecture": "IntAwareConceptEmbeddingModel",
-            "average_trajectory": true,
-            "beta_a": 1,
-            "beta_b": 3,
-            "embedding_activation": "leakyrelu",
-            "extra_name": "Retry_concept_loss_weight_{concept_loss_weight}_intervention_weight_{intervention_weight}_horizon_rate_{horizon_rate}_intervention_discount_{intervention_discount}_task_discount_{intervention_task_discount}_sampling_percent_{sampling_percent}",
-            "final_reward_ratio": 1,
-            "gradient_clip_val": 10,
-            "horizon_binary_representation": true,
-            "horizon_rate": 1.005,
-            "horizon_uniform_distr": true,
-            "include_only_last_trajectory_loss": true,
-            "include_task_trajectory_loss": true,
-            "initial_horizon": 2,
-            "initialize_discount": false,
-            "int_model_layers": [
-                128,
-                128,
-                64,
-                64
-            ],
-            "int_model_use_bn": true,
-            "intcem_task_loss_weight": 0,
-            "intermediate_reward_ratio": 0.1,
-            "intervention_discount": 1,
-            "intervention_task_discount": 1.1,
-            "intervention_task_loss_weight": 1,
-            "intervention_weight": 5,
-            "legacy_mode": false,
-            "max_horizon": 6,
-            "model_pretrain_path": null,
-            "num_rollouts": 3,
-            "propagate_target_gradients": false,
-            "sampling_percent": 1,
-            "task_loss_weight": 0,
-            "tau": 1,
-            "training_intervention_prob": 0.25,
-            "use_concept_groups": false,
-            "use_full_mask_distr": false,
-            "use_horizon": false
-        }
-    ],
-    "selected_concepts": false,
-    "shared_params": {
-        "ac_model_config": {
-            "affine_hids": [
-                256,
-                256
-            ],
-            "architecture": "flow",
-            "batch_size": 32,
-            "clip_gradient": 1,
-            "coupling_hids": [
-                256,
-                256
-            ],
-            "decay_rate": 0.5,
-            "decay_steps": 10000,
-            "lambda_nll": 1,
-            "lambda_xent": 1,
-            "layer_cfg": [
-                "ML",
-                "LR",
-                "CP2"
-            ],
-            "learning_rate": 0.0001,
-            "linear_hids": [
-                256,
-                256
-            ],
-            "linear_rank": -1,
-            "max_epochs": 50,
-            "model_classes": true,
-            "n_components": 256,
-            "num_samples": 10,
-            "optimizer": "adam",
-            "patience": 3,
-            "prior": "autoreg",
-            "prior_hids": [
-                1,
-                1
-            ],
-            "prior_layers": 2,
-            "prior_units": 1,
-            "rnncp_layers": 2,
-            "rnncp_units": 32,
-            "transformations": [
-                "AF",
-                "TL",
-                "TL",
-                "AF"
-            ],
-            "weight_decay": 0.01
-        },
-        "ac_model_nll_ratio": 0.5,
-        "ac_model_rollouts": 1,
-        "ac_model_weight": 2,
-        "afa_model_config": {
-            "act_fun": "relu",
-            "clip_coef": 0.2,
-            "clip_vloss": true,
-            "ent_coef": 0.0,
-            "lin_layers": [
-                512,
-                512,
-                256,
-                256
-            ],
-            "normalize_advantages": true,
-            "num_envs": 1,
-            "ortho_init": false,
-            "vf_coef": 1.0
-        },
-        "allow_no_action": false,
-        "bool": false,
-        "c_extractor_arch": "resnet34",
-        "cbm_aneal_rate": 1,
-        "cbm_starting_aneal_rate": 1,
-        "concept_loss_weight": 1,
-        "continue_training": true,
-        "early_stopping_delta": 0.0,
-        "early_stopping_mode": "min",
-        "early_stopping_monitor": "val_loss",
-        "emb_size": 16,
-        "enable_checkpointing": true,
-        "extra_dims": 0,
-        "learning_rate": 1e-05,
-        "mask_no_action": true,
-        "momentum": 0.9,
-        "normalize_values": false,
-        "only_train_ac_model": false,
-        "optimizer": "adam",
-        "patience": 5,
-        "save_model": true,
-        "sigmoidal_prob": false,
-        "top_k_accuracy": null,
-        "train_ac_model": true,
-        "train_afa_model": false,
-        "training_intervention_prob": 0.25,
-        "use_ac_model": true,
-        "weight_decay": 0.001,
-        "weight_loss": false
-    },
-    "trials": 1,
-    "use_binary_vector_class": true,
-    "use_imbalance": true
-}
-Files already downloaded and verified
-Files already downloaded and verified
-Files already downloaded and verified
-INFO:root:Training sample shape is: torch.Size([256, 3, 64, 64]) with type torch.FloatTensor
-INFO:root:Training label shape is: torch.Size([256]) with type torch.LongTensor
-INFO:root:	Number of output classes: 230
-INFO:root:Training concept shape is: torch.Size([256, 6]) with type torch.FloatTensor
-INFO:root:	Number of training concepts: 6
-INFO:root:Setting log level to: "DEBUG"
-DEBUG:root:Setting ac model save path to be results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
-DEBUG:git.util:Failed checking if running in CYGWIN due to: FileNotFoundError(2, 'No such file or directory')
-DEBUG:git.cmd:Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/xty20/cem, stdin=None, shell=False, universal_newlines=False)
-DEBUG:git.cmd:Popen(['git', 'rev-parse', '--show-toplevel'], cwd=/home/xty20/cem, stdin=None, shell=False, universal_newlines=False)
-DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.wandb.ai:443
-DEBUG:urllib3.connectionpool:https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
-DEBUG:urllib3.connectionpool:https://api.wandb.ai:443 "POST /graphql HTTP/1.1" 200 None
-wandb: Currently logged in as: thomasyuan1 (thomasyuan). Use `wandb login --relogin` to force relogin
-DEBUG:git.cmd:Popen(['git', 'cat-file', '--batch-check'], cwd=/home/xty20/cem, stdin=<valid stream>, shell=False, universal_newlines=False)
-wandb: wandb version 0.17.0 is available!  To upgrade, please run:
-wandb:  $ pip install wandb --upgrade
-wandb: Tracking run with wandb version 0.16.6
-wandb: Run data is saved locally in /home/xty20/cem/wandb/run-20240514_180544-ls8f56g0
-wandb: Run `wandb offline` to turn off syncing.
-wandb: Syncing run ac_flow_model_split_0
-wandb: ⭐️ View project at https://wandb.ai/thomasyuan/celeba_test
-wandb: 🚀 View run at https://wandb.ai/thomasyuan/celeba_test/runs/ls8f56g0
-DEBUG:root:AC Model input shape:	x:torch.Size([6])	b:torch.Size([6])	m:torch.Size([6])	y:torch.Size([])AC Data loader batch size: 32
-DEBUG:root:Found AC flow model saved in results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt
-DEBUG:root:<class 'cem.models.acflow.ACFlow'>
-False
-DEBUG:root:Restarting run because we could not find test_accuracy_ACFlowModel in old results.
-DEBUG:root:Getting test results without interventions.
-[TRIAL 1/1 BEGINS AT 14/05/2024 at 18:05:43
-Testing: 0it [00:00, ?it/s]Testing:   0%|          | 0/106 [00:00<?, ?it/s]Testing DataLoader 0:   0%|          | 0/106 [00:00<?, ?it/s]Testing DataLoader 0:   1%|          | 1/106 [00:00<00:50,  2.09it/s]Testing DataLoader 0:   2%|▏         | 2/106 [00:00<00:27,  3.80it/s]Testing DataLoader 0:   3%|▎         | 3/106 [00:00<00:19,  5.26it/s]Testing DataLoader 0:   4%|▍         | 4/106 [00:00<00:15,  6.50it/s]Testing DataLoader 0:   5%|▍         | 5/106 [00:00<00:13,  7.58it/s]Testing DataLoader 0:   6%|▌         | 6/106 [00:00<00:11,  8.51it/s]Testing DataLoader 0:   7%|▋         | 7/106 [00:00<00:10,  9.34it/s]Testing DataLoader 0:   8%|▊         | 8/106 [00:00<00:09, 10.08it/s]Testing DataLoader 0:   8%|▊         | 9/106 [00:00<00:09, 10.64it/s]Testing DataLoader 0:   9%|▉         | 10/106 [00:00<00:08, 11.23it/s]Testing DataLoader 0:  10%|█         | 11/106 [00:00<00:08, 11.77it/s]Testing DataLoader 0:  11%|█▏        | 12/106 [00:00<00:07, 12.25it/s]Testing DataLoader 0:  12%|█▏        | 13/106 [00:01<00:07, 12.69it/s]Testing DataLoader 0:  13%|█▎        | 14/106 [00:01<00:07, 13.10it/s]Testing DataLoader 0:  14%|█▍        | 15/106 [00:01<00:06, 13.47it/s]Testing DataLoader 0:  15%|█▌        | 16/106 [00:01<00:06, 13.82it/s]Testing DataLoader 0:  16%|█▌        | 17/106 [00:01<00:06, 14.13it/s]Testing DataLoader 0:  17%|█▋        | 18/106 [00:01<00:06, 14.41it/s]Testing DataLoader 0:  18%|█▊        | 19/106 [00:01<00:05, 14.68it/s]Testing DataLoader 0:  19%|█▉        | 20/106 [00:01<00:05, 14.92it/s]Testing DataLoader 0:  20%|█▉        | 21/106 [00:01<00:05, 15.16it/s]Testing DataLoader 0:  21%|██        | 22/106 [00:01<00:05, 15.37it/s]Testing DataLoader 0:  22%|██▏       | 23/106 [00:01<00:05, 15.57it/s]Testing DataLoader 0:  23%|██▎       | 24/106 [00:01<00:05, 15.76it/s]Testing DataLoader 0:  24%|██▎       | 25/106 [00:01<00:05, 15.94it/s]Testing DataLoader 0:  25%|██▍       | 26/106 [00:01<00:04, 16.11it/s]Testing DataLoader 0:  25%|██▌       | 27/106 [00:01<00:04, 16.27it/s]Testing DataLoader 0:  26%|██▋       | 28/106 [00:01<00:04, 16.42it/s]Testing DataLoader 0:  27%|██▋       | 29/106 [00:01<00:04, 16.57it/s]Testing DataLoader 0:  28%|██▊       | 30/106 [00:01<00:04, 16.70it/s]Testing DataLoader 0:  29%|██▉       | 31/106 [00:01<00:04, 16.83it/s]Testing DataLoader 0:  30%|███       | 32/106 [00:01<00:04, 16.95it/s]Testing DataLoader 0:  31%|███       | 33/106 [00:01<00:04, 17.07it/s]Testing DataLoader 0:  32%|███▏      | 34/106 [00:01<00:04, 17.18it/s]Testing DataLoader 0:  33%|███▎      | 35/106 [00:02<00:04, 17.29it/s]Testing DataLoader 0:  34%|███▍      | 36/106 [00:02<00:04, 17.39it/s]Testing DataLoader 0:  35%|███▍      | 37/106 [00:02<00:03, 17.49it/s]Testing DataLoader 0:  36%|███▌      | 38/106 [00:02<00:03, 17.59it/s]Testing DataLoader 0:  37%|███▋      | 39/106 [00:02<00:03, 17.68it/s]Testing DataLoader 0:  38%|███▊      | 40/106 [00:02<00:03, 17.76it/s]Testing DataLoader 0:  39%|███▊      | 41/106 [00:02<00:03, 17.85it/s]Testing DataLoader 0:  40%|███▉      | 42/106 [00:02<00:03, 17.92it/s]Testing DataLoader 0:  41%|████      | 43/106 [00:02<00:03, 18.00it/s]Testing DataLoader 0:  42%|████▏     | 44/106 [00:02<00:03, 18.07it/s]Testing DataLoader 0:  42%|████▏     | 45/106 [00:02<00:03, 18.14it/s]Testing DataLoader 0:  43%|████▎     | 46/106 [00:02<00:03, 18.21it/s]Testing DataLoader 0:  44%|████▍     | 47/106 [00:02<00:03, 18.28it/s]Testing DataLoader 0:  45%|████▌     | 48/106 [00:02<00:03, 18.34it/s]Testing DataLoader 0:  46%|████▌     | 49/106 [00:02<00:03, 18.40it/s]Testing DataLoader 0:  47%|████▋     | 50/106 [00:02<00:03, 18.46it/s]Testing DataLoader 0:  48%|████▊     | 51/106 [00:02<00:02, 18.52it/s]Testing DataLoader 0:  49%|████▉     | 52/106 [00:02<00:02, 18.57it/s]Testing DataLoader 0:  50%|█████     | 53/106 [00:02<00:02, 18.63it/s]Testing DataLoader 0:  51%|█████     | 54/106 [00:02<00:02, 18.68it/s]Testing DataLoader 0:  52%|█████▏    | 55/106 [00:02<00:02, 18.73it/s]Testing DataLoader 0:  53%|█████▎    | 56/106 [00:02<00:02, 18.78it/s]Testing DataLoader 0:  54%|█████▍    | 57/106 [00:03<00:02, 18.83it/s]Testing DataLoader 0:  55%|█████▍    | 58/106 [00:03<00:02, 18.88it/s]Testing DataLoader 0:  56%|█████▌    | 59/106 [00:03<00:02, 18.92it/s]Testing DataLoader 0:  57%|█████▋    | 60/106 [00:03<00:02, 18.96it/s]Testing DataLoader 0:  58%|█████▊    | 61/106 [00:03<00:02, 19.00it/s]Testing DataLoader 0:  58%|█████▊    | 62/106 [00:03<00:02, 19.05it/s]Testing DataLoader 0:  59%|█████▉    | 63/106 [00:03<00:02, 19.09it/s]Testing DataLoader 0:  60%|██████    | 64/106 [00:03<00:02, 19.12it/s]Testing DataLoader 0:  61%|██████▏   | 65/106 [00:03<00:02, 19.16it/s]Testing DataLoader 0:  62%|██████▏   | 66/106 [00:03<00:02, 19.20it/s]Testing DataLoader 0:  63%|██████▎   | 67/106 [00:03<00:02, 19.24it/s]Testing DataLoader 0:  64%|██████▍   | 68/106 [00:03<00:01, 19.27it/s]Testing DataLoader 0:  65%|██████▌   | 69/106 [00:03<00:01, 19.31it/s]Testing DataLoader 0:  66%|██████▌   | 70/106 [00:03<00:01, 19.34it/s]Testing DataLoader 0:  67%|██████▋   | 71/106 [00:03<00:01, 19.37it/s]Testing DataLoader 0:  68%|██████▊   | 72/106 [00:03<00:01, 19.40it/s]Testing DataLoader 0:  69%|██████▉   | 73/106 [00:03<00:01, 19.43it/s]Testing DataLoader 0:  70%|██████▉   | 74/106 [00:03<00:01, 19.46it/s]Testing DataLoader 0:  71%|███████   | 75/106 [00:03<00:01, 19.49it/s]Testing DataLoader 0:  72%|███████▏  | 76/106 [00:03<00:01, 19.52it/s]Testing DataLoader 0:  73%|███████▎  | 77/106 [00:03<00:01, 19.55it/s]Testing DataLoader 0:  74%|███████▎  | 78/106 [00:03<00:01, 19.58it/s]Testing DataLoader 0:  75%|███████▍  | 79/106 [00:04<00:01, 19.60it/s]Testing DataLoader 0:  75%|███████▌  | 80/106 [00:04<00:01, 19.63it/s]Testing DataLoader 0:  76%|███████▋  | 81/106 [00:04<00:01, 19.66it/s]Testing DataLoader 0:  77%|███████▋  | 82/106 [00:04<00:01, 19.68it/s]Testing DataLoader 0:  78%|███████▊  | 83/106 [00:04<00:01, 19.71it/s]Testing DataLoader 0:  79%|███████▉  | 84/106 [00:04<00:01, 19.73it/s]Testing DataLoader 0:  80%|████████  | 85/106 [00:04<00:01, 19.75it/s]Testing DataLoader 0:  81%|████████  | 86/106 [00:04<00:01, 19.78it/s]Testing DataLoader 0:  82%|████████▏ | 87/106 [00:04<00:00, 19.80it/s]Testing DataLoader 0:  83%|████████▎ | 88/106 [00:04<00:00, 19.82it/s]Testing DataLoader 0:  84%|████████▍ | 89/106 [00:04<00:00, 19.84it/s]Testing DataLoader 0:  85%|████████▍ | 90/106 [00:04<00:00, 19.86it/s]Testing DataLoader 0:  86%|████████▌ | 91/106 [00:04<00:00, 19.88it/s]Testing DataLoader 0:  87%|████████▋ | 92/106 [00:04<00:00, 19.90it/s]Testing DataLoader 0:  88%|████████▊ | 93/106 [00:04<00:00, 19.93it/s]Testing DataLoader 0:  89%|████████▊ | 94/106 [00:04<00:00, 19.94it/s]Testing DataLoader 0:  90%|████████▉ | 95/106 [00:04<00:00, 19.96it/s]Testing DataLoader 0:  91%|█████████ | 96/106 [00:04<00:00, 19.98it/s]Testing DataLoader 0:  92%|█████████▏| 97/106 [00:04<00:00, 20.00it/s]Testing DataLoader 0:  92%|█████████▏| 98/106 [00:04<00:00, 20.02it/s]Testing DataLoader 0:  93%|█████████▎| 99/106 [00:04<00:00, 20.04it/s]Testing DataLoader 0:  94%|█████████▍| 100/106 [00:04<00:00, 20.06it/s]Testing DataLoader 0:  95%|█████████▌| 101/106 [00:05<00:00, 20.07it/s]Testing DataLoader 0:  96%|█████████▌| 102/106 [00:05<00:00, 20.09it/s]Testing DataLoader 0:  97%|█████████▋| 103/106 [00:05<00:00, 20.11it/s]Testing DataLoader 0:  98%|█████████▊| 104/106 [00:05<00:00, 20.13it/s]Testing DataLoader 0:  99%|█████████▉| 105/106 [00:05<00:00, 20.14it/s]Testing DataLoader 0: 100%|██████████| 106/106 [00:05<00:00, 20.14it/s]Testing DataLoader 0: 100%|██████████| 106/106 [00:05<00:00, 20.13it/s]wandb: - 0.014 MB of 0.014 MB uploadedwandb: \ 0.014 MB of 0.014 MB uploadedwandb: | 0.024 MB of 0.024 MB uploadedwandb:                                                                                
-wandb: 🚀 View run ac_flow_model_split_0 at: https://wandb.ai/thomasyuan/celeba_test/runs/ls8f56g0
-wandb: ⭐️ View project at: https://wandb.ai/thomasyuan/celeba_test
-wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
-wandb: Find logs at: ./wandb/run-20240514_180544-ls8f56g0/logs
-DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): o151352.ingest.sentry.io:443
-DEBUG:urllib3.connectionpool:https://o151352.ingest.sentry.io:443 "POST /api/4504800232407040/envelope/ HTTP/1.1" 200 0
-[rank: 0] Global seed set to 42
-DEBUG:git.cmd:Popen(['git', 'cat-file', '--batch-check'], cwd=/home/xty20/cem, stdin=<valid stream>, shell=False, universal_newlines=False)
-wandb: wandb version 0.17.0 is available!  To upgrade, please run:
-wandb:  $ pip install wandb --upgrade
-wandb: Tracking run with wandb version 0.16.6
-wandb: Run data is saved locally in /home/xty20/cem/wandb/run-20240514_180557-9efazynh
-wandb: Run `wandb offline` to turn off syncing.
-wandb: Syncing run IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_resnet34_fold_1
-wandb: ⭐️ View project at https://wandb.ai/thomasyuan/celeba_test
-wandb: 🚀 View run at https://wandb.ai/thomasyuan/celeba_test/runs/9efazynh
-DEBUG:root:Loading trained model from results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_resnet34_fold_1.ckpt
-DEBUG:root:Loaded model
-DEBUG:root:Continue training model
-DEBUG:fsspec.local:open file: /home/xty20/cem/results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_resnet34_fold_1.ckpt
-
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-       Test metric             DataLoader 0
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-      test_accuracy         0.3981042802333832
-        test_nll            0.03969743102788925
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-AC Model test_accuracy: 39.81%, 
-AC Model test_nll: 3.97%, 
-AC Model training_time: 16425.96%, 
-AC Model num_epochs: 700.00%, 
-with 7.0 epochs in 164.26 seconds
-[Training IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_resnet34_fold_1]
-config:
-<built-in function localtime>
-	top_k_accuracy -> None
-	save_model -> True
-	patience -> 5
-	emb_size -> 16
-	extra_dims -> 0
-	concept_loss_weight -> 1
-	learning_rate -> 1e-05
-	weight_decay -> 0.001
-	weight_loss -> False
-	c_extractor_arch -> resnet34
-	optimizer -> adam
-	bool -> False
-	early_stopping_monitor -> val_loss
-	early_stopping_mode -> min
-	early_stopping_delta -> 0.0
-	momentum -> 0.9
-	sigmoidal_prob -> False
-	training_intervention_prob -> 0.25
-	train_ac_model -> True
-	only_train_ac_model -> False
-	allow_no_action -> False
-	mask_no_action -> True
-	train_afa_model -> False
-	continue_training -> True
-	cbm_aneal_rate -> 1
-	cbm_starting_aneal_rate -> 1
-	enable_checkpointing -> True
-	ac_model_config -> {'architecture': 'flow', 'max_epochs': 50, 'batch_size': 32, 'transformations': ['AF', 'TL', 'TL', 'AF'], 'layer_cfg': ['ML', 'LR', 'CP2'], 'rnncp_units': 32, 'rnncp_layers': 2, 'linear_hids': [256, 256], 'linear_rank': -1, 'affine_hids': [256, 256], 'coupling_hids': [256, 256], 'prior': 'autoreg', 'n_components': 256, 'prior_units': 1, 'prior_layers': 2, 'prior_hids': [1, 1], 'optimizer': 'adam', 'learning_rate': 0.0001, 'weight_decay': 0.01, 'decay_steps': 10000, 'decay_rate': 0.5, 'clip_gradient': 1, 'num_samples': 10, 'patience': 3, 'lambda_nll': 1, 'lambda_xent': 1, 'model_classes': True, 'save_path': 'results/afa/celeba_afa/acflow_sampling_1_model_trial_0.pt'}
-	ac_model_nll_ratio -> 0.5
-	ac_model_weight -> 2
-	ac_model_rollouts -> 1
-	normalize_values -> False
-	use_ac_model -> True
-	afa_model_config -> {'lin_layers': [512, 512, 256, 256], 'act_fun': 'relu', 'ortho_init': False, 'vf_coef': 1.0, 'ent_coef': 0.0, 'clip_coef': 0.2, 'clip_vloss': True, 'normalize_advantages': True, 'num_envs': 1}
-	trials -> 1
-	results_dir -> results/afa/celeba_afa
-	dataset -> celeba
-	num_workers -> 8
-	batch_size -> 256
-	check_val_every_n_epoch -> 2
-	root_dir -> /home/xty20/data
-	use_imbalance -> True
-	image_size -> 64
-	num_classes -> 1000
-	use_binary_vector_class -> True
-	num_concepts -> 6
-	label_binary_width -> 1
-	label_dataset_subsample -> 12
-	num_hidden_concepts -> 2
-	selected_concepts -> False
-	competence_levels -> [1, 0]
-	intervention_freq -> 1
-	intervention_batch_size -> 512
-	intervention_policies -> ['intcem_policy', 'optimal_greedy_no_prior', 'group_random_no_prior']
-	max_epochs -> 300
-	time_last_called -> 2024/05/14 at 18:05:03
-	n_concepts -> 6
-	n_tasks -> 230
-	concept_map -> None
-	architecture -> IntAwareConceptEmbeddingModel
-	extra_name -> Retry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1
-	sampling_percent -> 1
-	horizon_binary_representation -> True
-	include_task_trajectory_loss -> True
-	include_only_last_trajectory_loss -> True
-	task_loss_weight -> 0
-	intervention_weight -> 5
-	intervention_task_loss_weight -> 1
-	initial_horizon -> 2
-	use_concept_groups -> False
-	use_full_mask_distr -> False
-	propagate_target_gradients -> False
-	int_model_use_bn -> True
-	int_model_layers -> [128, 128, 64, 64]
-	intcem_task_loss_weight -> 0
-	embedding_activation -> leakyrelu
-	tau -> 1
-	max_horizon -> 6
-	horizon_uniform_distr -> True
-	num_rollouts -> 3
-	beta_a -> 1
-	beta_b -> 3
-	intervention_task_discount -> 1.1
-	final_reward_ratio -> 1
-	intermediate_reward_ratio -> 0.1
-	average_trajectory -> True
-	use_horizon -> False
-	initialize_discount -> False
-	model_pretrain_path -> None
-	horizon_rate -> 1.005
-	intervention_discount -> 1
-	gradient_clip_val -> 10
-	legacy_mode -> False
-[Number of parameters in model 22055846 ]
-[Number of non-trainable parameters in model 2 ]
-	Found cached model... loading it
-DEBUG:root:Restarting run because we could not find val_acc_c_IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1 in old results.
-DEBUG:root:Getting validation results.
-DEBUG:root:Restarting run because we could not find test_acc_c_IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1 in old results.
-DEBUG:root:Getting test results without interventions
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-        Test metric               DataLoader 0
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-     test_avg_c_y_acc          0.5056246299585552
-      test_c_accuracy          0.7619893428063942
-        test_c_auc             0.7625077832640829
-         test_c_f1              0.758931707803817
-     test_concept_loss         0.4749900996685028
-    test_current_steps           10417.81640625
-    test_horizon_limit          7.028732776641846
-  test_intervention_loss               0.0
-test_intervention_task_loss            0.0
-         test_loss             0.4749900996685028
-    test_mask_accuracy                -1.0
-      test_task_loss                   0.0
-      test_y_accuracy          0.2492599171107164
-        test_y_auc                     0.0
-         test_y_f1            0.057910520917511234
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-val_c_acc: 76.20%, val_y_acc: 24.93%, val_c_auc: 76.25%, val_y_auc: 0.00% with 116 epochs in 76.72 seconds
-wandb: - 0.014 MB of 0.014 MB uploadedwandb: \ 0.014 MB of 0.031 MB uploadedwandb: | 0.014 MB of 0.031 MB uploadedwandb: / 0.033 MB of 0.033 MB uploadedwandb:                                                                                
-wandb: 
-wandb: Run history:
-wandb:                 avg_c_y_acc ▇▆█▁▅█▆▆▇
-wandb:                  c_accuracy ▅▇▇▁▆█▆▆▆
-wandb:                       c_auc ▅▇▇▁▆█▆▆▆
-wandb:                        c_f1 ▅█▇▁▇█▆▆▆
-wandb:                concept_loss ▃▂▂█▂▁▁▂▂
-wandb:               current_steps ▁▂▃▄▄▅▆▇█
-wandb:                       epoch ▁▂▂▂▃▃▅▅▅▆▆▇▇▇██
-wandb:               horizon_limit ▁▁▁▁▁▁▁▁▁
-wandb:           intervention_loss ▆▁▇▆▂▄▃█▅
-wandb:      intervention_task_loss ▂▂▂█▂▁▁▆▂
-wandb:                        loss ▅▁▆▇▂▄▂█▄
-wandb:               mask_accuracy ▂█▁▃▆▄▆▁▂
-wandb:                   task_loss ▁▁▁▁▁▁▁▁▁
-wandb:            test_avg_c_y_acc █▁
-wandb:             test_c_accuracy █▁
-wandb:                  test_c_auc █▁
-wandb:                   test_c_f1 █▁
-wandb:           test_concept_loss ▁█
-wandb:          test_current_steps ▁█
-wandb:          test_horizon_limit █▁
-wandb:      test_intervention_loss ▁▁
-wandb: test_intervention_task_loss ▁▁
-wandb:                   test_loss ▁█
-wandb:          test_mask_accuracy ▁▁
-wandb:              test_task_loss ▁▁
-wandb:             test_y_accuracy █▁
-wandb:                  test_y_auc ▁▁
-wandb:                   test_y_f1 █▁
-wandb:         trainer/global_step ▁▂▂▃▃▃▄▅▅▆▆▇▇███
-wandb:             val_avg_c_y_acc ▁▆██▇
-wandb:              val_c_accuracy ▁▆▆█▆
-wandb:                   val_c_auc ▁▅▆█▆
-wandb:                    val_c_f1 ▁▆▆█▇
-wandb:            val_concept_loss █▄▅▃▁
-wandb:           val_current_steps ▁▃▅▆█
-wandb:           val_horizon_limit ▁▁▁▁▁
-wandb:       val_intervention_loss ▁▁▁▁▁
-wandb:  val_intervention_task_loss ▁▁▁▁▁
-wandb:                    val_loss █▄▅▃▁
-wandb:           val_mask_accuracy ▁▁▁▁▁
-wandb:               val_task_loss ▁▁▁▁▁
-wandb:              val_y_accuracy ▁▆█▇▇
-wandb:                   val_y_auc ▁▁▁▁▁
-wandb:                    val_y_f1 ▁█▆▆▆
-wandb:                  y_accuracy ▇▆█▁▄█▆▇▇
-wandb:                       y_auc ▁▁▁▁▁▁▁▁▁
-wandb:                        y_f1 ▇▄▇█▁▆▅▆▇
-wandb: 
-wandb: Run summary:
-wandb:                 avg_c_y_acc 0.69889
-wandb:                  c_accuracy 0.82747
-wandb:                       c_auc 0.82665
-wandb:                        c_f1 0.82521
-wandb:                concept_loss 0.38692
-wandb:               current_steps 10375.0
-wandb:                       epoch 116
-wandb:               horizon_limit 7.02873
-wandb:           intervention_loss 19.52178
-wandb:      intervention_task_loss 1.20296
-wandb:                        loss 8.09713
-wandb:               mask_accuracy 0.46224
-wandb:                   task_loss 0.0
-wandb:            test_avg_c_y_acc 0.48939
-wandb:             test_c_accuracy 0.75691
-wandb:                  test_c_auc 0.75417
-wandb:                   test_c_f1 0.75182
-wandb:           test_concept_loss 0.48782
-wandb:          test_current_steps 10428.09961
-wandb:          test_horizon_limit 7.02873
-wandb:      test_intervention_loss 0.0
-wandb: test_intervention_task_loss 0.0
-wandb:                   test_loss 0.48782
-wandb:          test_mask_accuracy -1.0
-wandb:              test_task_loss 0.0
-wandb:             test_y_accuracy 0.22186
-wandb:                  test_y_auc 0.0
-wandb:                   test_y_f1 0.05084
-wandb:         trainer/global_step 9682
-wandb:             val_avg_c_y_acc 0.50562
-wandb:              val_c_accuracy 0.76199
-wandb:                   val_c_auc 0.76251
-wandb:                    val_c_f1 0.75893
-wandb:            val_concept_loss 0.47499
-wandb:           val_current_steps 10410.81738
-wandb:           val_horizon_limit 7.02873
-wandb:       val_intervention_loss 0.0
-wandb:  val_intervention_task_loss 0.0
-wandb:                    val_loss 0.47499
-wandb:           val_mask_accuracy -1.0
-wandb:               val_task_loss 0.0
-wandb:              val_y_accuracy 0.24926
-wandb:                   val_y_auc 0.0
-wandb:                    val_y_f1 0.05791
-wandb:                  y_accuracy 0.57031
-wandb:                       y_auc 0.0
-wandb:                        y_f1 0.24071
-wandb: 
-wandb: 🚀 View run IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_resnet34_fold_1 at: https://wandb.ai/thomasyuan/celeba_test/runs/9efazynh
-wandb: ⭐️ View project at: https://wandb.ai/thomasyuan/celeba_test
-wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
-wandb: Find logs at: ./wandb/run-20240514_180557-9efazynh/logs
-DEBUG:urllib3.connectionpool:https://o151352.ingest.sentry.io:443 "POST /api/4504800232407040/envelope/ HTTP/1.1" 200 0
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-        Test metric               DataLoader 0
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-     test_avg_c_y_acc          0.48938586097946296
-      test_c_accuracy          0.7569115323854663
-        test_c_auc             0.7541714791709437
-         test_c_f1             0.7518166941396833
-     test_concept_loss         0.4878205358982086
-    test_current_steps           10428.099609375
-    test_horizon_limit         7.0287322998046875
-  test_intervention_loss               0.0
-test_intervention_task_loss            0.0
-         test_loss             0.4878205358982086
-    test_mask_accuracy                -1.0
-      test_task_loss                   0.0
-      test_y_accuracy          0.2218601895734597
-        test_y_auc                     0.0
-         test_y_f1             0.05084245718203713
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-c_acc: 75.69%, y_acc: 22.19%, c_auc: 75.42%, y_auc: 0.00% with 116 epochs in 76.72 seconds
-DEBUG:root:Restarting run because we could not find test_acc_y_intcem_policy_ints_IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1 in old results.
-[rank: 0] Global seed set to 42
-DEBUG:root:		Test accuracy when intervening with 0 concept groups is 22.36% (avg int time is 0.00029s and construction time is 0.00011s).
-DEBUG:root:		Test accuracy when intervening with 1 concept groups is 30.51% (avg int time is 0.00029s and construction time is 0.00011s).
-DEBUG:root:		Test accuracy when intervening with 2 concept groups is 36.55% (avg int time is 0.00029s and construction time is 0.00011s).
-DEBUG:root:		Test accuracy when intervening with 3 concept groups is 40.20% (avg int time is 0.00029s and construction time is 0.00011s).
-DEBUG:root:		Test accuracy when intervening with 4 concept groups is 42.51% (avg int time is 0.00029s and construction time is 0.00011s).
-DEBUG:root:		Test accuracy when intervening with 5 concept groups is 43.72% (avg int time is 0.00029s and construction time is 0.00011s).
-DEBUG:root:		Test accuracy when intervening with 6 concept groups is 44.28% (avg int time is 0.00029s and construction time is 0.00011s).
-DEBUG:root:Restarting run because we could not find test_acc_y_optimal_greedy_no_prior_ints_IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1 in old results.
-[rank: 0] Global seed set to 42
-DEBUG:root:		Test accuracy when intervening with 0 concept groups is 22.36% (avg int time is 0.00024s and construction time is 0.00008s).
-DEBUG:root:		Test accuracy when intervening with 1 concept groups is 39.57% (avg int time is 0.00024s and construction time is 0.00008s).
-DEBUG:root:		Test accuracy when intervening with 2 concept groups is 48.40% (avg int time is 0.00024s and construction time is 0.00008s).
-DEBUG:root:		Test accuracy when intervening with 3 concept groups is 51.13% (avg int time is 0.00024s and construction time is 0.00008s).
-DEBUG:root:		Test accuracy when intervening with 4 concept groups is 51.18% (avg int time is 0.00024s and construction time is 0.00008s).
-DEBUG:root:		Test accuracy when intervening with 5 concept groups is 49.50% (avg int time is 0.00024s and construction time is 0.00008s).
-DEBUG:root:		Test accuracy when intervening with 6 concept groups is 44.28% (avg int time is 0.00024s and construction time is 0.00008s).
-DEBUG:root:Restarting run because we could not find test_acc_y_group_random_no_prior_ints_IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1 in old results.
-[rank: 0] Global seed set to 42
-DEBUG:root:		Test accuracy when intervening with 0 concept groups is 22.36% (avg int time is 0.00023s and construction time is 0.00004s).
-DEBUG:root:		Test accuracy when intervening with 1 concept groups is 25.71% (avg int time is 0.00023s and construction time is 0.00004s).
-DEBUG:root:		Test accuracy when intervening with 2 concept groups is 29.09% (avg int time is 0.00023s and construction time is 0.00004s).
-DEBUG:root:		Test accuracy when intervening with 3 concept groups is 32.76% (avg int time is 0.00023s and construction time is 0.00004s).
-DEBUG:root:		Test accuracy when intervening with 4 concept groups is 36.37% (avg int time is 0.00023s and construction time is 0.00004s).
-DEBUG:root:		Test accuracy when intervening with 5 concept groups is 40.46% (avg int time is 0.00023s and construction time is 0.00004s).
-DEBUG:root:		Test accuracy when intervening with 6 concept groups is 44.28% (avg int time is 0.00023s and construction time is 0.00004s).
-DEBUG:root:Restarting run because we could not find test_acc_y_intcem_policy_ints_co_0_IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1 in old results.
-[rank: 0] Global seed set to 42
-DEBUG:root:		Test accuracy when intervening with 0 concept groups is 22.36% (avg int time is 0.00030s and construction time is 0.00008s).
-DEBUG:root:		Test accuracy when intervening with 1 concept groups is 3.85% (avg int time is 0.00030s and construction time is 0.00008s).
-DEBUG:root:		Test accuracy when intervening with 2 concept groups is 1.57% (avg int time is 0.00030s and construction time is 0.00008s).
-DEBUG:root:		Test accuracy when intervening with 3 concept groups is 0.21% (avg int time is 0.00030s and construction time is 0.00008s).
-DEBUG:root:		Test accuracy when intervening with 4 concept groups is 0.00% (avg int time is 0.00030s and construction time is 0.00008s).
-DEBUG:root:		Test accuracy when intervening with 5 concept groups is 0.00% (avg int time is 0.00030s and construction time is 0.00008s).
-DEBUG:root:		Test accuracy when intervening with 6 concept groups is 0.00% (avg int time is 0.00030s and construction time is 0.00008s).
-DEBUG:root:Restarting run because we could not find test_acc_y_optimal_greedy_no_prior_ints_co_0_IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1 in old results.
-[rank: 0] Global seed set to 42
-DEBUG:root:		Test accuracy when intervening with 0 concept groups is 22.36% (avg int time is 0.00025s and construction time is 0.00008s).
-DEBUG:root:		Test accuracy when intervening with 1 concept groups is 26.72% (avg int time is 0.00025s and construction time is 0.00008s).
-DEBUG:root:		Test accuracy when intervening with 2 concept groups is 20.29% (avg int time is 0.00025s and construction time is 0.00008s).
-DEBUG:root:		Test accuracy when intervening with 3 concept groups is 8.86% (avg int time is 0.00025s and construction time is 0.00008s).
-DEBUG:root:		Test accuracy when intervening with 4 concept groups is 1.66% (avg int time is 0.00025s and construction time is 0.00008s).
-DEBUG:root:		Test accuracy when intervening with 5 concept groups is 0.00% (avg int time is 0.00025s and construction time is 0.00008s).
-DEBUG:root:		Test accuracy when intervening with 6 concept groups is 0.00% (avg int time is 0.00025s and construction time is 0.00008s).
-DEBUG:root:Restarting run because we could not find test_acc_y_group_random_no_prior_ints_co_0_IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1 in old results.
-[rank: 0] Global seed set to 42
-DEBUG:root:		Test accuracy when intervening with 0 concept groups is 22.36% (avg int time is 0.00024s and construction time is 0.00005s).
-DEBUG:root:		Test accuracy when intervening with 1 concept groups is 11.02% (avg int time is 0.00024s and construction time is 0.00005s).
-DEBUG:root:		Test accuracy when intervening with 2 concept groups is 4.44% (avg int time is 0.00024s and construction time is 0.00005s).
-DEBUG:root:		Test accuracy when intervening with 3 concept groups is 1.42% (avg int time is 0.00024s and construction time is 0.00005s).
-DEBUG:root:		Test accuracy when intervening with 4 concept groups is 0.18% (avg int time is 0.00024s and construction time is 0.00005s).
-DEBUG:root:		Test accuracy when intervening with 5 concept groups is 0.00% (avg int time is 0.00024s and construction time is 0.00005s).
-DEBUG:root:		Test accuracy when intervening with 6 concept groups is 0.00% (avg int time is 0.00024s and construction time is 0.00005s).
-[rank: 0] Global seed set to 42
-DEBUG:root:Loading trained model from results/afa/celeba_afa/IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_resnet34_fold_1.ckpt
-Predicting: 0it [00:00, ?it/s]Predicting:   0%|          | 0/14 [00:00<?, ?it/s]Predicting DataLoader 0:   0%|          | 0/14 [00:00<?, ?it/s]Predicting DataLoader 0:   7%|▋         | 1/14 [00:00<00:00, 117.20it/s]Predicting DataLoader 0:  14%|█▍        | 2/14 [00:00<00:00, 101.53it/s]Predicting DataLoader 0:  21%|██▏       | 3/14 [00:00<00:00, 95.86it/s] Predicting DataLoader 0:  29%|██▊       | 4/14 [00:00<00:00, 92.70it/s]Predicting DataLoader 0:  36%|███▌      | 5/14 [00:00<00:00, 89.24it/s]Predicting DataLoader 0:  43%|████▎     | 6/14 [00:00<00:00, 88.65it/s]Predicting DataLoader 0:  50%|█████     | 7/14 [00:00<00:00, 86.85it/s]Predicting DataLoader 0:  57%|█████▋    | 8/14 [00:00<00:00, 86.21it/s]Predicting DataLoader 0:  64%|██████▍   | 9/14 [00:00<00:00, 30.29it/s]Predicting DataLoader 0:  71%|███████▏  | 10/14 [00:00<00:00, 32.33it/s]Predicting DataLoader 0:  79%|███████▊  | 11/14 [00:00<00:00, 34.19it/s]Predicting DataLoader 0:  86%|████████▌ | 12/14 [00:00<00:00, 36.00it/s]Predicting DataLoader 0:  93%|█████████▎| 13/14 [00:00<00:00, 37.51it/s]Predicting DataLoader 0: 100%|██████████| 14/14 [00:00<00:00, 39.19it/s]Predicting DataLoader 0: 100%|██████████| 14/14 [00:00<00:00, 33.76it/s]INFO:root:Computing OIS score...
-
-  0%|          | 0/6 [00:00<?, ?it/s]  0%|          | 0/6 [00:01<?, ?it/s]
-Process SpawnProcess-185:
-Traceback (most recent call last):
-  File "/usr/local/software/master/python/3.8/lib/python3.8/multiprocessing/process.py", line 315, in _bootstrap
-    self.run()
-  File "/usr/local/software/master/python/3.8/lib/python3.8/multiprocessing/process.py", line 108, in run
-    self._target(*self._args, **self._kwargs)
-  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/train/utils.py", line 19, in _save_result
-    result = fun(**kwargs)
-  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/train/utils.py", line 90, in load_call
-    return function(**kwargs), False
-  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/metrics/oracle.py", line 695, in oracle_impurity_score
-    pred_matrix = concept_purity_matrix(
-  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/metrics/oracle.py", line 364, in concept_purity_matrix
-    estimator.fit(
-  File "/home/xty20/cem/venv/lib/python3.8/site-packages/keras/src/utils/traceback_utils.py", line 70, in error_handler
-    raise e.with_traceback(filtered_tb) from None
-  File "/home/xty20/cem/venv/lib/python3.8/site-packages/tensorflow/python/eager/execute.py", line 53, in quick_execute
-    tensors = pywrap_tfe.TFE_Py_Execute(ctx._handle, device_name, op_name,
-tensorflow.python.framework.errors_impl.InternalError: Graph execution error:
-
-Detected at node 'Adam/StatefulPartitionedCall_2' defined at (most recent call last):
-    File "<string>", line 1, in <module>
-    File "/usr/local/software/master/python/3.8/lib/python3.8/multiprocessing/spawn.py", line 116, in spawn_main
-      exitcode = _main(fd, parent_sentinel)
-    File "/usr/local/software/master/python/3.8/lib/python3.8/multiprocessing/spawn.py", line 129, in _main
-      return self._bootstrap(parent_sentinel)
-    File "/usr/local/software/master/python/3.8/lib/python3.8/multiprocessing/process.py", line 315, in _bootstrap
-      self.run()
-    File "/usr/local/software/master/python/3.8/lib/python3.8/multiprocessing/process.py", line 108, in run
-      self._target(*self._args, **self._kwargs)
-    File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/train/utils.py", line 19, in _save_result
-      result = fun(**kwargs)
-    File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/train/utils.py", line 90, in load_call
-      return function(**kwargs), False
-    File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/metrics/oracle.py", line 695, in oracle_impurity_score
-      pred_matrix = concept_purity_matrix(
-    File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/metrics/oracle.py", line 364, in concept_purity_matrix
-      estimator.fit(
-    File "/home/xty20/cem/venv/lib/python3.8/site-packages/keras/src/utils/traceback_utils.py", line 65, in error_handler
-      return fn(*args, **kwargs)
-    File "/home/xty20/cem/venv/lib/python3.8/site-packages/keras/src/engine/training.py", line 1742, in fit
-      tmp_logs = self.train_function(iterator)
-    File "/home/xty20/cem/venv/lib/python3.8/site-packages/keras/src/engine/training.py", line 1338, in train_function
-      return step_function(self, iterator)
-    File "/home/xty20/cem/venv/lib/python3.8/site-packages/keras/src/engine/training.py", line 1322, in step_function
-      outputs = model.distribute_strategy.run(run_step, args=(data,))
-    File "/home/xty20/cem/venv/lib/python3.8/site-packages/keras/src/engine/training.py", line 1303, in run_step
-      outputs = model.train_step(data)
-    File "/home/xty20/cem/venv/lib/python3.8/site-packages/keras/src/engine/training.py", line 1084, in train_step
-      self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
-    File "/home/xty20/cem/venv/lib/python3.8/site-packages/keras/src/optimizers/optimizer.py", line 544, in minimize
-      self.apply_gradients(grads_and_vars)
-    File "/home/xty20/cem/venv/lib/python3.8/site-packages/keras/src/optimizers/optimizer.py", line 1230, in apply_gradients
-      return super().apply_gradients(grads_and_vars, name=name)
-    File "/home/xty20/cem/venv/lib/python3.8/site-packages/keras/src/optimizers/optimizer.py", line 652, in apply_gradients
-      iteration = self._internal_apply_gradients(grads_and_vars)
-    File "/home/xty20/cem/venv/lib/python3.8/site-packages/keras/src/optimizers/optimizer.py", line 1260, in _internal_apply_gradients
-      return tf.__internal__.distribute.interim.maybe_merge_call(
-    File "/home/xty20/cem/venv/lib/python3.8/site-packages/keras/src/optimizers/optimizer.py", line 1352, in _distributed_apply_gradients_fn
-      distribution.extended.update(
-    File "/home/xty20/cem/venv/lib/python3.8/site-packages/keras/src/optimizers/optimizer.py", line 1347, in apply_grad_to_update_var
-      return self._update_step_xla(grad, var, id(self._var_key(var)))
-Node: 'Adam/StatefulPartitionedCall_2'
-libdevice not found at ./libdevice.10.bc
-	 [[{{node Adam/StatefulPartitionedCall_2}}]] [Op:__inference_train_function_707]
-Traceback (most recent call last):
-  File "experiments/run_experiments_rl.py", line 913, in <module>
-    main(
-  File "experiments/run_experiments_rl.py", line 536, in main
-    training.evaluate_representation_metrics(
-  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/train/training.py", line 1848, in evaluate_representation_metrics
-    ois, loaded = utils.execute_and_save(
-  File "/home/xty20/cem/venv/lib/python3.8/site-packages/cem-1.1.0-py3.8.egg/cem/train/utils.py", line 48, in execute_and_save
-    raise ValueError(
-ValueError: Subprocess of saving to results/afa/celeba_afa/test_ois_IntAwareConceptEmbeddingModelRetry_concept_loss_weight_1_intervention_weight_5_horizon_rate_1.005_intervention_discount_1_task_discount_1.1_sampling_percent_1_split_0.joblib failed!

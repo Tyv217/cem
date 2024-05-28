@@ -198,8 +198,8 @@ class ACConceptBottleneckModel(ConceptBottleneckModel):
                     f"AC CBM loaded AC model checkpoint from {ac_model_config['save_path']}"
                 )
                 self.train_ac_model = False
-            else:
-                raise ValueError(f"AC{ac_model_config['architecture']} model checkpoint at {ac_model_config['save_path']} incorrect / not found")
+            # else:
+            #     raise ValueError(f"AC{ac_model_config['architecture']} model checkpoint at {ac_model_config['save_path']} incorrect / not found")
             self.train_ac_model = False
         else:
             self.train_ac_model = True
@@ -1264,8 +1264,8 @@ class ACConceptEmbeddingModel(
                     f"AC CBM loaded AC model checkpoint from {ac_model_config['save_path']}"
                 )
                 self.train_ac_model = False
-            else:
-                raise ValueError(f"AC{ac_model_config['architecture']} model checkpoint at {ac_model_config['save_path']} incorrect / not found")
+            # else:
+            #     raise ValueError(f"AC{ac_model_config['architecture']} model checkpoint at {ac_model_config['save_path']} incorrect / not found")
             self.train_ac_model = False
         else:
             self.train_ac_model = True
@@ -2527,8 +2527,8 @@ class AFAConceptEmbeddingModel(
                 )
                 self.train_ac_model = False
             except:
-                raise ValueError(f"ACFlow model checkpoint at {ac_model_config['save_path']} incorrect / not found")
-            self.train_ac_model = False
+                # raise ValueError(f"ACFlow model checkpoint at {ac_model_config['save_path']} incorrect / not found")
+                self.train_ac_model = False
         else:
             self.ac_model = ACFlow(
                 n_concepts = n_concepts,
@@ -2698,10 +2698,10 @@ class AFAModel(pl.LightningModule):
             logging.debug(
                 f"AC CBM loaded AC model checkpoint from {ac_model_config['save_path']}"
             )
-        else:
-            checkpoint_location = "" if "save_path" not in ac_model_config.keys() else f"at {ac_model_config['save_path']}"
-            message = f"AC{ac_model_config['architecture']} model checkpoint {checkpoint_location}incorrect / not found"
-            raise ValueError(message)
+        # else:
+        #     checkpoint_location = "" if "save_path" not in ac_model_config.keys() else f"at {ac_model_config['save_path']}"
+        #     message = f"AC{ac_model_config['architecture']} model checkpoint {checkpoint_location}incorrect / not found"
+        #     raise ValueError(message)
         self.ac_model.freeze()
         self.num_envs = config["afa_model_config"]["num_envs"]
         # self.env = gym.vector.make("cem/AFAEnv-v0", num_envs = self.num_envs, cbm = self.cbm, ac_model = self.ac_model, env_config = config)

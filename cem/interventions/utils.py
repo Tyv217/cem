@@ -372,6 +372,8 @@ def intervene_in_cbm(
             # if j == 1:
             #     import pdb
             #     pdb.set_trace()
+            if j < config["afa_model_config"].get("test_start_budget", 0):
+                continue
             if budget < acquisition_costs:
                 break
             budget -= acquisition_costs
